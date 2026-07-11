@@ -54,3 +54,6 @@ venv/
 .wrangler/
 .netlify/
 .vercel/
+
+.dev.vars*
+!.dev.vars.example
