@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="56" height="14" viewBox="0 0 56 14">
+  <!-- Geometric kilim-style diamond motif, used as a repeating divider strip -->
+  <g fill="none">
+    <path d="M7 1 L13 7 L7 13 L1 7 Z" fill="#b3202c"/>
+    <path d="M21 3 L25 7 L21 11 L17 7 Z" fill="#e9b44c"/>
+    <path d="M35 1 L41 7 L35 13 L29 7 Z" fill="#1d4e9e"/>
+    <path d="M49 3 L53 7 L49 11 L45 7 Z" fill="#e9b44c"/>
+  </g>
+</svg>

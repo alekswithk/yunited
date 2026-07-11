@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact — Yunited</title>
+  <meta name="description" content="Get in touch with Yunited, the Balkan & ex-Yu student club at HSG.">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,500&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="index.html">YUNITED<span>.</span></a>
+      <button class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="events.html">Events</a>
+        <a href="members.html">Members</a>
+        <a href="exchange.html">Exchange</a>
+        <a href="contact.html" aria-current="page">Contact</a>
+        <a class="btn btn-gold nav-join" href="join.html">Join</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="page-hero">
+      <div class="container">
+        <p class="hero-script">Kontakt · Контакт · Contact</p>
+        <h1>Get in touch</h1>
+        <p>Questions about membership, events, partnerships or anything else —
+        we're happy to hear from you.</p>
+      </div>
+    </section>
+
+    <div class="motif-divider" role="presentation"></div>
+
+    <section>
+      <div class="container reveal">
+        <p class="eyebrow">Message us</p>
+        <h2>Contact form</h2>
+
+        <!--
+          The form posts to Formspree (free tier), which forwards submissions
+          to the club inbox. SETUP REQUIRED: create a free form at
+          https://formspree.io pointing at yunited@shsg.ch, then replace
+          YOUR_FORM_ID below with the real form ID. Until then the form
+          shows a setup notice instead of sending.
+        -->
+        <form id="contact-form" class="form-grid" action="https://formspree.io/f/YOUR_FORM_ID" method="POST" novalidate>
+          <div>
+            <label for="field-name">Name *</label>
+            <input id="field-name" name="name" type="text" required autocomplete="name">
+          </div>
+          <div>
+            <label for="field-email">Email *</label>
+            <input id="field-email" name="email" type="email" required autocomplete="email"
+              placeholder="you@student.unisg.ch">
+          </div>
+          <div>
+            <label for="field-topic">Topic *</label>
+            <select id="field-topic" name="topic" required>
+              <option value="">Please choose…</option>
+              <option>Membership</option>
+              <option>Events</option>
+              <option>Partnerships</option>
+              <option>Exchange / buddy-system</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div>
+            <label for="field-message">Message *</label>
+            <textarea id="field-message" name="message" rows="6" required></textarea>
+          </div>
+          <p class="form-error" id="form-error">Please fill in all fields (with a valid email) before sending.</p>
+          <div>
+            <button class="btn btn-red" type="submit">Send message</button>
+          </div>
+          <p class="form-note">
+            Your message goes straight to the Yunited board inbox
+            (yunited@shsg.ch) and is only used to reply to you — nothing else.
+          </p>
+        </form>
+
+        <p style="margin-top: var(--space-5);">
+          Prefer plain email? Write to
+          <a href="mailto:yunited@shsg.ch">yunited@shsg.ch</a> — or DM us on
+          <a href="https://www.instagram.com/yunited.unisg" target="_blank" rel="noopener">Instagram</a>.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="motif-divider" role="presentation"></div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <h3>Yunited</h3>
+          <p>HSG student club connecting students with Balkan and ex-Yugoslav
+          roots — and everyone curious about the culture — since 2013.</p>
+        </div>
+        <div>
+          <h3>Pages</h3>
+          <ul>
+            <li><a href="about.html">About</a></li>
+            <li><a href="events.html">Events</a></li>
+            <li><a href="members.html">Members</a></li>
+            <li><a href="exchange.html">Exchange students</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Connect</h3>
+          <ul>
+            <li><a href="https://www.instagram.com/yunited.unisg" target="_blank" rel="noopener">Instagram</a></li>
+            <li><a href="https://www.linkedin.com/company/yunited-unisg" target="_blank" rel="noopener">LinkedIn</a></li>
+            <li><a href="mailto:yunited@shsg.ch">yunited@shsg.ch</a></li>
+            <li><a href="https://uniclubs.ch/hsg/clubs/yunited" target="_blank" rel="noopener">Join on uniclubs</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© <span id="footer-year"></span> Yunited — a student club at the University
+        of St. Gallen (HSG). Membership is managed on
+        <a href="https://uniclubs.ch/hsg/clubs/yunited" target="_blank" rel="noopener">uniclubs.ch</a>.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    // Simple client-side validation for the contact form.
+    // Blocks submission and shows one clear error line if anything is
+    // missing or the email looks implausible.
+    const contactForm = document.querySelector("#contact-form");
+    const errorLine = document.querySelector("#form-error");
+
+    contactForm.addEventListener("submit", function (submitEvent) {
+      const name = document.querySelector("#field-name").value.trim();
+      const email = document.querySelector("#field-email").value.trim();
+      const topic = document.querySelector("#field-topic").value;
+      const message = document.querySelector("#field-message").value.trim();
+
+      // "Plausible email" = something@something.something
+      const emailLooksValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+      if (!name || !emailLooksValid || !topic || !message) {
+        submitEvent.preventDefault();
+        errorLine.classList.add("is-visible");
+        return;
+      }
+
+      // Guard against the form being deployed before Formspree is set up.
+      if (contactForm.action.includes("YOUR_FORM_ID")) {
+        submitEvent.preventDefault();
+        errorLine.textContent =
+          "The form backend isn't configured yet — please email us directly at yunited@shsg.ch.";
+        errorLine.classList.add("is-visible");
+        return;
+      }
+
+      errorLine.classList.remove("is-visible");
+    });
+  </script>
+</body>
+</html>

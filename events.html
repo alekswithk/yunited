@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Events — Yunited</title>
+  <meta name="description" content="Upcoming events and past-event recaps from Yunited, the Balkan & ex-Yu student club at HSG.">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,500&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="index.html">YUNITED<span>.</span></a>
+      <button class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="events.html" aria-current="page">Events</a>
+        <a href="members.html">Members</a>
+        <a href="exchange.html">Exchange</a>
+        <a href="contact.html">Contact</a>
+        <a class="btn btn-gold nav-join" href="join.html">Join</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="page-hero">
+      <div class="container">
+        <p class="hero-script">Događaji · Догађаји · Events</p>
+        <h1>Events</h1>
+        <p>Brunches, barbecues, karaoke, casino nights and career events —
+        this is what we get up to. Members get access to all events via
+        uniclubs.</p>
+      </div>
+    </section>
+
+    <div class="motif-divider" role="presentation"></div>
+
+    <!-- Both sections below are rendered from content/events.json by js/events.js.
+         Whether an event is upcoming or past is computed from its date. -->
+
+    <section>
+      <div class="container reveal">
+        <p class="eyebrow">Save the date</p>
+        <h2>Upcoming events</h2>
+        <div class="magazine-grid" id="upcoming-events"></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container reveal">
+        <p class="eyebrow">Recaps</p>
+        <h2>Past events</h2>
+        <p class="section-intro">A look back at what we've done recently.
+        Photos and stories also live on our
+        <a href="https://www.instagram.com/yunited.unisg" target="_blank" rel="noopener">Instagram</a>.</p>
+        <div class="magazine-grid" id="past-events"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="motif-divider" role="presentation"></div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <h3>Yunited</h3>
+          <p>HSG student club connecting students with Balkan and ex-Yugoslav
+          roots — and everyone curious about the culture — since 2013.</p>
+        </div>
+        <div>
+          <h3>Pages</h3>
+          <ul>
+            <li><a href="about.html">About</a></li>
+            <li><a href="events.html">Events</a></li>
+            <li><a href="members.html">Members</a></li>
+            <li><a href="exchange.html">Exchange students</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Connect</h3>
+          <ul>
+            <li><a href="https://www.instagram.com/yunited.unisg" target="_blank" rel="noopener">Instagram</a></li>
+            <li><a href="https://www.linkedin.com/company/yunited-unisg" target="_blank" rel="noopener">LinkedIn</a></li>
+            <li><a href="mailto:yunited@shsg.ch">yunited@shsg.ch</a></li>
+            <li><a href="https://uniclubs.ch/hsg/clubs/yunited" target="_blank" rel="noopener">Join on uniclubs</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© <span id="footer-year"></span> Yunited — a student club at the University
+        of St. Gallen (HSG). Membership is managed on
+        <a href="https://uniclubs.ch/hsg/clubs/yunited" target="_blank" rel="noopener">uniclubs.ch</a>.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/events.js"></script>
+</body>
+</html>

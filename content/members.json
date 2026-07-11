@@ -1,0 +1,32 @@
+[
+  {
+    "name": "[PLACEHOLDER: Full Name]",
+    "role": "President",
+    "photo": null,
+    "bio": "[PLACEHOLDER: optional one-liner]"
+  },
+  {
+    "name": "[PLACEHOLDER: Full Name]",
+    "role": "Vice President",
+    "photo": null,
+    "bio": ""
+  },
+  {
+    "name": "[PLACEHOLDER: Full Name]",
+    "role": "Head of Events",
+    "photo": null,
+    "bio": ""
+  },
+  {
+    "name": "[PLACEHOLDER: Full Name]",
+    "role": "Head of Marketing",
+    "photo": null,
+    "bio": ""
+  },
+  {
+    "name": "[PLACEHOLDER: Full Name]",
+    "role": "Head of Finance",
+    "photo": null,
+    "bio": ""
+  }
+]
