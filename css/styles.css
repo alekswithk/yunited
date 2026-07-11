@@ -357,30 +357,175 @@ section { padding: var(--space-6) 0; }
 }
 .card-link:hover { color: var(--color-red); border-bottom-color: var(--color-red); }
 
-/* Member cards: square photo, centred text */
-.member-card { text-align: center; }
-.member-photo {
+/* ---------- Board masthead (members page) ----------
+   The board has a real hierarchy — a president, a deputy, then the heads —
+   so the layout says so instead of lining up five equal cards. The lead role
+   runs as an editor's-letter spread; everyone else is set as a ruled roster
+   with their role hanging in the left margin, the way print mastheads list
+   staff. Photos are optional: until one exists, the member's initial is set
+   as a drop cap in the flag palette. */
+
+/* Portrait block — shared by the lead spread and the roster. Carries a photo
+   when there is one, and a drop-cap initial when there isn't. */
+.portrait {
   aspect-ratio: 1 / 1;
-  background: var(--color-paper-soft);
-  border-bottom: 2px solid var(--color-ink);
+  background: var(--color-red);
+  color: var(--color-paper);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 2.6rem;
-  color: var(--color-ink);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  overflow: hidden;
 }
-.member-photo img { width: 100%; height: 100%; object-fit: cover; }
-.member-role {
+.portrait img { width: 100%; height: 100%; object-fit: cover; }
+
+/* --- The lead: most senior role, set as a spread --- */
+.masthead-lead {
+  display: grid;
+  grid-template-columns: minmax(0, 300px) 1fr;
+  background: #fffdf8;
+  border: var(--border);
+  border-top: 0;
+  margin-bottom: var(--space-6);
+}
+/* Flag stripe across the top of the spread — the one flourish on this page */
+.masthead-lead::before {
+  content: "";
+  grid-column: 1 / -1;
+  height: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--color-red) 0 33.33%,
+    var(--color-azure) 33.33% 66.66%,
+    var(--color-gold) 66.66% 100%
+  );
+}
+.masthead-lead .portrait {
+  border-right: 2px solid var(--color-ink);
+  font-size: clamp(3.5rem, 9vw, 7rem);
+}
+.masthead-body {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.masthead-role {
   font-family: var(--font-mono);
-  color: var(--color-red);
-  font-weight: 700;
   font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-red);
+}
+.masthead-body h3 {
+  font-size: clamp(2.2rem, 6vw, 4.4rem);
+  font-weight: 900;
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+}
+.masthead-bio { font-size: 1.15rem; color: var(--color-muted); max-width: 46ch; }
+
+/* --- The roster: staff lines, roles hanging in the margin.
+   Set two-up on desktop so the block reads as dense as a printed masthead
+   rather than four lonely names across a wide page. --- */
+.roster {
+  border-top: 2px solid var(--color-ink);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.roster-row {
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr);
+  border-bottom: 2px solid var(--color-ink);
+  transition: background-color 0.15s ease;
+}
+/* Column rule between the two roster columns */
+.roster-row:nth-child(odd) { border-right: 2px solid var(--color-ink); }
+.roster-row:hover { background: var(--color-paper-soft); }
+
+.roster-role {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: var(--color-red);
+  text-align: right;
+  text-wrap: balance;
+  padding: var(--space-4) var(--space-3) var(--space-4) 0;
+  border-right: 2px solid var(--color-ink);
 }
-.member-bio { font-size: 0.95rem; color: var(--color-muted); }
+
+.roster-person {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  min-width: 0;
+}
+.roster-person .portrait {
+  flex: 0 0 76px;
+  width: 76px;
+  border: 2px solid var(--color-ink);
+  font-size: 1.7rem;
+}
+.roster-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.35rem;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+.roster-bio { font-size: 0.95rem; color: var(--color-muted); margin-top: var(--space-1); }
+
+/* Rotate the drop-cap fills through the flag palette so the page reads as a
+   spread rather than a column of identical red squares. Seats that are still
+   unfilled sit this out — they should read as quiet, not as a flag block. */
+.roster-row:nth-child(3n + 2) .portrait:not(:has(img)):not(.is-tba) { background: var(--color-azure); }
+.roster-row:nth-child(3n + 3) .portrait:not(:has(img)):not(.is-tba) { background: var(--color-ink); color: var(--color-gold); }
+
+/* A seat with no name yet: the role still holds its place, the name waits. */
+.portrait.is-tba {
+  background: var(--color-paper-soft);
+  color: var(--color-muted);
+}
+.masthead-name.is-tba,
+.roster-name.is-tba {
+  color: var(--color-muted);
+  font-weight: 500;
+  font-style: italic;
+}
+.masthead-name.is-tba { font-size: clamp(1.6rem, 3vw, 2.4rem); }
+
+@media (max-width: 960px) {
+  .roster { grid-template-columns: 1fr; }
+  .roster-row:nth-child(odd) { border-right: 0; }
+}
+
+@media (max-width: 760px) {
+  .masthead-lead { grid-template-columns: 1fr; }
+  .masthead-lead .portrait {
+    border-right: 0;
+    border-bottom: 2px solid var(--color-ink);
+    aspect-ratio: 3 / 2;
+  }
+  .masthead-body { padding: var(--space-4); }
+
+  .roster-row { grid-template-columns: 1fr; }
+  .roster-role {
+    text-align: left;
+    border-right: 0;
+    padding: var(--space-3) 0 0;
+  }
+  .roster-person { padding: var(--space-3) 0 var(--space-4); }
+}
 
 /* Empty-state note when a list has nothing to show */
 .empty-note {
