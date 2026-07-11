@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# yunited
-=======
 # How to update this website
 
 This is the Yunited club website. It's a plain static site — no database, no
@@ -135,4 +132,3 @@ assets/     ← favicon + the folk-pattern divider graphic
 Design rules baked in: colors and spacing come from CSS variables at the top
 of `css/styles.css`; one `card` style is shared by events and members; the
 same event card renders both upcoming and past events from the same JSON.
->>>>>>> 217610e (Initial commit: Yunited website)
