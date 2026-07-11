@@ -1,6 +1,56 @@
-# macOS
+# ---- Operating system ----
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+Desktop.ini
 
-# Editor / tooling local settings
+# ---- Editors / IDEs ----
 .claude/settings.local.json
 .claude/launch.json
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ---- Secrets / local config ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ---- Logs & temp files ----
+*.log
+npm-debug.log*
+yarn-error.log*
+*.tmp
+*.bak
+*.orig
+
+# ---- Node (in case a build step is ever added) ----
+node_modules/
+dist/
+build/
+.cache/
+.parcel-cache/
+
+# ---- Python (local preview server, scripts) ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ---- R ----
+.Rhistory
+.Rapp.history
+.RData
+.Ruserdata
+
+# ---- Host / deploy tooling ----
+.wrangler/
+.netlify/
+.vercel/
