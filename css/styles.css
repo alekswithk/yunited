@@ -141,14 +141,18 @@ section { padding: var(--space-6) 0; }
 }
 
 .logo {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 1.5rem;
-  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
   text-decoration: none;
-  color: var(--color-ink);
 }
-.logo span { color: var(--color-red); }
+.logo img {
+  display: block;
+  height: 34px;
+  width: auto;   /* intrinsic 863:340 ratio keeps the wordmark undistorted */
+}
+@media (max-width: 480px) {
+  .logo img { height: 28px; }
+}
 
 .main-nav { display: flex; align-items: center; gap: var(--space-4); }
 
