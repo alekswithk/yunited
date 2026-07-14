@@ -5,8 +5,8 @@
     "date": "2026-05-13",
     "time": "20:30",
     "location": "Yak Bar, St. Gallen",
-    "description": "A proper end to the semester before the studying begins.",
-    "image": null,
+    "description": "A proper end to the semester before the study phase begins.",
+    "image": "images/events/25/26/sep_2026.jpeg",
     "rsvpUrl": "https://uniclubs.ch/hsg/clubs/yunited/events/semester-end-party"
   },
   {
@@ -16,7 +16,7 @@
     "time": null,
     "location": "TheCo by SHSG, Müller-Friedberg-Strasse 6, St. Gallen",
     "description": "Partner event with AIESEC: Global Village St. Gallen, together with East Slavic, MENA, Scandinavian Society, Persian Association and Hungarian Association.",
-    "image": null,
+    "image": "images/events/25/26/global_village_2026.jpg",
     "rsvpUrl": "https://uniclubs.ch/hsg/clubs/aiesec/events/global-village-by-aiesec"
   },
   {
@@ -25,8 +25,8 @@
     "date": "2026-05-08",
     "time": "20:00",
     "location": "Casino St. Gallen",
-    "description": "Yunited goes Casino.",
-    "image": null,
+    "description": "Testing our luck, weren't we?.",
+    "image": "images/events/25/26/casino_2026.jpeg",
     "rsvpUrl": "https://uniclubs.ch/hsg/clubs/yunited/events/casino-night"
   },
   {
@@ -36,7 +36,7 @@
     "time": "17:00",
     "location": "Drei Weihern, St. Gallen",
     "description": "A celebration of the 1st of May with an outdoor barbecue.",
-    "image": null,
+    "image": "images/events/25/26/prvi_maj_2026.jpeg",
     "rsvpUrl": "https://uniclubs.ch/hsg/clubs/yunited/events/prvi-maj"
   },
   {
@@ -45,18 +45,18 @@
     "date": "2026-04-26",
     "time": "11:00",
     "location": "Visage Gastrobar, Dübendorf",
-    "description": "A rich, traditional brunch in a beautiful location after the stressful midterm exams.",
-    "image": null,
+    "description": "A traditional brunch with alumni in a beautiful location after the stressful midterm exams.",
+    "image": "images/events/25/26/brunch_2026.webp",
     "rsvpUrl": "https://uniclubs.ch/hsg/clubs/yunited/events/post-midterm-brunch"
   },
   {
     "id": "karaoke-2026",
-    "title": "Karaoke",
+    "title": "Karaoke Night",
     "date": "2026-03-18",
     "time": "20:30",
     "location": "Déja Vu Bar, St. Gallen",
     "description": "Karaoke night at Déja Vu Bar.",
-    "image": null,
+    "image": "images/events/25/26/karaoke_2026.jpeg",
     "rsvpUrl": null
   },
   {
@@ -64,9 +64,9 @@
     "title": "Movie Night — Svadba",
     "date": "2026-03-04",
     "time": "20:30",
-    "location": "BlueCinema, St. Gallen",
+    "location": "blue Cinema, St. Gallen",
     "description": "A cinema screening of Svadba.",
-    "image": null,
+    "image": "images/events/25/26/cinema_2026.jpg",
     "rsvpUrl": null
   },
   {
@@ -76,7 +76,7 @@
     "time": "19:30",
     "location": "Zürcherstrasse 162, St. Gallen",
     "description": "A festive dinner to close out the year together.",
-    "image": null,
+    "image": "images/events/25/26/christmas_dinner_2026.jpg",
     "rsvpUrl": null
   }
 ]
