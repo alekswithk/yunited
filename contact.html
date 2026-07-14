@@ -70,13 +70,18 @@
         <h2>Contact form</h2>
 
         <!--
-          The form posts to Formspree (free tier), which forwards submissions
-          to the club inbox. SETUP REQUIRED: create a free form at
-          https://formspree.io pointing at yunited@shsg.ch, then replace
-          YOUR_FORM_ID below with the real form ID. Until then the form
-          shows a setup notice instead of sending.
+          The form posts to Formspree, which forwards submissions to the club
+          inbox. The action attribute is a real endpoint, so the form still
+          works without JavaScript (Formspree renders its own thank-you page);
+          the script at the bottom of this file upgrades that to an in-page
+          submit so visitors never leave the site.
         -->
-        <form id="contact-form" class="form-grid" action="https://formspree.io/f/YOUR_FORM_ID" method="POST" novalidate>
+        <p class="form-success" id="form-success" role="status" tabindex="-1">
+          Thanks — your message is on its way to the board. We usually reply
+          within a few days.
+        </p>
+
+        <form id="contact-form" class="form-grid" action="https://formspree.io/f/xeeyoryk" method="POST" novalidate>
           <div>
             <label for="field-name">Name *</label>
             <input id="field-name" name="name" type="text" required autocomplete="name">
@@ -101,9 +106,16 @@
             <label for="field-message">Message *</label>
             <textarea id="field-message" name="message" rows="6" required></textarea>
           </div>
+
+          <!-- Formspree uses this as the subject line of the notification email. -->
+          <input type="hidden" name="_subject" value="Yunited website — contact form">
+          <!-- Honeypot: real people never see it, bots fill it in and get dropped. -->
+          <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true"
+            style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;">
+
           <p class="form-error" id="form-error">Please fill in all fields (with a valid email) before sending.</p>
           <div>
-            <button class="btn btn-red" type="submit">Send message</button>
+            <button class="btn btn-red" type="submit" id="form-submit">Send message</button>
           </div>
           <p class="form-note">
             Your message goes straight to the Yunited board inbox
@@ -161,13 +173,26 @@
 
   <script src="js/main.js"></script>
   <script>
-    // Simple client-side validation for the contact form.
-    // Blocks submission and shows one clear error line if anything is
-    // missing or the email looks implausible.
+    // Contact form: client-side validation, then submit to Formspree over
+    // fetch so the visitor stays on the page. If this script never runs the
+    // form still posts natively to the same endpoint — the only thing lost is
+    // the in-page success message.
     const contactForm = document.querySelector("#contact-form");
     const errorLine = document.querySelector("#form-error");
+    const successLine = document.querySelector("#form-success");
+    const submitButton = document.querySelector("#form-submit");
 
-    contactForm.addEventListener("submit", function (submitEvent) {
+    const CONTACT_FALLBACK =
+      "Sorry — sending failed. Please email us directly at yunited@shsg.ch.";
+
+    function showError(text) {
+      errorLine.textContent = text;
+      errorLine.classList.add("is-visible");
+    }
+
+    contactForm.addEventListener("submit", async function (submitEvent) {
+      submitEvent.preventDefault();
+
       const name = document.querySelector("#field-name").value.trim();
       const email = document.querySelector("#field-email").value.trim();
       const topic = document.querySelector("#field-topic").value;
@@ -177,21 +202,41 @@
       const emailLooksValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
       if (!name || !emailLooksValid || !topic || !message) {
-        submitEvent.preventDefault();
-        errorLine.classList.add("is-visible");
-        return;
-      }
-
-      // Guard against the form being deployed before Formspree is set up.
-      if (contactForm.action.includes("YOUR_FORM_ID")) {
-        submitEvent.preventDefault();
-        errorLine.textContent =
-          "The form backend isn't configured yet — please email us directly at yunited@shsg.ch.";
-        errorLine.classList.add("is-visible");
+        showError("Please fill in all fields (with a valid email) before sending.");
         return;
       }
 
       errorLine.classList.remove("is-visible");
+      submitButton.disabled = true;
+      submitButton.textContent = "Sending…";
+
+      try {
+        const response = await fetch(contactForm.action, {
+          method: "POST",
+          body: new FormData(contactForm),
+          headers: { Accept: "application/json" },
+        });
+
+        if (response.ok) {
+          contactForm.reset();
+          contactForm.hidden = true;
+          successLine.classList.add("is-visible");
+          successLine.focus();
+          return;
+        }
+
+        // Formspree returns { errors: [{ message, field }] } on a 4xx.
+        const body = await response.json().catch(() => null);
+        const detail = body && body.errors && body.errors.length
+          ? body.errors.map((error) => error.message).join(" ")
+          : null;
+        showError(detail || CONTACT_FALLBACK);
+      } catch {
+        showError(CONTACT_FALLBACK);
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Send message";
+      }
     });
   </script>
 </body>
