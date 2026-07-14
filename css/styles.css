@@ -830,3 +830,50 @@ input:focus, select:focus, textarea:focus {
     border-bottom: 2px solid var(--color-ink);
   }
 }
+
+/* ---------- Scroll-assembled "puzzle" motion (events grid) ----------
+   As each card scrolls into view it settles from a scattered pose — nudged
+   outward, tilted, shrunk and faded — into its exact grid slot, so the spread
+   reads as pieces converging into place the further you scroll.
+
+   Built on native CSS scroll-driven animation (animation-timeline: view()),
+   so it's tied to scroll position with no JS. It only animates the individual
+   translate/rotate/scale properties, leaving `transform` free for the card
+   hover-lift. Guarded by @supports + reduced-motion so any browser without
+   scroll-timeline support (or a user who asked for less motion) simply gets
+   the settled layout with nothing moving — and transforms never reflow the
+   grid, so there is no layout shift either way. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes puzzle-in {
+      from {
+        opacity: 0;
+        translate: var(--pz-x, 0) var(--pz-y, 12%);
+        rotate: var(--pz-rot, 0deg);
+        scale: 0.93;
+      }
+      to {
+        opacity: 1;
+        translate: 0 0;
+        rotate: 0deg;
+        scale: 1;
+      }
+    }
+
+    .magazine-grid > .card {
+      animation: puzzle-in linear both;
+      animation-timeline: view();
+      /* Assemble across the card's entry into the viewport, settled by the
+         time it's fully visible — so it's readable well before centre. */
+      animation-range: entry 15% cover 30%;
+    }
+
+    /* Scatter direction follows each card's slot in the 5-card cycle, so the
+       pieces fly apart toward their own edge and snap back toward the centre. */
+    .magazine-grid > .card:nth-child(5n + 1) { --pz-x: -9%;  --pz-y: 0;    --pz-rot: -2deg;  } /* lead — from the left  */
+    .magazine-grid > .card:nth-child(5n + 2) { --pz-x: 10%;  --pz-y: 0;    --pz-rot: 1.5deg; } /* wide — from the right */
+    .magazine-grid > .card:nth-child(5n + 3) { --pz-x: 11%;  --pz-y: 9%;   --pz-rot: 3deg;   } /* from bottom-right    */
+    .magazine-grid > .card:nth-child(5n + 4) { --pz-x: -10%; --pz-y: 7%;   --pz-rot: -2.5deg;} /* from bottom-left     */
+    .magazine-grid > .card:nth-child(5n + 5) { --pz-x: 0;    --pz-y: 11%;  --pz-rot: 2deg;   } /* from below           */
+  }
+}

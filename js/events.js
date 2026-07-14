@@ -20,8 +20,15 @@ function escapeHtml(value) {
   return holder.innerHTML;
 }
 
-// Turn "2026-05-13" into "13 May 2026" for display.
+// An event counts as scheduled only if it carries a real YYYY-MM-DD date.
+// A dateless event (date: null) is a "to be announced" event — still upcoming.
+function hasDate(event) {
+  return typeof event.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(event.date);
+}
+
+// Turn "2026-05-13" into "13 May 2026" for display; TBA events show "Date TBA".
 function formatEventDate(isoDate) {
+  if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return "Date TBA";
   const date = new Date(isoDate + "T00:00:00");
   return date.toLocaleDateString("en-GB", {
     day: "numeric",
@@ -101,13 +108,20 @@ fetch(EVENTS_JSON_URL)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const upcoming = allEvents
-      .filter(function (e) { return new Date(e.date + "T00:00:00") >= today; })
-      .sort(function (a, b) { return a.date.localeCompare(b.date); }); // soonest first
-
+    // Past = anything with a real date before today. Everything else —
+    // future-dated OR date-TBA — is upcoming, with TBA events shown first.
     const past = allEvents
-      .filter(function (e) { return new Date(e.date + "T00:00:00") < today; })
+      .filter(function (e) { return hasDate(e) && new Date(e.date + "T00:00:00") < today; })
       .sort(function (a, b) { return b.date.localeCompare(a.date); }); // newest first
+
+    const upcoming = allEvents
+      .filter(function (e) { return !(hasDate(e) && new Date(e.date + "T00:00:00") < today); })
+      .sort(function (a, b) {
+        if (!hasDate(a) && !hasDate(b)) return 0;
+        if (!hasDate(a)) return -1; // TBA floats to the top
+        if (!hasDate(b)) return 1;
+        return a.date.localeCompare(b.date); // then soonest first
+      });
 
     const upcomingContainer = document.querySelector("#upcoming-events");
     const pastContainer = document.querySelector("#past-events");
