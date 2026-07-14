@@ -13,6 +13,13 @@
 // Figure out where this page sits so the JSON path works from any page.
 const EVENTS_JSON_URL = "content/events.json";
 
+// events.json is edited by hand, so treat its values as untrusted text.
+function escapeHtml(value) {
+  const holder = document.createElement("div");
+  holder.textContent = value == null ? "" : String(value);
+  return holder.innerHTML;
+}
+
 // Turn "2026-05-13" into "13 May 2026" for display.
 function formatEventDate(isoDate) {
   const date = new Date(isoDate + "T00:00:00");
@@ -32,24 +39,25 @@ function buildEventCard(event, isPast) {
   let imageHtml;
   if (event.image) {
     imageHtml =
-      '<div class="card-image"><img src="' + event.image + '" alt="Photo from ' +
-      event.title + '" loading="lazy"></div>';
+      '<div class="card-image"><img src="' + escapeHtml(event.image) + '" alt="Photo from ' +
+      escapeHtml(event.title) + '" loading="lazy"></div>';
   } else {
     // Placeholder shows the first letter of the event title.
     imageHtml =
       '<div class="card-image" aria-hidden="true">' +
-      event.title.charAt(0).toUpperCase() + "</div>";
+      escapeHtml(event.title.charAt(0).toUpperCase()) + "</div>";
   }
 
   const timeText = event.time ? " · " + event.time : "";
 
   // Past events link to their recap page (if any) with different wording
   // than upcoming events, which link to RSVP/tickets.
+  // Only allow https links — never interpolate a javascript:/data: URL into href.
   let linkHtml = "";
-  if (event.rsvpUrl) {
+  if (event.rsvpUrl && /^https:\/\//i.test(event.rsvpUrl)) {
     const linkText = isPast ? "Event page →" : "RSVP on uniclubs →";
     linkHtml =
-      '<a class="card-link" href="' + event.rsvpUrl +
+      '<a class="card-link" href="' + escapeHtml(event.rsvpUrl) +
       '" target="_blank" rel="noopener">' + linkText + "</a>";
   }
 
@@ -57,9 +65,9 @@ function buildEventCard(event, isPast) {
     imageHtml +
     '<div class="card-body">' +
     '<p class="card-date">' + formatEventDate(event.date) + timeText + "</p>" +
-    "<h3>" + event.title + "</h3>" +
-    '<p class="card-location">' + event.location + "</p>" +
-    '<p class="card-description">' + event.description + "</p>" +
+    "<h3>" + escapeHtml(event.title) + "</h3>" +
+    '<p class="card-location">' + escapeHtml(event.location) + "</p>" +
+    '<p class="card-description">' + escapeHtml(event.description) + "</p>" +
     linkHtml +
     "</div>";
 
