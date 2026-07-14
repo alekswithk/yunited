@@ -85,19 +85,25 @@ Page text (About story, Exchange info, etc.) lives in the `.html` files —
 it between the tags. Anything marked `[PLACEHOLDER: …]` is waiting for real
 content from the board — replace the whole bracket.
 
-## The contact form (one-time setup)
+## The contact form
 
-The form on `contact.html` sends messages via **Formspree** (free tier):
+The form on `contact.html` sends messages via **Formspree** (free tier), which
+forwards them to the club inbox (yunited@shsg.ch). It posts to
+`https://formspree.io/f/xeeyoryk` — set up under the club Formspree account,
+where submissions are also archived.
 
-1. Create a free account at https://formspree.io using the club inbox
-   (yunited@shsg.ch).
-2. Create a new form; Formspree gives you a URL like
-   `https://formspree.io/f/abcd1234`.
-3. In `contact.html`, replace `YOUR_FORM_ID` in the form's `action` with the
-   real ID.
+Submissions go out over `fetch`, so the visitor stays on the page and sees an
+in-page confirmation. The `action` attribute points at the same endpoint, so if
+JavaScript fails the browser posts the form natively and Formspree shows its own
+thank-you page — nothing gets lost either way.
 
-Until that's done, the form politely refuses to send and points people to the
-club email instead, so nothing silently gets lost.
+Two things to know before changing it:
+
+- **Recipients** are configured in the Formspree dashboard, not in this repo.
+  Adding a board member to the notification list is a dashboard change.
+- **The CSP in `_headers`** allow-lists `https://formspree.io` under both
+  `connect-src` (the fetch) and `form-action` (the no-JS fallback). Pointing the
+  form at a different provider means updating both.
 
 ## Publish your change
 
