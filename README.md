@@ -1,8 +1,8 @@
 # How to update this website
 
-This is the Yunited club website. It's a plain static site — no database, no
-admin panel. **All the content you'd ever normally change lives in two small
-files:**
+This is the Yunited club website. It's a static site built with
+[Astro](https://astro.build) — no database, no admin panel. **All the content
+you'd ever normally change lives in two small files:**
 
 - `content/events.json` — every event (upcoming and past)
 - `content/members.json` — the board members
@@ -70,8 +70,10 @@ appear on the page in the same order as in this file.
 
 1. Save the photo as a `.webp` file (any online "convert to WebP" tool works;
    aim for under ~300 KB). Use a simple lowercase filename with dashes.
-2. Put event photos in `images/events/` and member photos in
-   `images/members/`.
+2. Put event photos in `public/images/events/` and member photos in
+   `public/images/members/`. (In the JSON you still write the path without
+   the `public/` prefix, e.g. `images/events/prvi-maj-2026.webp` — `public/`
+   is the web root.)
 3. Point the `image` / `photo` field in the JSON at it, e.g.
    `"images/events/prvi-maj-2026.webp"`.
 
@@ -80,14 +82,18 @@ automatically, so descriptive titles and names matter.
 
 ## Change text on a page
 
-Page text (About story, Exchange info, etc.) lives in the `.html` files —
-`about.html`, `exchange.html`, and so on. Open the file, find the text, change
-it between the tags. Anything marked `[PLACEHOLDER: …]` is waiting for real
+Page text (About story, Exchange info, etc.) lives in the page files under
+`src/pages/` — `about.astro`, `exchange.astro`, and so on. Open the file, find
+the text, and change it between the tags (everything below the `---` line at the
+top is plain HTML). Anything marked `[PLACEHOLDER: …]` is waiting for real
 content from the board — replace the whole bracket.
+
+The shared header and footer live once in `src/components/` and
+`src/layouts/BaseLayout.astro`, so a change there updates every page at once.
 
 ## The contact form
 
-The form on `contact.html` sends messages via **Formspree** (free tier), which
+The form on the contact page (`src/pages/contact.astro`) sends messages via **Formspree** (free tier), which
 forwards them to the club inbox (yunited@shsg.ch). It posts to
 `https://formspree.io/f/xeeyoryk` — set up under the club Formspree account,
 where submissions are also archived.
@@ -107,20 +113,22 @@ Two things to know before changing it:
 
 ## Publish your change
 
-The site is a static folder — it deploys anywhere. With Vercel or Netlify
-connected to this git repository:
+The site is built by Astro and deployed on Cloudflare. To publish:
 
 1. Commit and push your edit to the `main` branch.
-2. The host auto-deploys — the live site updates in about a minute.
+2. Cloudflare runs `npm run build` and deploys the result — the live site
+   updates in a minute or two.
 
-To preview locally before pushing, run a tiny web server from this folder
-(opening `index.html` directly won't load the JSON content):
+To preview locally before pushing, you need Node installed, then from this
+folder run:
 
 ```
-python3 -m http.server 8000
+npm install      # once, the first time
+npm run dev       # starts a local preview at http://localhost:4321
 ```
 
-then open http://localhost:8000 in your browser.
+Open the address it prints. To reproduce exactly what gets deployed, run
+`npm run build` and it writes the finished site to `dist/`.
 
 ---
 
@@ -128,13 +136,18 @@ then open http://localhost:8000 in your browser.
 
 ```
 content/    ← events.json + members.json — 95% of edits happen here
-images/     ← photos (events/ and members/ subfolders)
-css/        ← one stylesheet; colors & fonts are variables at the top
-js/         ← three small scripts: menu/animations, event cards, member cards
-assets/     ← favicon + the folk-pattern divider graphic
-*.html      ← one file per page
+public/     ← files served as-is: images/, assets/ (fonts, favicon), _headers
+src/
+  pages/       ← one file per page (index.astro, about.astro, …)
+  layouts/     ← BaseLayout.astro: the <head>, header and footer, once
+  components/  ← EventCard, MemberLead, Header, Footer, …
+  styles/      ← global.css — colors & fonts are variables at the top
+  lib/         ← the small helpers that sort events and members at build time
+astro.config.mjs, package.json  ← build config
 ```
 
 Design rules baked in: colors and spacing come from CSS variables at the top
-of `css/styles.css`; one `card` style is shared by events and members; the
-same event card renders both upcoming and past events from the same JSON.
+of `src/styles/global.css`; one `card` style is shared by events and members;
+the same event card renders both upcoming and past events from the same JSON.
+Event and member content is rendered into the HTML **at build time**, so it's
+visible to search engines and link previews (no JavaScript required to see it).

@@ -1,0 +1,29 @@
+---
+// The site header + primary navigation, rendered once for every page.
+// `path` is the current page's route so the active link gets aria-current.
+const { path = "/" } = Astro.props;
+
+const links = [
+  { href: "/", label: "Home" },
+  { href: "/about", label: "About" },
+  { href: "/events", label: "Events" },
+  { href: "/members", label: "Members" },
+  { href: "/exchange", label: "Exchange" },
+  { href: "/contact", label: "Contact" },
+];
+---
+
+<header class="site-header">
+  <div class="container">
+    <a class="logo" href="/"><img src="/assets/yunited-logo.svg" alt="Yunited" width="916" height="344"></a>
+    <button class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="main-nav" aria-label="Main navigation">
+      {links.map((link) => (
+        <a href={link.href} aria-current={path === link.href ? "page" : undefined}>{link.label}</a>
+      ))}
+      <a class="btn btn-gold nav-join" href="/join" aria-current={path === "/join" ? "page" : undefined}>Join</a>
+    </nav>
+  </div>
+</header>

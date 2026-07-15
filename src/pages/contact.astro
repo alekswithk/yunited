@@ -1,0 +1,154 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const title = "Contact — Yunited";
+const description = "Get in touch with Yunited, the Balkan & ex-Yu student club at HSG.";
+---
+
+<BaseLayout title={title} description={description} path="/contact">
+  <section class="page-hero">
+    <div class="container">
+      <p class="hero-script">Kontakt · Контакт · Contact</p>
+      <h1>Get in touch</h1>
+      <p>Questions about membership, events, partnerships or anything else —
+      we're happy to hear from you.</p>
+    </div>
+  </section>
+
+  <div class="motif-divider" role="presentation"></div>
+
+  <section>
+    <div class="container reveal">
+      <p class="eyebrow">Message us</p>
+      <h2>Contact form</h2>
+
+      <!--
+        The form posts to Formspree, which forwards submissions to the club
+        inbox. The action attribute is a real endpoint, so the form still
+        works without JavaScript (Formspree renders its own thank-you page);
+        the script below upgrades that to an in-page submit so visitors never
+        leave the site.
+      -->
+      <p class="form-success" id="form-success" role="status" tabindex="-1">
+        Thanks — your message is on its way to the board. We usually reply
+        within a few days.
+      </p>
+
+      <form id="contact-form" class="form-grid" action="https://formspree.io/f/xeeyoryk" method="POST" novalidate>
+        <div>
+          <label for="field-name">Name *</label>
+          <input id="field-name" name="name" type="text" required autocomplete="name">
+        </div>
+        <div>
+          <label for="field-email">Email *</label>
+          <input id="field-email" name="email" type="email" required autocomplete="email"
+            placeholder="you@student.unisg.ch">
+        </div>
+        <div>
+          <label for="field-topic">Topic *</label>
+          <select id="field-topic" name="topic" required>
+            <option value="">Please choose…</option>
+            <option>Membership</option>
+            <option>Events</option>
+            <option>Partnerships</option>
+            <option>Exchange / buddy-system</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label for="field-message">Message *</label>
+          <textarea id="field-message" name="message" rows="6" required></textarea>
+        </div>
+
+        <!-- Formspree uses this as the subject line of the notification email. -->
+        <input type="hidden" name="_subject" value="Yunited website — contact form">
+        <!-- Honeypot: real people never see it, bots fill it in and get dropped. -->
+        <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true"
+          style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;">
+
+        <p class="form-error" id="form-error">Please fill in all fields (with a valid email) before sending.</p>
+        <div>
+          <button class="btn btn-red" type="submit" id="form-submit">Send message</button>
+        </div>
+        <p class="form-note">
+          Your message goes straight to the Yunited board inbox
+          (yunited@shsg.ch) and is only used to reply to you — nothing else.
+        </p>
+      </form>
+
+      <p style="margin-top: var(--space-5);">
+        Prefer plain email? Write to
+        <a href="mailto:yunited@shsg.ch">yunited@shsg.ch</a> — or DM us on
+        <a href="https://www.instagram.com/yunited.unisg" target="_blank" rel="noopener">Instagram</a>.
+      </p>
+    </div>
+  </section>
+
+  <script is:inline>
+    // Contact form: client-side validation, then submit to Formspree over
+    // fetch so the visitor stays on the page. If this script never runs the
+    // form still posts natively to the same endpoint — the only thing lost is
+    // the in-page success message.
+    const contactForm = document.querySelector("#contact-form");
+    const errorLine = document.querySelector("#form-error");
+    const successLine = document.querySelector("#form-success");
+    const submitButton = document.querySelector("#form-submit");
+
+    const CONTACT_FALLBACK =
+      "Sorry — sending failed. Please email us directly at yunited@shsg.ch.";
+
+    function showError(text) {
+      errorLine.textContent = text;
+      errorLine.classList.add("is-visible");
+    }
+
+    if (contactForm) {
+      contactForm.addEventListener("submit", async function (submitEvent) {
+        submitEvent.preventDefault();
+
+        const name = document.querySelector("#field-name").value.trim();
+        const email = document.querySelector("#field-email").value.trim();
+        const topic = document.querySelector("#field-topic").value;
+        const message = document.querySelector("#field-message").value.trim();
+
+        const emailLooksValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+        if (!name || !emailLooksValid || !topic || !message) {
+          showError("Please fill in all fields (with a valid email) before sending.");
+          return;
+        }
+
+        errorLine.classList.remove("is-visible");
+        submitButton.disabled = true;
+        submitButton.textContent = "Sending…";
+
+        try {
+          const response = await fetch(contactForm.action, {
+            method: "POST",
+            body: new FormData(contactForm),
+            headers: { Accept: "application/json" },
+          });
+
+          if (response.ok) {
+            contactForm.reset();
+            contactForm.hidden = true;
+            successLine.classList.add("is-visible");
+            successLine.focus();
+            return;
+          }
+
+          const body = await response.json().catch(() => null);
+          const detail = body && body.errors && body.errors.length
+            ? body.errors.map((error) => error.message).join(" ")
+            : null;
+          showError(detail || CONTACT_FALLBACK);
+        } catch {
+          showError(CONTACT_FALLBACK);
+        } finally {
+          submitButton.disabled = false;
+          submitButton.textContent = "Send message";
+        }
+      });
+    }
+  </script>
+</BaseLayout>

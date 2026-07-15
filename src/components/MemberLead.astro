@@ -1,0 +1,19 @@
+---
+// The lead board member: oversized portrait beside the name, like an
+// editor's letter (was buildLead in members.js).
+import Portrait from "./Portrait.astro";
+import { isUnfilled, displayName } from "../lib/members.js";
+
+const { member } = Astro.props;
+const tbaClass = isUnfilled(member.name) ? " is-tba" : "";
+const showBio = !isUnfilled(member.bio);
+---
+
+<article class="masthead-lead">
+  <Portrait member={member} />
+  <div class="masthead-body">
+    <p class="masthead-role">{member.role}</p>
+    <h3 class={`masthead-name${tbaClass}`}>{displayName(member)}</h3>
+    {showBio && <p class="masthead-bio">{member.bio}</p>}
+  </div>
+</article>

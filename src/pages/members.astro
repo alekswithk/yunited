@@ -1,0 +1,54 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import MemberLead from "../components/MemberLead.astro";
+import MemberRow from "../components/MemberRow.astro";
+import members from "../../content/members.json";
+
+const title = "Members & Board — Yunited";
+const description = "Meet the board of Yunited, the Balkan & ex-Yu student club at HSG.";
+
+const [lead, ...roster] = Array.isArray(members) ? members : [];
+---
+
+<BaseLayout title={title} description={description} path="/members">
+  <section class="page-hero">
+    <div class="container">
+      <p class="hero-script">Naš tim · Наш тим · Our team</p>
+      <h1>Members &amp; board</h1>
+      <p>The people who keep Yunited running — organising events, building
+      partnerships and welcoming new members every semester.</p>
+    </div>
+  </section>
+
+  <div class="motif-divider" role="presentation"></div>
+
+  <section>
+    <div class="container reveal">
+      <p class="eyebrow">Board</p>
+      <h2>Current board</h2>
+      <div id="member-grid">
+        {lead ? (
+          <>
+            <MemberLead member={lead} />
+            {roster.length > 0 && (
+              <div class="roster">
+                {roster.map((member) => <MemberRow member={member} />)}
+              </div>
+            )}
+          </>
+        ) : (
+          <p class="empty-note">The board for this semester is being confirmed. Check back shortly.</p>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <section class="section-dark">
+    <div class="container reveal">
+      <h2>Want to get involved?</h2>
+      <p class="section-intro">Members can help shape events, take on board
+      roles and grow the community. Say hi at any event or drop us a line.</p>
+      <a class="btn btn-gold" href="/contact">Get in touch</a>
+    </div>
+  </section>
+</BaseLayout>
