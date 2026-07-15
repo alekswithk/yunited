@@ -1,0 +1,60 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const title = "Join — Yunited";
+const description =
+  "Become a Yunited member via uniclubs.ch — CHF 10 per semester for access to all events.";
+---
+
+<BaseLayout title={title} description={description} path="/join">
+  <section class="page-hero">
+    <div class="container">
+      <p class="hero-script">Pridruži se · Придружи се · Join us</p>
+      <h1>Join Yunited</h1>
+      <p>Membership is handled entirely on uniclubs.ch — the official HSG
+      club platform. Sign up there in a couple of minutes; this website is
+      just here to tell you why it's worth it.</p>
+    </div>
+  </section>
+
+  <div class="motif-divider" role="presentation"></div>
+
+  <section>
+    <div class="container reveal">
+      <p class="eyebrow">Membership</p>
+      <h2>What you get</h2>
+      <div class="split-grid" style="max-width: 860px;">
+        <div class="info-panel panel-red">
+          <h3>Semester membership — CHF 10</h3>
+          <p>Access to <strong>all Yunited events</strong> for the semester:
+          brunches, barbecues, karaoke, casino nights, career events and
+          more.</p>
+        </div>
+        <div class="info-panel" style="border-top-color: var(--color-gold);">
+          <h3>Free tier</h3>
+          <p>Not sure yet? The free option on uniclubs gives you access to
+          the <strong>opening event</strong> so you can meet us first.</p>
+        </div>
+      </div>
+      <p style="margin-top: var(--space-5);">
+        <a class="btn btn-red" href="https://uniclubs.ch/hsg/clubs/yunited" target="_blank" rel="noopener">
+          Become a member on uniclubs.ch →
+        </a>
+      </p>
+      <p class="form-note" style="margin-top: var(--space-3);">
+        You'll need to sign in with your uniclubs account. Payment and
+        membership administration all happen on uniclubs — we never handle
+        it on this site.
+      </p>
+    </div>
+  </section>
+
+  <section class="section-dark">
+    <div class="container reveal">
+      <h2>Questions before joining?</h2>
+      <p class="section-intro">Not sure if the club is for you, or want to
+      know what's planned this semester? Just ask.</p>
+      <a class="btn btn-gold" href="/contact">Contact us</a>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,21 @@
+---
+// A roster line: role hanging in the left margin, person to the right
+// (was buildRosterRow in members.js).
+import Portrait from "./Portrait.astro";
+import { isUnfilled, displayName } from "../lib/members.js";
+
+const { member } = Astro.props;
+const tbaClass = isUnfilled(member.name) ? " is-tba" : "";
+const showBio = !isUnfilled(member.bio);
+---
+
+<article class="roster-row">
+  <p class="roster-role">{member.role}</p>
+  <div class="roster-person">
+    <Portrait member={member} />
+    <div>
+      <p class={`roster-name${tbaClass}`}>{displayName(member)}</p>
+      {showBio && <p class="roster-bio">{member.bio}</p>}
+    </div>
+  </div>
+</article>

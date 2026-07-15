@@ -31,12 +31,13 @@ yarn-error.log*
 *.bak
 *.orig
 
-# ---- Node (in case a build step is ever added) ----
+# ---- Node / Astro build ----
 node_modules/
 dist/
 build/
 .cache/
 .parcel-cache/
+.astro/
 
 # ---- Python (local preview server, scripts) ----
 __pycache__/

@@ -1,0 +1,107 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import EventCard from "../components/EventCard.astro";
+import events from "../../content/events.json";
+import { splitEvents } from "../lib/events.js";
+
+const { upcoming, past } = splitEvents(events);
+const upcomingTeaser = upcoming.slice(0, 2);
+const pastTeaser = past.slice(0, 2);
+
+const title = "Yunited — Balkan & ex-Yu student club at HSG";
+const description =
+  "Yunited connects students with roots from former Yugoslavia socially and professionally while fostering cultural exchange at the University of St. Gallen.";
+
+const orgSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Yunited",
+  url: "https://yunited.ch",
+  logo: "https://yunited.ch/assets/yunited-logo.svg",
+  image: "https://yunited.ch/assets/og-image.png",
+  email: "yunited@shsg.ch",
+  foundingDate: "2013",
+  description,
+  parentOrganization: {
+    "@type": "CollegeOrUniversity",
+    name: "University of St. Gallen",
+    url: "https://www.unisg.ch",
+  },
+  areaServed: { "@type": "City", name: "St. Gallen" },
+  sameAs: [
+    "https://www.instagram.com/yunited.unisg",
+    "https://www.linkedin.com/company/yunited-unisg",
+    "https://uniclubs.ch/hsg/clubs/yunited",
+  ],
+};
+---
+
+<BaseLayout title={title} description={description} path="/">
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(orgSchema)} slot="head" />
+
+  <!-- Hero: answers "what is this" immediately, no info gated behind animation -->
+  <section class="hero">
+    <div class="container">
+      <p class="hero-script">Dobrodošli · Добродошли · Welcome</p>
+      <h1>The Balkan &amp; ex-Yu community <span class="accent">at HSG.</span></h1>
+      <p class="lede">
+        Yunited is a student club at the University of St. Gallen connecting
+        students with roots from former Yugoslavia — and anyone curious about
+        the culture — socially and professionally. Since 2013.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-gold" href="/join">Join Yunited</a>
+        <a class="btn btn-red" href="/events">See our events</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="motif-divider" role="presentation"></div>
+
+  <!-- Upcoming events teaser (max 2, rendered from content/events.json) -->
+  <section>
+    <div class="container reveal">
+      <p class="eyebrow">What's next</p>
+      <h2>Upcoming events</h2>
+      <div class="card-grid" id="upcoming-events">
+        {upcomingTeaser.length > 0 ? (
+          upcomingTeaser.map((event) => <EventCard event={event} isPast={false} />)
+        ) : (
+          <p class="empty-note">No upcoming events are scheduled right now — follow us on Instagram (@yunited.unisg) or check uniclubs to be first to hear about the next one.</p>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent past-event highlights (max 2, same JSON, same card) -->
+  <section>
+    <div class="container reveal">
+      <p class="eyebrow">Recently</p>
+      <h2>Latest highlights</h2>
+      <div class="card-grid" id="past-events">
+        {pastTeaser.length > 0 ? (
+          pastTeaser.map((event) => <EventCard event={event} isPast={true} />)
+        ) : (
+          <p class="empty-note">No past events yet.</p>
+        )}
+      </div>
+      <p style="margin-top: var(--space-4);">
+        <a class="btn btn-outline" href="/events">All events &amp; recaps</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- Short "what we stand for" teaser linking to About -->
+  <section class="section-dark">
+    <div class="container reveal">
+      <p class="eyebrow">Who we are</p>
+      <h2>Culture, community, connections.</h2>
+      <p class="section-intro">
+        From Prvi Maj barbecues to casino nights and career networks — Yunited
+        hosts social and professional events that help students feel at home
+        in St. Gallen and build friendships that last well beyond graduation.
+      </p>
+      <a class="btn btn-gold" href="/about">More about the club</a>
+    </div>
+  </section>
+</BaseLayout>
