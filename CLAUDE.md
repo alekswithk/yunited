@@ -36,9 +36,9 @@ The load-bearing idea: **content is authored as JSON and rendered to static HTML
 
 - **Events are never marked "past" by hand.** `splitEvents()` compares each event's `date` to today. A `null`/missing date means "TBA" and renders as an upcoming card floated to the top (see `hasDate`).
 - **URLs are extensionless.** Internal links use `/about`, not `/about.html`; `astro.config.mjs` sets `build.format: 'file'` so Cloudflare serves them, and the canonicals match. Keep new links extensionless.
-- **Image paths in JSON omit the `public/` prefix.** A photo at `public/images/events/x.webp` is referenced as `"images/events/x.webp"`; components prepend `/`. Images are **not** yet optimized (that is a planned phase) — they are served as-is from `public/`.
+- **Image paths in JSON are relative to `src/`.** A photo at `src/images/events/x.webp` is referenced in the JSON as `"images/events/x.webp"`. `src/lib/images.js` (`resolveImage`) maps that string to the imported asset via `import.meta.glob`, and Astro's `<Image>` optimizes it at build time — resized, 1×/2× srcset, hashed under `/_astro/`. A path with **no matching file fails the build** (this is intentional). Images live in `src/`, not `public/`, precisely so they go through the sharp pipeline.
 - **`astro.config.mjs` sets `inlineStylesheets: 'never'`** deliberately, to keep the CSP free of `style-src 'unsafe-inline'` for the stylesheet. Don't flip it.
 
 ## Roadmap context
 
-A phased improvement plan exists at `~/.claude/plans/compare-this-static-website-cryptic-key.md`. The Astro migration was Phase 1. Known deferred work: image optimization (`<Image>`/srcset), Zod content-collection schemas + a Git-based CMS, generated sitemap with hreflang, English + BCS i18n, a partners/recruiting funnel, and CSP/CI hardening. Check that plan before large structural changes so work aligns with the intended direction.
+A phased improvement plan exists at `~/.claude/plans/compare-this-static-website-cryptic-key.md`. The Astro migration was Phase 1. Known deferred work: Zod content-collection schemas + a Git-based CMS, generated sitemap with hreflang, English + BCS i18n, a partners/recruiting funnel, and CSP/CI hardening. (Phase 1 Astro migration and image optimization are done.) Check that plan before large structural changes so work aligns with the intended direction.

@@ -68,14 +68,16 @@ appear on the page in the same order as in this file.
 
 ## Swap or add a photo
 
-1. Save the photo as a `.webp` file (any online "convert to WebP" tool works;
-   aim for under ~300 KB). Use a simple lowercase filename with dashes.
-2. Put event photos in `public/images/events/` and member photos in
-   `public/images/members/`. (In the JSON you still write the path without
-   the `public/` prefix, e.g. `images/events/prvi-maj-2026.webp` — `public/`
-   is the web root.)
+1. Use a normal photo — JPG, PNG or WebP, **any size is fine** (you can drop
+   in a photo straight from a phone). The build automatically resizes it and
+   creates responsive versions, so you no longer need to shrink it yourself.
+   Use a simple lowercase filename with dashes.
+2. Put event photos in `src/images/events/` and member photos in
+   `src/images/members/`. (In the JSON you write the path relative to `src/`,
+   e.g. `images/events/prvi-maj-2026.webp`.)
 3. Point the `image` / `photo` field in the JSON at it, e.g.
-   `"images/events/prvi-maj-2026.webp"`.
+   `"images/events/prvi-maj-2026.webp"`. A path with no matching file makes
+   the build fail with a clear message, so a typo can't ship a broken image.
 
 Every photo gets its alt text generated from the event/member name
 automatically, so descriptive titles and names matter.

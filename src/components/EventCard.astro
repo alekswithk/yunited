@@ -2,19 +2,22 @@
 // One event card, rendered at build time (was buildEventCard in events.js).
 // The same template serves upcoming and past events. Astro escapes every
 // interpolated value, so the old manual escapeHtml is no longer needed.
+import { Image } from "astro:assets";
 import { formatEventDate } from "../lib/events.js";
+import { resolveImage } from "../lib/images.js";
 
 const { event, isPast = false } = Astro.props;
 
+const image = resolveImage(event.image);
 const timeText = event.time ? " · " + event.time : "";
 const hasRsvp = event.rsvpUrl && /^https:\/\//i.test(event.rsvpUrl);
 const linkText = isPast ? "Event page →" : "RSVP on uniclubs →";
 ---
 
 <article class="card reveal is-visible">
-  {event.image ? (
+  {image ? (
     <div class="card-image">
-      <img src={`/${event.image}`} alt={`Photo from ${event.title}`} loading="lazy">
+      <Image src={image} alt={`Photo from ${event.title}`} width={480} densities={[1, 2]} loading="lazy" />
     </div>
   ) : (
     <div class="card-image" aria-hidden="true">{event.title.charAt(0).toUpperCase()}</div>
