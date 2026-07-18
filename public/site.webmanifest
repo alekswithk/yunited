@@ -1,0 +1,13 @@
+{
+  "name": "Yunited",
+  "short_name": "Yunited",
+  "description": "Balkan & ex-Yu student club at the University of St. Gallen (HSG).",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4ecdd",
+  "theme_color": "#f4ecdd",
+  "icons": [
+    { "src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

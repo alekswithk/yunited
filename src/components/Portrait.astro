@@ -1,15 +1,18 @@
 ---
 // A board member's portrait: real photo if there is one, otherwise the
 // drop-cap initial (was portraitHtml in members.js).
+import { Image } from "astro:assets";
 import { isUnfilled, displayName, initialOf } from "../lib/members.js";
+import { resolveImage } from "../lib/images.js";
 
 const { member } = Astro.props;
+const photo = resolveImage(member.photo);
 const tbaClass = isUnfilled(member.name) ? " is-tba" : "";
 ---
 
-{member.photo ? (
+{photo ? (
   <div class="portrait">
-    <img src={`/${member.photo}`} alt={`Portrait of ${displayName(member)}`} loading="lazy">
+    <Image src={photo} alt={`Portrait of ${displayName(member)}`} width={220} densities={[1, 2]} loading="lazy" />
   </div>
 ) : (
   <div class={`portrait${tbaClass}`} aria-hidden="true">{initialOf(member.name)}</div>
