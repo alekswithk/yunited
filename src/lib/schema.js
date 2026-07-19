@@ -41,19 +41,25 @@ const imagePath = z
     "must be a path relative to src/, e.g. images/events/25_26/x.webp"
   );
 
+// An optional field. A hand-edit leaves it `null`; the CMS writes "" (or omits
+// it) when the editor leaves it blank. Normalize all of those to null before
+// checking the value's real format, so both edit paths validate identically.
+const optional = (schema) =>
+  z.preprocess((v) => (v === "" || v === undefined ? null : v), schema.nullable());
+
 // .strict() so a misspelled key ("titel", "rsvp") is caught instead of being
 // silently ignored — the whole point of validating hand-edited JSON.
 export const eventSchema = z
   .object({
     id: z.string().min(1, "is required"),
     title: z.string().min(1, "is required"),
-    // null / omitted date means "TBA" and renders as an upcoming card.
-    date: isoDate.nullable(),
-    time: time24.nullable(),
+    // null / blank / omitted date means "TBA" and renders as an upcoming card.
+    date: optional(isoDate),
+    time: optional(time24),
     location: z.string().min(1, "is required"),
     description: z.string().min(1, "is required"),
     image: imagePath,
-    rsvpUrl: z.string().url("must be a full URL").nullable(),
+    rsvpUrl: optional(z.string().url("must be a full URL")),
   })
   .strict();
 
@@ -66,7 +72,7 @@ export const memberSchema = z
   .object({
     name: z.string(),
     role: z.string().min(1, "is required"),
-    photo: imagePath.nullable(),
+    photo: optional(imagePath),
     bio: z.string(),
     order: z.number().int().positive("must be a positive whole number"),
   })

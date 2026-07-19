@@ -5,12 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
+    "vendor:cms": "node scripts/vendor-cms.mjs",
+    "prebuild": "node scripts/vendor-cms.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
+    "@sveltia/cms": "^0.172.1",
     "astro": "^5.13.0",
     "typescript": "^5.9.0"
   },
