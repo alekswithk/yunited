@@ -57,33 +57,17 @@ export const eventSchema = z
   })
   .strict();
 
-export const eventsSchema = z
-  .array(eventSchema)
-  .superRefine((events, ctx) => {
-    const seen = new Map();
-    events.forEach((event, i) => {
-      if (seen.has(event.id)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: [i, "id"],
-          message: `duplicate id "${event.id}" (first used at index ${seen.get(event.id)})`,
-        });
-      } else {
-        seen.set(event.id, i);
-      }
-    });
-  });
-
 // A board seat. The name may be blank or a "[PLACEHOLDER]" while a role is
 // filled but the person isn't announced yet — members.js treats that as "To be
 // announced" — so name is intentionally not required. The role is the news.
+// `order` sets the display sequence (lowest = the large lead card); it replaces
+// the old "first entry wins" rule now that each member is its own file.
 export const memberSchema = z
   .object({
     name: z.string(),
     role: z.string().min(1, "is required"),
     photo: imagePath.nullable(),
     bio: z.string(),
+    order: z.number().int().positive("must be a positive whole number"),
   })
   .strict();
-
-export const membersSchema = z.array(memberSchema);
