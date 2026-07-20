@@ -9,7 +9,7 @@ backend:
   branch: main
   # URL of the deployed sveltia-cms-auth Cloudflare Worker (handles GitHub login).
   # Replace after deploying the worker — see docs/CMS.md.
-  base_url: https://REPLACE-ME.workers.dev
+  base_url: https://sveltia-cms-auth.maric-aleksandar.workers.dev
 
 # "Save & publish" commits straight to `main`; Cloudflare rebuilds and the change
 # is live in ~a minute. The editor validates fields before saving and the build
