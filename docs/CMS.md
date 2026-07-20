@@ -103,6 +103,9 @@ Notes for editors:
   and commit. The bundle is re-vendored into `/admin` at build time by
   `scripts/vendor-cms.mjs` (the built file is gitignored, never committed).
 - **CSP**: `/admin` has its own Content-Security-Policy in [`public/_headers`](../public/_headers).
-  If sign-in fails and the browser console shows a CSP violation naming an origin,
+  If something fails and the browser console shows a CSP violation naming an origin,
   add that origin to the `/admin/*` policy. In particular, if you host the worker
-  on a **custom domain** (not `*.workers.dev`), add it to `connect-src`.
+  on a **custom domain** (not `*.workers.dev`), add it to `connect-src`. Sveltia's
+  toolbar icons and fonts come from Google Fonts, so `fonts.googleapis.com`
+  (style-src) and `fonts.gstatic.com` (font-src) are allowed there — without them
+  the icons show as raw text like `cloud_upload`.
