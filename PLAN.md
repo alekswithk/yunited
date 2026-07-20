@@ -86,15 +86,33 @@ as a repo collaborator — steps in [`docs/CMS.md`](docs/CMS.md) §5._
 ## 4. Planned ahead 🗺️ (roadmap, in suggested order)
 
 Status: `[ ]` not started · `[~]` in progress · `[x]` done.
+Items tagged **🧑 human-led** must NOT be auto-implemented by the weekly agent (§7) —
+they carry design decisions that need a person. The agent skips them.
 
 - [x] **CI check on PRs** — shipped in #19 (`.github/workflows/ci.yml`).
 - [ ] **CSP hardening** *(medium).* Drop `style-src 'unsafe-inline'` from the public
       site by moving the inline `style="…"` attributes (6 pages) into `global.css`
       classes, and the inline JSON-LD / contact script into hashed/external form.
       The stylesheet is already CSP-clean; this finishes the job.
-- [ ] **i18n: English + BCS** *(large).* Bosnian/Croatian/Serbian + English routing;
-      adds `hreflang` to the (already generated) sitemap. Touches routing & layout —
-      do after the two above.
+- [ ] **i18n — 🧑 human-led** *(large, multi-PR).* English (source) + German + BCS
+      first; Slovenian/Macedonian only if the first slice lands well. Decisions taken:
+      real **static pages per locale** (`/de/events`, …) rather than a JS translate
+      widget — the widget is deprecated, gives no per-language URL (so no SEO or
+      `hreflang`), and would need holes in the CSP. Board keeps authoring in English.
+      Serbian/Croatian/Bosnian share one **BCS** translation (Latin script) unless the
+      board wants them split. Sub-steps, each its own PR:
+  - [ ] **4a. Foundation.** Locale routing via `src/pages/[...locale]/`, locale
+        dictionaries in `src/i18n/`, language selector in the header, `hreflang` in
+        the generated sitemap, and fallback to English for anything untranslated so
+        no localized URL can 404. Shared chrome (nav/footer/meta) translated de+BCS.
+  - [ ] **4b. Page copy.** Translate the remaining page bodies (about, events,
+        members, exchange, join, contact, 404) for de + BCS.
+  - [ ] **4c. Content pipeline.** `npm run i18n:sync` — translates board-authored
+        event/member text with the DeepL API (all 7 target languages supported).
+        Key stays local/manual; **translations are committed** so the Cloudflare build
+        needs no secret and stays deterministic. Untranslated entries fall back to
+        English until synced.
+  - [ ] **4d. Native-speaker review** by the board, then decide on `sl` + `mk`.
 - [ ] **Partners / recruiting funnel** *(content + feature).* Sponsor/partner page
       and a recruiting flow. Scope with the board.
 
@@ -133,7 +151,8 @@ A **weekly cloud agent** ("Yunited weekly roadmap agent") runs every **Monday
 09:00 Europe/Zurich** (`0 7 * * 1` UTC). Manage/disable it at
 <https://claude.ai/code/routines>.
 
-Each run it takes the **first unchecked item** in §4 (or §5 if §4 is clear),
+Each run it takes the **first unchecked item that is not tagged 🧑 human-led** in §4
+(or §5 if §4 is clear),
 implements it on a branch, ticks it here, opens a PR, verifies with
 `npm ci` + `build` + `check`, reviews its own diff, and **auto-merges only if CI
 passes and nothing is contentious**. If §4 and §5 are both clear it switches to
