@@ -1,12 +1,18 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { localePaths, localizePath } from "../../i18n/config.js";
+import { useTranslations } from "../../i18n/utils.js";
 
-const title = "Exchange Students — Yunited";
-const description =
-  "What Yunited offers incoming exchange students at HSG — and how outgoing HSG students can stay connected while abroad.";
+export const getStaticPaths = localePaths;
+
+const { locale } = Astro.params;
+const t = useTranslations(locale);
+
+const title = t("meta.exchange.title");
+const description = t("meta.exchange.description");
 ---
 
-<BaseLayout title={title} description={description} path="/exchange">
+<BaseLayout locale={locale} title={title} description={description} path="/exchange">
   <section class="page-hero">
     <div class="container">
       <p class="hero-script">Razmena · Размена · Exchange</p>
@@ -40,7 +46,7 @@ const description =
             abroad. If not, we're a fun way to discover it.</li>
           </ul>
           <p style="margin-top: var(--space-4);">
-            <a class="btn btn-red" href="/contact">Ask us anything</a>
+            <a class="btn btn-red" href={localizePath("/contact", locale)}>Ask us anything</a>
           </p>
         </div>
 
@@ -58,10 +64,10 @@ const description =
             to keep up with the community while you're away.</li>
             <li>Happy to share tips: if a Yunited member has studied at
             your destination, we'll gladly connect you — just
-            <a href="/contact">reach out</a>.</li>
+            <a href={localizePath("/contact", locale)}>reach out</a>.</li>
           </ul>
           <p style="margin-top: var(--space-4);">
-            <a class="btn btn-outline" href="/contact">Stay in touch</a>
+            <a class="btn btn-outline" href={localizePath("/contact", locale)}>Stay in touch</a>
           </p>
         </div>
 

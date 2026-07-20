@@ -1,11 +1,18 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { localePaths } from "../../i18n/config.js";
+import { useTranslations } from "../../i18n/utils.js";
 
-const title = "Contact — Yunited";
-const description = "Get in touch with Yunited, the Balkan & ex-Yu student club at HSG.";
+export const getStaticPaths = localePaths;
+
+const { locale } = Astro.params;
+const t = useTranslations(locale);
+
+const title = t("meta.contact.title");
+const description = t("meta.contact.description");
 ---
 
-<BaseLayout title={title} description={description} path="/contact">
+<BaseLayout locale={locale} title={title} description={description} path="/contact">
   <section class="page-hero">
     <div class="container">
       <p class="hero-script">Kontakt · Контакт · Contact</p>

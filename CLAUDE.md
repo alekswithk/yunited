@@ -48,6 +48,15 @@ The board edits content through **Sveltia CMS** at `/admin` — a Git-based CMS:
 - The Sveltia bundle is **vendored at build time** by `scripts/vendor-cms.mjs` (the npm `prebuild` step) from the pinned `@sveltia/cms` devDependency into `public/admin/sveltia-cms.js` (gitignored, never committed) — so it's served first-party under `script-src 'self'`, not from a CDN.
 - `/admin` has its **own CSP** in `public/_headers` (it needs the GitHub API); the `! Content-Security-Policy` line drops the global policy for that path so the two aren't intersected. The public site's strict CSP is unchanged.
 
+### i18n
+
+Pages live under `src/pages/[...locale]/` — a **rest parameter that matches zero segments**, so one file emits both the English route (`/events`) and every localized one (`/de/events`). Never duplicate a page per language.
+
+- `src/i18n/config.js` is the locale registry and the only place locales are defined. `localePaths()` feeds every page's `getStaticPaths`; `localizePath(path, code)` builds locale-aware hrefs — **use it for every internal link**, including in page bodies. On default-locale pages `Astro.params.locale` is `undefined`, which `localizePath`/`getLocale` treat as English.
+- `src/i18n/{en,de,bcs}.json` are the dictionaries; `useTranslations(locale)` returns `t("dotted.key")` and **falls back to English** for anything missing, so an unfinished locale still renders a complete page.
+- Serbian/Croatian/Bosnian share the one `bcs` dictionary but keep separate locale codes and URL prefixes, so no community is folded into another's label. They can diverge later by giving one its own dictionary.
+- **`complete: false` gates a locale**: its pages are generated (reviewable at real URLs) but marked `noindex`, excluded from the sitemap (`isIndexable` in `astro.config.mjs`) and from `hreflang`, and hidden from the language switcher. Flip to `true` only when that locale's copy is genuinely finished — that one flag publishes it everywhere.
+
 ## Roadmap context
 
 **[`PLAN.md`](PLAN.md) is the living status tracker** — the repo map, what's done (with PR numbers), pending human actions, and the ordered roadmap. Read it first for orientation, and tick items there in the same PR that ships them.

@@ -1,12 +1,18 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { localePaths } from "../../i18n/config.js";
+import { useTranslations } from "../../i18n/utils.js";
 
-const title = "About — Yunited";
-const description =
-  "Yunited fosters cultural exchange between students from former Yugoslavia at the University of St. Gallen. Founded 2013.";
+export const getStaticPaths = localePaths;
+
+const { locale } = Astro.params;
+const t = useTranslations(locale);
+
+const title = t("meta.about.title");
+const description = t("meta.about.description");
 ---
 
-<BaseLayout title={title} description={description} path="/about">
+<BaseLayout locale={locale} title={title} description={description} path="/about">
   <section class="page-hero">
     <div class="container">
       <p class="hero-script">O nama · О нама · About us</p>

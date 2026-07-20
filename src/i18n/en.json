@@ -1,0 +1,59 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "events": "Events",
+    "members": "Members",
+    "exchange": "Exchange",
+    "contact": "Contact",
+    "join": "Join",
+    "aria": "Main navigation",
+    "openMenu": "Open menu"
+  },
+  "lang": {
+    "label": "Language",
+    "aria": "Choose a language"
+  },
+  "footer": {
+    "tagline": "HSG student club connecting students with Balkan and ex-Yugoslav roots — and everyone curious about the culture — since 2013.",
+    "pages": "Pages",
+    "connect": "Connect",
+    "exchangeLink": "Exchange students",
+    "joinOnUniclubs": "Join on uniclubs",
+    "rights": "a student club at the University of St. Gallen (HSG). Membership is managed on"
+  },
+  "meta": {
+    "home": {
+      "title": "Yunited — Balkan & ex-Yu student club at HSG",
+      "description": "Yunited connects students with roots from former Yugoslavia socially and professionally while fostering cultural exchange at the University of St. Gallen."
+    },
+    "about": {
+      "title": "About — Yunited",
+      "description": "Yunited fosters cultural exchange between students from former Yugoslavia at the University of St. Gallen. Founded 2013."
+    },
+    "events": {
+      "title": "Events — Yunited",
+      "description": "Upcoming events and past-event recaps from Yunited, the Balkan & ex-Yu student club at HSG."
+    },
+    "members": {
+      "title": "Members & Board — Yunited",
+      "description": "Meet the board of Yunited, the Balkan & ex-Yu student club at HSG."
+    },
+    "exchange": {
+      "title": "Exchange Students — Yunited",
+      "description": "What Yunited offers incoming exchange students at HSG — and how outgoing HSG students can stay connected while abroad."
+    },
+    "join": {
+      "title": "Join — Yunited",
+      "description": "Become a Yunited member via uniclubs.ch — CHF 10 per semester for access to all events."
+    },
+    "contact": {
+      "title": "Contact — Yunited",
+      "description": "Get in touch with Yunited, the Balkan & ex-Yu student club at HSG."
+    },
+    "notFound": {
+      "title": "Page not found — Yunited",
+      "description": "That page doesn't exist."
+    }
+  }
+}

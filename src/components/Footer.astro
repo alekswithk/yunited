@@ -1,6 +1,11 @@
 ---
 // The site footer, rendered once for every page. The year is computed at
 // build time (was set client-side by main.js).
+import { defaultLocale, localizePath } from "../i18n/config.js";
+import { useTranslations } from "../i18n/utils.js";
+
+const { locale = defaultLocale } = Astro.props;
+const t = useTranslations(locale);
 const year = new Date().getFullYear();
 ---
 
@@ -9,32 +14,30 @@ const year = new Date().getFullYear();
     <div class="footer-grid">
       <div>
         <h3>Yunited</h3>
-        <p>HSG student club connecting students with Balkan and ex-Yugoslav
-        roots — and everyone curious about the culture — since 2013.</p>
+        <p>{t("footer.tagline")}</p>
       </div>
       <div>
-        <h3>Pages</h3>
+        <h3>{t("footer.pages")}</h3>
         <ul>
-          <li><a href="/about">About</a></li>
-          <li><a href="/events">Events</a></li>
-          <li><a href="/members">Members</a></li>
-          <li><a href="/exchange">Exchange students</a></li>
-          <li><a href="/contact">Contact</a></li>
+          <li><a href={localizePath("/about", locale)}>{t("nav.about")}</a></li>
+          <li><a href={localizePath("/events", locale)}>{t("nav.events")}</a></li>
+          <li><a href={localizePath("/members", locale)}>{t("nav.members")}</a></li>
+          <li><a href={localizePath("/exchange", locale)}>{t("footer.exchangeLink")}</a></li>
+          <li><a href={localizePath("/contact", locale)}>{t("nav.contact")}</a></li>
         </ul>
       </div>
       <div>
-        <h3>Connect</h3>
+        <h3>{t("footer.connect")}</h3>
         <ul>
           <li><a href="https://www.instagram.com/yunited.unisg" target="_blank" rel="noopener">Instagram</a></li>
           <li><a href="https://www.linkedin.com/company/yunited-unisg" target="_blank" rel="noopener">LinkedIn</a></li>
           <li><a href="mailto:yunited@shsg.ch">yunited@shsg.ch</a></li>
-          <li><a href="https://uniclubs.ch/hsg/clubs/yunited" target="_blank" rel="noopener">Join on uniclubs</a></li>
+          <li><a href="https://uniclubs.ch/hsg/clubs/yunited" target="_blank" rel="noopener">{t("footer.joinOnUniclubs")}</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© {year} Yunited — a student club at the University
-      of St. Gallen (HSG). Membership is managed on
+      <p>© {year} Yunited — {t("footer.rights")}
       <a href="https://uniclubs.ch/hsg/clubs/yunited" target="_blank" rel="noopener">uniclubs.ch</a>.</p>
     </div>
   </div>
