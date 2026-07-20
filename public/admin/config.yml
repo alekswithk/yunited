@@ -1,0 +1,128 @@
+# Sveltia CMS configuration. This describes the same content the build validates
+# against src/lib/schema.js — keep the two in sync. Edits made here are committed
+# straight to the GitHub repo, and the schema check runs on the next build, so a
+# bad value is caught even if it slips through the editor.
+
+backend:
+  name: github
+  repo: alekswithk/yunited
+  branch: main
+  # URL of the deployed sveltia-cms-auth Cloudflare Worker (handles GitHub login).
+  # Replace after deploying the worker — see docs/CMS.md.
+  base_url: https://sveltia-cms-auth.maric-aleksandar.workers.dev
+
+# "Save & publish" commits straight to `main`; Cloudflare rebuilds and the change
+# is live in ~a minute. The editor validates fields before saving and the build
+# re-checks everything against src/lib/schema.js, so a bad value can't reach the
+# live site. To add a review-and-preview step instead, uncomment the next line
+# (board edits then open a Pull Request that someone merges):
+# publish_mode: editorial_workflow
+
+# Show a preview link and keep the editor UI in English.
+site_url: https://yunited.ch
+locale: en
+
+# Default upload location; the per-field settings below override it per section.
+media_folder: src/images
+public_folder: images
+
+collections:
+  - name: events
+    label: Events
+    label_singular: Event
+    description: >-
+      Each event is one file. Past vs. upcoming is decided automatically from the
+      date — never mark an event "past" by hand. Leave the date empty for a TBA
+      event; it shows at the top of Upcoming.
+    folder: content/events
+    extension: json
+    format: json
+    identifier_field: id
+    slug: "{{fields.id}}"
+    create: true
+    delete: true
+    summary: "{{title}} — {{date | default('TBA')}}"
+    sortable_fields: [date, title]
+    fields:
+      - label: "Web-address ID (lowercase-with-dashes, e.g. casino-night-2026)"
+        name: id
+        widget: string
+        pattern: ["^[a-z0-9-]+$", "Use only lowercase letters, numbers and dashes"]
+      - label: Title
+        name: title
+        widget: string
+      - label: "Date (leave empty for TBA)"
+        name: date
+        widget: datetime
+        required: false
+        date_format: "YYYY-MM-DD"
+        time_format: false
+        format: "YYYY-MM-DD"
+        default: ""
+      - label: "Start time (24h HH:MM, e.g. 20:30 — optional)"
+        name: time
+        widget: string
+        required: false
+        default: ""
+        pattern: ["^([01][0-9]|2[0-3]):[0-5][0-9]$", "Use 24-hour HH:MM, e.g. 20:30"]
+      - label: Location
+        name: location
+        widget: string
+      - label: Description
+        name: description
+        widget: text
+      - label: Photo
+        name: image
+        widget: image
+        media_folder: /src/images/events
+        public_folder: /images/events
+        choose_url: false
+      - label: "RSVP / event-page link (optional)"
+        name: rsvpUrl
+        widget: string
+        required: false
+        default: ""
+
+  - name: members
+    label: Board members
+    label_singular: Board member
+    description: >-
+      Each board member is one file. "Order" sets the display sequence — 1 is the
+      President and gets the large card, then 2, 3, … A seat can have a role with
+      no name yet; it shows as "To be announced".
+    folder: content/members
+    extension: json
+    format: json
+    identifier_field: role
+    slug: "{{fields.role}}"
+    create: true
+    delete: true
+    summary: "{{order}}. {{role}} — {{name | default('TBA')}}"
+    sortable_fields: [order, role]
+    fields:
+      - label: "Role (e.g. Head of Events)"
+        name: role
+        widget: string
+      - label: "Name (leave empty if not announced yet)"
+        name: name
+        widget: string
+        required: false
+        default: ""
+      - label: "Order (1 = President / large card, then 2, 3, …)"
+        name: order
+        widget: number
+        value_type: int
+        min: 1
+        default: 1
+      - label: "Short bio (optional)"
+        name: bio
+        widget: text
+        required: false
+        default: ""
+      - label: "Photo (optional)"
+        name: photo
+        widget: image
+        required: false
+        media_folder: /src/images/members
+        public_folder: /images/members
+        choose_url: false
