@@ -13,7 +13,7 @@ when a step ships, tick it here in the same PR.
   & usage → [`docs/CMS.md`](docs/CMS.md). This file is the *tracker/index*; those
   are the *reference*.
 
-_Last updated: 2026-07-20 (through PR #17)._
+_Last updated: 2026-07-20 (through PR #19)._
 
 ---
 
@@ -64,6 +64,8 @@ extensionless; events are never marked "past" by hand; shared chrome lives once 
 | #15 | CMS **logo branding** (theme-adaptive `yunited-logo-cms.svg`) |
 | #16 | Fixed CMS toolbar icons rendering as text (allow Google Fonts in `/admin` CSP) |
 | #17 | Image loader accepts **any raster format, any case**; HEIC gives a clear board-facing error |
+| #18 | This tracker (`PLAN.md`) + `CLAUDE.md` pointer to it |
+| #19 | **CI on every PR** — `npm ci` + `build` + `check` (Node 22); catches bad content before merge |
 
 Earlier foundation (pre-#12): Astro migration + build-time image optimization.
 
@@ -85,10 +87,7 @@ as a repo collaborator — steps in [`docs/CMS.md`](docs/CMS.md) §5._
 
 Status: `[ ]` not started · `[~]` in progress · `[x]` done.
 
-- [ ] **CI check on PRs** *(small, recommended next).* A GitHub Action running
-      `npm run build` + `npm run check` on every PR. Now that the board commits via
-      the CMS, this catches a bad edit *before* merge instead of only on Cloudflare's
-      deploy. Highest safety-per-effort.
+- [x] **CI check on PRs** — shipped in #19 (`.github/workflows/ci.yml`).
 - [ ] **CSP hardening** *(medium).* Drop `style-src 'unsafe-inline'` from the public
       site by moving the inline `style="…"` attributes (6 pages) into `global.css`
       classes, and the inline JSON-LD / contact script into hashed/external form.
@@ -125,3 +124,26 @@ npm run preview   # serve built dist/
 ```
 "Verified" = `build` succeeds, `check` is clean, and for content/render changes the
 expected text appears in the built HTML (e.g. `grep "Casino Night" dist/events.html`).
+
+---
+
+## 7. Automation 🤖
+
+A **weekly cloud agent** ("Yunited weekly roadmap agent") runs every **Monday
+09:00 Europe/Zurich** (`0 7 * * 1` UTC). Manage/disable it at
+<https://claude.ai/code/routines>.
+
+Each run it takes the **first unchecked item** in §4 (or §5 if §4 is clear),
+implements it on a branch, ticks it here, opens a PR, verifies with
+`npm ci` + `build` + `check`, reviews its own diff, and **auto-merges only if CI
+passes and nothing is contentious**. If §4 and §5 are both clear it switches to
+proposing new ideas into §4 (and does *not* merge that PR).
+
+**It will never auto-merge a change touching** `public/_headers`,
+`public/admin/**`, `.github/workflows/**`, `wrangler.jsonc`, `astro.config.mjs`,
+`src/lib/schema.js`, dependency files, or any deletion/rename under `content/` —
+those it leaves open for a human. It never pushes to `main`, never weakens CI or
+the schema to go green, and does one item per run.
+
+> **Keep this file accurate.** The agent decides what to do from §4/§5, so a
+> stale checkbox means it redoes finished work or skips real work.
