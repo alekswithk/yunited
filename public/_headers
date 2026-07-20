@@ -30,13 +30,17 @@
   Cache-Control: public, max-age=2592000, immutable
 
 # The CMS admin app (Sveltia SPA) needs a looser policy than the public site: it
-# talks to the GitHub API and runs a bundled single-page app. Cloudflare COMBINES
-# a repeated header across matching rules (intersecting the two CSPs, which would
-# block the CMS), so "! Content-Security-Policy" first drops the global /* policy,
-# then we set an admin-only one. The public site's CSP is untouched.
-# If first-time login shows a CSP violation in the browser console, add the named
-# origin here (see docs/CMS.md).
+# talks to the GitHub API, runs a bundled single-page app, and loads its icon
+# font (Material Symbols) + UI fonts from Google Fonts — without fonts.googleapis
+# (the font CSS) and fonts.gstatic (the font files) the toolbar icons render as
+# raw text like "cloud_upload". This is scoped to /admin only; the public site
+# keeps its strict, fully self-hosted-font CSP. Cloudflare COMBINES a repeated
+# header across matching rules (intersecting the two CSPs, which would block the
+# CMS), so "! Content-Security-Policy" first drops the global /* policy, then we
+# set this admin-only one.
+# If something still fails with a CSP violation in the browser console, add the
+# named origin here (see docs/CMS.md).
 /admin/*
   ! Content-Security-Policy
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.githubusercontent.com https://avatars.githubusercontent.com; font-src 'self' data:; connect-src 'self' https://api.github.com https://*.githubusercontent.com https://*.workers.dev; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self' https://github.com
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://*.githubusercontent.com https://avatars.githubusercontent.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://api.github.com https://*.githubusercontent.com https://*.workers.dev; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self' https://github.com
   X-Robots-Tag: noindex
