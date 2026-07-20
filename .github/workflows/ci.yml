@@ -1,0 +1,42 @@
+name: CI
+
+# Runs on every PR to main and on pushes to main. The build step loads the
+# content collections through src/lib/content.js, so it validates every
+# events/members entry against the Zod schema — a bad CMS edit or hand-edit fails
+# here, before merge, instead of only when Cloudflare tries to deploy.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# A newer push to the same branch/PR cancels the older, still-running check.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-check:
+    name: Build & type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Runs the `prebuild` step (vendors the CMS bundle) then `astro build`,
+      # which is also where content validation happens.
+      - name: Build
+        run: npm run build
+
+      - name: Type-check
+        run: npm run check
