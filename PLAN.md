@@ -71,13 +71,13 @@ Earlier foundation (pre-#12): Astro migration + build-time image optimization.
 
 ## 3. Pending — human actions ⏳
 
-These need account access / manual steps; code is already in place.
+Manual/account steps (code is in place). **None currently open.**
 
-- [x] Deploy `sveltia-cms-auth` worker + GitHub OAuth app + secrets — **done, login works**.
-- [ ] **Add every board member** as a repo collaborator (GitHub → Settings →
-      Collaborators) so they can log into `/admin`.
-- [ ] **Google Search Console**: replace the old `sitemap.xml` with
-      `https://yunited.ch/sitemap-index.xml` (the old URL now 404s).
+- [x] Deploy `sveltia-cms-auth` worker + GitHub OAuth app + secrets — login works.
+- [x] **Google Search Console**: sitemap switched to `https://yunited.ch/sitemap-index.xml`.
+
+_On demand (not a pending task): to give a new board member CMS access, add them
+as a repo collaborator — steps in [`docs/CMS.md`](docs/CMS.md) §5._
 
 ---
 
