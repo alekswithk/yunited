@@ -50,4 +50,6 @@ The board edits content through **Sveltia CMS** at `/admin` — a Git-based CMS:
 
 ## Roadmap context
 
+**[`PLAN.md`](PLAN.md) is the living status tracker** — the repo map, what's done (with PR numbers), pending human actions, and the ordered roadmap. Read it first for orientation, and tick items there in the same PR that ships them.
+
 A phased improvement plan exists at `~/.claude/plans/compare-this-static-website-cryptic-key.md`. The Astro migration was Phase 1. Known deferred work: generated sitemap with hreflang, English + BCS i18n, a partners/recruiting funnel, and CSP/CI hardening. (Done: Phase 1 Astro migration, image optimization, generated sitemap, Zod content schemas, and the Sveltia Git-based CMS.) Check that plan before large structural changes so work aligns with the intended direction.
