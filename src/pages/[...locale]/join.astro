@@ -1,12 +1,18 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { localePaths, localizePath } from "../../i18n/config.js";
+import { useTranslations } from "../../i18n/utils.js";
 
-const title = "Join — Yunited";
-const description =
-  "Become a Yunited member via uniclubs.ch — CHF 10 per semester for access to all events.";
+export const getStaticPaths = localePaths;
+
+const { locale } = Astro.params;
+const t = useTranslations(locale);
+
+const title = t("meta.join.title");
+const description = t("meta.join.description");
 ---
 
-<BaseLayout title={title} description={description} path="/join">
+<BaseLayout locale={locale} title={title} description={description} path="/join">
   <section class="page-hero">
     <div class="container">
       <p class="hero-script">Pridruži se · Придружи се · Join us</p>
@@ -54,7 +60,7 @@ const description =
       <h2>Questions before joining?</h2>
       <p class="section-intro">Not sure if the club is for you, or want to
       know what's planned this semester? Just ask.</p>
-      <a class="btn btn-gold" href="/contact">Contact us</a>
+      <a class="btn btn-gold" href={localizePath("/contact", locale)}>Contact us</a>
     </div>
   </section>
 </BaseLayout>

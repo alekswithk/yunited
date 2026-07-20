@@ -270,6 +270,21 @@ section { padding: var(--space-6) 0; }
 .main-nav a.nav-join:hover,
 .main-nav a.nav-join[aria-current="page"] { border-bottom-color: var(--color-ink); }
 
+/* Language switcher. Rendered only once more than one translation is finished
+   (see src/i18n/config.js), so it is absent from the markup until then. */
+.lang-switch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-left: 1px solid color-mix(in srgb, var(--color-ink) 25%, transparent);
+  padding-left: var(--space-3);
+}
+.lang-switch a { font-size: 0.72rem; }
+.lang-switch a[aria-current="true"] { color: var(--color-red); font-weight: 700; }
+
 /* Buttons: square, solid fill, hard offset shadow, tactile press */
 .btn {
   display: inline-block;

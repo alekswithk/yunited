@@ -1,29 +1,54 @@
 ---
 // The site header + primary navigation, rendered once for every page.
-// `path` is the current page's route so the active link gets aria-current.
-const { path = "/" } = Astro.props;
+// `path` is the current page's locale-independent route (e.g. "/events") so the
+// active link gets aria-current and the language switcher can offer the same
+// page in another language.
+import { defaultLocale, localizePath, publishedLocales } from "../i18n/config.js";
+import { useTranslations } from "../i18n/utils.js";
+
+const { path = "/", locale = defaultLocale } = Astro.props;
+const t = useTranslations(locale);
 
 const links = [
-  { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
-  { href: "/events", label: "Events" },
-  { href: "/members", label: "Members" },
-  { href: "/exchange", label: "Exchange" },
-  { href: "/contact", label: "Contact" },
+  { href: "/", key: "nav.home" },
+  { href: "/about", key: "nav.about" },
+  { href: "/events", key: "nav.events" },
+  { href: "/members", key: "nav.members" },
+  { href: "/exchange", key: "nav.exchange" },
+  { href: "/contact", key: "nav.contact" },
 ];
+
+// Only finished translations are offered. With a single published locale there
+// is nothing to switch between, so the control is left out entirely.
+const switchable = publishedLocales();
+const showSwitcher = switchable.length > 1;
 ---
 
 <header class="site-header">
   <div class="container">
-    <a class="logo" href="/"><img src="/assets/yunited-logo.svg" alt="Yunited" width="916" height="344"></a>
-    <button class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+    <a class="logo" href={localizePath("/", locale)}><img src="/assets/yunited-logo.svg" alt="Yunited" width="916" height="344"></a>
+    <button class="nav-toggle" aria-label={t("nav.openMenu")} aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
-    <nav class="main-nav" aria-label="Main navigation">
+    <nav class="main-nav" aria-label={t("nav.aria")}>
       {links.map((link) => (
-        <a href={link.href} aria-current={path === link.href ? "page" : undefined}>{link.label}</a>
+        <a href={localizePath(link.href, locale)} aria-current={path === link.href ? "page" : undefined}>{t(link.key)}</a>
       ))}
-      <a class="btn btn-gold nav-join" href="/join" aria-current={path === "/join" ? "page" : undefined}>Join</a>
+      <a class="btn btn-gold nav-join" href={localizePath("/join", locale)} aria-current={path === "/join" ? "page" : undefined}>{t("nav.join")}</a>
+      {showSwitcher && (
+        <ul class="lang-switch" aria-label={t("lang.aria")}>
+          {switchable.map((l) => (
+            <li>
+              <a
+                href={localizePath(path, l.code)}
+                hreflang={l.code}
+                lang={l.htmlLang}
+                aria-current={l.code === locale ? "true" : undefined}
+              >{l.label}</a>
+            </li>
+          ))}
+        </ul>
+      )}
     </nav>
   </div>
 </header>

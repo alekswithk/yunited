@@ -1,0 +1,59 @@
+{
+  "nav": {
+    "home": "Startseite",
+    "about": "Über uns",
+    "events": "Events",
+    "members": "Vorstand",
+    "exchange": "Austausch",
+    "contact": "Kontakt",
+    "join": "Mitglied werden",
+    "aria": "Hauptnavigation",
+    "openMenu": "Menü öffnen"
+  },
+  "lang": {
+    "label": "Sprache",
+    "aria": "Sprache wählen"
+  },
+  "footer": {
+    "tagline": "HSG-Studentenclub, der seit 2013 Studierende mit Wurzeln auf dem Balkan und im ehemaligen Jugoslawien verbindet — und alle, die neugierig auf die Kultur sind.",
+    "pages": "Seiten",
+    "connect": "Kontakt",
+    "exchangeLink": "Austauschstudierende",
+    "joinOnUniclubs": "Auf uniclubs beitreten",
+    "rights": "ein Studentenclub an der Universität St. Gallen (HSG). Die Mitgliedschaft wird verwaltet über"
+  },
+  "meta": {
+    "home": {
+      "title": "Yunited — Balkan- und Ex-Ju-Studentenclub an der HSG",
+      "description": "Yunited verbindet Studierende mit Wurzeln im ehemaligen Jugoslawien sozial und beruflich und fördert den kulturellen Austausch an der Universität St. Gallen."
+    },
+    "about": {
+      "title": "Über uns — Yunited",
+      "description": "Yunited fördert den kulturellen Austausch zwischen Studierenden aus dem ehemaligen Jugoslawien an der Universität St. Gallen. Gegründet 2013."
+    },
+    "events": {
+      "title": "Events — Yunited",
+      "description": "Kommende Events und Rückblicke von Yunited, dem Balkan- und Ex-Ju-Studentenclub an der HSG."
+    },
+    "members": {
+      "title": "Mitglieder & Vorstand — Yunited",
+      "description": "Lerne den Vorstand von Yunited kennen, dem Balkan- und Ex-Ju-Studentenclub an der HSG."
+    },
+    "exchange": {
+      "title": "Austauschstudierende — Yunited",
+      "description": "Was Yunited ankommenden Austauschstudierenden an der HSG bietet — und wie HSG-Studierende im Ausland in Verbindung bleiben."
+    },
+    "join": {
+      "title": "Mitglied werden — Yunited",
+      "description": "Werde Yunited-Mitglied über uniclubs.ch — CHF 10 pro Semester für Zugang zu allen Events."
+    },
+    "contact": {
+      "title": "Kontakt — Yunited",
+      "description": "Nimm Kontakt mit Yunited auf, dem Balkan- und Ex-Ju-Studentenclub an der HSG."
+    },
+    "notFound": {
+      "title": "Seite nicht gefunden — Yunited",
+      "description": "Diese Seite existiert nicht."
+    }
+  }
+}

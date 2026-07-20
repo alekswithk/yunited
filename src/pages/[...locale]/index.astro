@@ -1,16 +1,22 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
-import EventCard from "../components/EventCard.astro";
-import { events } from "../lib/content.js";
-import { splitEvents } from "../lib/events.js";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import EventCard from "../../components/EventCard.astro";
+import { events } from "../../lib/content.js";
+import { splitEvents } from "../../lib/events.js";
+import { localePaths, localizePath } from "../../i18n/config.js";
+import { useTranslations } from "../../i18n/utils.js";
+
+export const getStaticPaths = localePaths;
+
+const { locale } = Astro.params;
+const t = useTranslations(locale);
 
 const { upcoming, past } = splitEvents(events);
 const upcomingTeaser = upcoming.slice(0, 2);
 const pastTeaser = past.slice(0, 2);
 
-const title = "Yunited — Balkan & ex-Yu student club at HSG";
-const description =
-  "Yunited connects students with roots from former Yugoslavia socially and professionally while fostering cultural exchange at the University of St. Gallen.";
+const title = t("meta.home.title");
+const description = t("meta.home.description");
 
 const orgSchema = {
   "@context": "https://schema.org",
@@ -36,7 +42,7 @@ const orgSchema = {
 };
 ---
 
-<BaseLayout title={title} description={description} path="/">
+<BaseLayout locale={locale} title={title} description={description} path="/">
   <script type="application/ld+json" is:inline set:html={JSON.stringify(orgSchema)} slot="head" />
 
   <!-- Hero: answers "what is this" immediately, no info gated behind animation -->
@@ -50,8 +56,8 @@ const orgSchema = {
         the culture — socially and professionally. Since 2013.
       </p>
       <div class="hero-actions">
-        <a class="btn btn-gold" href="/join">Join Yunited</a>
-        <a class="btn btn-red" href="/events">See our events</a>
+        <a class="btn btn-gold" href={localizePath("/join", locale)}>Join Yunited</a>
+        <a class="btn btn-red" href={localizePath("/events", locale)}>See our events</a>
       </div>
     </div>
   </section>
@@ -86,7 +92,7 @@ const orgSchema = {
         )}
       </div>
       <p style="margin-top: var(--space-4);">
-        <a class="btn btn-outline" href="/events">All events &amp; recaps</a>
+        <a class="btn btn-outline" href={localizePath("/events", locale)}>All events &amp; recaps</a>
       </p>
     </div>
   </section>
@@ -101,7 +107,7 @@ const orgSchema = {
         hosts social and professional events that help students feel at home
         in St. Gallen and build friendships that last well beyond graduation.
       </p>
-      <a class="btn btn-gold" href="/about">More about the club</a>
+      <a class="btn btn-gold" href={localizePath("/about", locale)}>More about the club</a>
     </div>
   </section>
 </BaseLayout>

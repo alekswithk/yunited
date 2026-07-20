@@ -1,17 +1,23 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
-import EventCard from "../components/EventCard.astro";
-import { events } from "../lib/content.js";
-import { splitEvents } from "../lib/events.js";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import EventCard from "../../components/EventCard.astro";
+import { events } from "../../lib/content.js";
+import { splitEvents } from "../../lib/events.js";
+import { localePaths } from "../../i18n/config.js";
+import { useTranslations } from "../../i18n/utils.js";
+
+export const getStaticPaths = localePaths;
+
+const { locale } = Astro.params;
+const t = useTranslations(locale);
 
 const { upcoming, past } = splitEvents(events);
 
-const title = "Events — Yunited";
-const description =
-  "Upcoming events and past-event recaps from Yunited, the Balkan & ex-Yu student club at HSG.";
+const title = t("meta.events.title");
+const description = t("meta.events.description");
 ---
 
-<BaseLayout title={title} description={description} path="/events">
+<BaseLayout locale={locale} title={title} description={description} path="/events">
   <section class="page-hero">
     <div class="container">
       <p class="hero-script">Događaji · Догађаји · Events</p>

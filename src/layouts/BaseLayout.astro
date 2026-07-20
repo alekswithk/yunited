@@ -5,33 +5,50 @@
 // tags such as JSON-LD.
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
+import { defaultLocale, getLocale, localizePath, publishedLocales } from "../i18n/config.js";
 import "../styles/global.css";
 
 const {
   title,
   description,
   path = "/",
+  locale = defaultLocale,
   noindex = false,
 } = Astro.props;
 
-const canonical = new URL(path, Astro.site).href;
+const loc = getLocale(locale);
+const canonical = new URL(localizePath(path, loc.code), Astro.site).href;
 const ogImage = new URL("/assets/og-image.png", Astro.site).href;
+
+// Only finished translations are advertised to crawlers. An in-progress locale
+// still renders (so it can be reviewed at its real URL) but is kept out of the
+// alternates and marked noindex, so a half-translated page is never indexed.
+const alternates = publishedLocales();
+const showAlternates = alternates.length > 1;
+const hideFromIndex = noindex || !loc.complete;
 ---
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang={loc.htmlLang}>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title}</title>
   <meta name="description" content={description}>
-  {noindex && <meta name="robots" content="noindex">}
+  {hideFromIndex && <meta name="robots" content="noindex">}
 
   <link rel="canonical" href={canonical}>
 
+  {showAlternates && alternates.map((l) => (
+    <link rel="alternate" hreflang={l.code} href={new URL(localizePath(path, l.code), Astro.site).href}>
+  ))}
+  {showAlternates && (
+    <link rel="alternate" hreflang="x-default" href={new URL(localizePath(path, defaultLocale), Astro.site).href}>
+  )}
+
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Yunited">
-  <meta property="og:locale" content="en_GB">
+  <meta property="og:locale" content={loc.ogLocale}>
   <meta property="og:url" content={canonical}>
   <meta property="og:title" content={title}>
   <meta property="og:description" content={description}>
@@ -58,7 +75,7 @@ const ogImage = new URL("/assets/og-image.png", Astro.site).href;
 </head>
 <body>
 
-  <Header path={path} />
+  <Header path={path} locale={loc.code} />
 
   <main>
     <slot />
@@ -66,7 +83,7 @@ const ogImage = new URL("/assets/og-image.png", Astro.site).href;
 
   <div class="motif-divider" role="presentation"></div>
 
-  <Footer />
+  <Footer locale={loc.code} />
 
   <script>
     // Shared behaviours from the old main.js: mobile menu toggle and
