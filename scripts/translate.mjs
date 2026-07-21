@@ -1,9 +1,14 @@
 // One-time, offline translation helper. Fills the locale dictionaries in
 // src/i18n/ from the English source (en.json) using the DeepL API.
 //
-//   DEEPL_API_KEY=xxxx npm run translate            # fill only missing keys
-//   DEEPL_API_KEY=xxxx npm run translate -- --force # re-translate everything
-//   DEEPL_API_KEY=xxxx npm run translate -- de sr    # only these dictionaries
+// Put your key in a .env file (copy .env.example -> .env); it is gitignored.
+// `npm run translate` loads it automatically (via --env-file-if-exists), so:
+//
+//   npm run translate                    # fill only missing keys
+//   npm run translate -- --force         # re-translate everything
+//   npm run translate -- de sr           # only these dictionaries
+//
+// An inline env var still works too: `DEEPL_API_KEY=xxxx npm run translate`.
 //
 // This is NOT part of the build. The build stays hermetic (no network, no
 // secrets) — you run this by hand, review the machine translation, and commit
@@ -58,9 +63,9 @@ const apiKey = process.env.DEEPL_API_KEY;
 if (!apiKey) {
   console.error(
     "DEEPL_API_KEY is not set.\n" +
-      "Get a key at https://www.deepl.com/pro-api (the free tier's 500k " +
-      "chars/month is plenty here) and run:\n" +
-      "  DEEPL_API_KEY=your-key npm run translate",
+      "Copy .env.example to .env and paste your key (get one at\n" +
+      "https://www.deepl.com/pro-api — the free tier's 500k chars/month is\n" +
+      "plenty here), then run:  npm run translate",
   );
   process.exit(1);
 }

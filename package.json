@@ -10,7 +10,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "translate": "node scripts/translate.mjs"
+    "translate": "node --env-file-if-exists=.env scripts/translate.mjs"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
