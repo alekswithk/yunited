@@ -18,7 +18,7 @@ export const locales = [
   { code: "de", dict: "de", label: "Deutsch", htmlLang: "de", ogLocale: "de_CH", complete: false },
   { code: "bs", dict: "bcs", label: "Bosanski", htmlLang: "bs", ogLocale: "bs_BA", complete: false },
   { code: "hr", dict: "bcs", label: "Hrvatski", htmlLang: "hr", ogLocale: "hr_HR", complete: false },
-  { code: "sr", dict: "bcs", label: "Srpski", htmlLang: "sr-Latn", ogLocale: "sr_RS", complete: false },
+  { code: "sr", dict: "sr", label: "Srpski", htmlLang: "sr-Latn", ogLocale: "sr_RS", complete: false },
 ];
 
 export const localeCodes = locales.map((l) => l.code);

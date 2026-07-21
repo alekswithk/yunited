@@ -21,10 +21,8 @@ const description = t("meta.events.description");
   <section class="page-hero">
     <div class="container">
       <p class="hero-script">Događaji · Догађаји · Events</p>
-      <h1>Events</h1>
-      <p>Brunches, barbecues, karaoke, casino nights and career events —
-      this is what we get up to. Members get access to all events via
-      uniclubs.</p>
+      <h1>{t("events.heroTitle")}</h1>
+      <p>{t("events.heroLede")}</p>
     </div>
   </section>
 
@@ -32,13 +30,13 @@ const description = t("meta.events.description");
 
   <section>
     <div class="container reveal">
-      <p class="eyebrow">Save the date</p>
-      <h2>Upcoming events</h2>
+      <p class="eyebrow">{t("events.upcomingEyebrow")}</p>
+      <h2>{t("events.upcomingHeading")}</h2>
       <div class="magazine-grid" id="upcoming-events">
         {upcoming.length > 0 ? (
           upcoming.map((event) => <EventCard event={event} isPast={false} />)
         ) : (
-          <p class="empty-note">No upcoming events are scheduled right now — follow us on Instagram (@yunited.unisg) or check uniclubs to be first to hear about the next one.</p>
+          <p class="empty-note">{t("events.emptyUpcoming")}</p>
         )}
       </div>
     </div>
@@ -46,15 +44,14 @@ const description = t("meta.events.description");
 
   <section>
     <div class="container reveal">
-      <p class="eyebrow">Recaps</p>
-      <h2>Past events</h2>
-      <p class="section-intro">A look back at what we've done recently.
-      Photos and stories also live on our <a href="https://www.instagram.com/yunited.unisg" target="_blank" rel="noopener">Instagram</a>.</p>
+      <p class="eyebrow">{t("events.pastEyebrow")}</p>
+      <h2>{t("events.pastHeading")}</h2>
+      <p class="section-intro" set:html={t("events.pastIntro")}></p>
       <div class="magazine-grid" id="past-events">
         {past.length > 0 ? (
           past.map((event) => <EventCard event={event} isPast={true} />)
         ) : (
-          <p class="empty-note">No past events yet.</p>
+          <p class="empty-note">{t("events.emptyPast")}</p>
         )}
       </div>
     </div>

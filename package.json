@@ -9,7 +9,8 @@
     "prebuild": "node scripts/vendor-cms.mjs",
     "build": "astro build",
     "preview": "astro preview",
-    "check": "astro check"
+    "check": "astro check",
+    "translate": "node scripts/translate.mjs"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",

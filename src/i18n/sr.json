@@ -1,0 +1,59 @@
+{
+  "nav": {
+    "home": "Početna",
+    "about": "O nama",
+    "events": "Događaji",
+    "members": "Uprava",
+    "exchange": "Razmena",
+    "contact": "Kontakt",
+    "join": "Učlani se",
+    "aria": "Glavna navigacija",
+    "openMenu": "Otvori meni"
+  },
+  "lang": {
+    "label": "Jezik",
+    "aria": "Odaberi jezik"
+  },
+  "footer": {
+    "tagline": "Studentski klub na HSG-u koji od 2013. povezuje studente s balkanskim i eks-jugoslovenskim korenima — i sve koje zanima naša kultura.",
+    "pages": "Stranice",
+    "connect": "Kontakt",
+    "exchangeLink": "Studenti na razmeni",
+    "joinOnUniclubs": "Učlani se na uniclubs",
+    "rights": "studentski klub na Univerzitetu St. Gallen (HSG). Članstvo se vodi preko"
+  },
+  "meta": {
+    "home": {
+      "title": "Yunited — balkanski i eks-Yu studentski klub na HSG-u",
+      "description": "Yunited povezuje studente s korenima iz bivše Jugoslavije društveno i profesionalno te podstiče kulturnu razmenu na Univerzitetu St. Gallen."
+    },
+    "about": {
+      "title": "O nama — Yunited",
+      "description": "Yunited podstiče kulturnu razmenu među studentima iz bivše Jugoslavije na Univerzitetu St. Gallen. Osnovan 2013."
+    },
+    "events": {
+      "title": "Događaji — Yunited",
+      "description": "Predstojeći događaji i osvrti na prošle događaje kluba Yunited, balkanskog i eks-Yu studentskog kluba na HSG-u."
+    },
+    "members": {
+      "title": "Članovi i uprava — Yunited",
+      "description": "Upoznaj upravu kluba Yunited, balkanskog i eks-Yu studentskog kluba na HSG-u."
+    },
+    "exchange": {
+      "title": "Studenti na razmeni — Yunited",
+      "description": "Šta Yunited nudi studentima koji dolaze na razmenu na HSG — i kako studenti HSG-a ostaju povezani dok su u inostranstvu."
+    },
+    "join": {
+      "title": "Učlani se — Yunited",
+      "description": "Postani član kluba Yunited preko uniclubs.ch — 10 CHF po semestru za pristup svim događajima."
+    },
+    "contact": {
+      "title": "Kontakt — Yunited",
+      "description": "Javi se klubu Yunited, balkanskom i eks-Yu studentskom klubu na HSG-u."
+    },
+    "notFound": {
+      "title": "Stranica nije pronađena — Yunited",
+      "description": "Ova stranica ne postoji."
+    }
+  }
+}

@@ -4,9 +4,10 @@
 import en from "./en.json";
 import de from "./de.json";
 import bcs from "./bcs.json";
+import sr from "./sr.json";
 import { getLocale } from "./config.js";
 
-const dictionaries = { en, de, bcs };
+const dictionaries = { en, de, bcs, sr };
 
 function lookup(dict, key) {
   return key.split(".").reduce((node, part) => (node == null ? undefined : node[part]), dict);
