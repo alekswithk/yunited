@@ -91,6 +91,8 @@ as a repo collaborator — steps in [`docs/CMS.md`](docs/CMS.md) §5._
 ## 4. Planned ahead 🗺️ (roadmap, in suggested order)
 
 Status: `[ ]` not started · `[~]` in progress · `[x]` done.
+Items tagged **🧑 human-led** must NOT be auto-implemented by the weekly agent (§7) —
+they carry design decisions that need a person. The agent skips them.
 
 - [x] **CI check on PRs** — shipped in #19 (`.github/workflows/ci.yml`).
 - [ ] **CSP hardening** *(medium).* Drop `style-src 'unsafe-inline'` from the public
@@ -146,7 +148,8 @@ A **weekly cloud agent** ("Yunited weekly roadmap agent") runs every **Monday
 09:00 Europe/Zurich** (`0 7 * * 1` UTC). Manage/disable it at
 <https://claude.ai/code/routines>.
 
-Each run it takes the **first unchecked item** in §4 (or §5 if §4 is clear),
+Each run it takes the **first unchecked item that is not tagged 🧑 human-led** in §4
+(or §5 if §4 is clear),
 implements it on a branch, ticks it here, opens a PR, verifies with
 `npm ci` + `build` + `check`, reviews its own diff, and **auto-merges only if CI
 passes and nothing is contentious**. If §4 and §5 are both clear it switches to
