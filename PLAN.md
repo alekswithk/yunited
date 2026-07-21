@@ -13,7 +13,7 @@ when a step ships, tick it here in the same PR.
   & usage → [`docs/CMS.md`](docs/CMS.md). This file is the *tracker/index*; those
   are the *reference*.
 
-_Last updated: 2026-07-20 (through PR #19)._
+_Last updated: 2026-07-21 (through PR #19; i18n in progress on `i18n-foundation`)._
 
 ---
 
@@ -24,9 +24,13 @@ content/                 CONTENT LAYER — one JSON file per entry (board's edit
   events/<id>.json         9 events; filename = the event id
   members/<role>.json      6 board members; each has an `order` (1 = lead card)
 src/
-  pages/*.astro            8 routes: index, about, events, members, exchange, join, contact, 404
+  pages/[...locale]/*.astro 7 localized routes (index, about, events, members, exchange,
+                           join, contact); rest param emits both /events and /de/events
+  pages/404.astro          not-found page (not localized)
   components/*.astro       EventCard, MemberLead, MemberRow, Portrait, Header, Footer
-  layouts/BaseLayout.astro single source of <head> + header/footer + client script
+  layouts/BaseLayout.astro single source of <head> (canonical + hreflang) + chrome + script
+  i18n/                    locale registry (config.js), t()/fallback (utils.js), {en,de,
+                           bcs,sr}.json dictionaries; en.json is the source of truth
   lib/                     build-time logic (framework-free, no Astro imports)
     content.js               loads + validates every content file (the choke point)
     schema.js                Zod schemas = authoritative shape of the edit surface
@@ -43,6 +47,7 @@ public/                    copied verbatim into dist/
   assets/                  logos, favicons, icons, motif, fonts/ (self-hosted woff2)
   robots.txt, site.webmanifest
 scripts/vendor-cms.mjs     npm `prebuild`: copies Sveltia bundle into public/admin/
+scripts/translate.mjs      npm `translate`: offline DeepL fill of i18n dictionaries (not in build)
 astro.config.mjs           site, trailingSlash, build.format:'file', sitemap integration
 wrangler.jsonc             Cloudflare: assets.directory = ./dist
 ```
@@ -94,29 +99,21 @@ they carry design decisions that need a person. The agent skips them.
       site by moving the inline `style="…"` attributes (6 pages) into `global.css`
       classes, and the inline JSON-LD / contact script into hashed/external form.
       The stylesheet is already CSP-clean; this finishes the job.
-- [ ] **i18n — 🧑 human-led** *(large, multi-PR).* English (source) + German + BCS
-      first; Slovenian/Macedonian only if the first slice lands well. Decisions taken:
-      real **static pages per locale** (`/de/events`, …) rather than a JS translate
-      widget — the widget is deprecated, gives no per-language URL (so no SEO or
-      `hreflang`), and would need holes in the CSP. Board keeps authoring in English.
-      Serbian/Croatian/Bosnian share one **BCS** translation (Latin script) unless the
-      board wants them split. Sub-steps, each its own PR:
-  - [ ] **4a. Foundation.** Locale routing via `src/pages/[...locale]/`, locale
-        dictionaries in `src/i18n/`, language selector in the header, `hreflang` in
-        the generated sitemap, and fallback to English for anything untranslated so
-        no localized URL can 404. Shared chrome (nav/footer/meta) translated de+BCS.
-  - [ ] **4b. Page copy.** Translate the remaining page bodies (about, events,
-        members, exchange, join, contact, 404) for de + BCS.
-  - [ ] **4c. Content pipeline.** `npm run i18n:sync` — translates board-authored
-        event/member text with the DeepL API (all 7 target languages supported).
-        Key stays local/manual; **translations are committed** so the Cloudflare build
-        needs no secret and stays deterministic. Untranslated entries fall back to
-        English until synced.
-  - [ ] **4d. Native-speaker review** by the board, then decide on `sl` + `mk`.
+- [~] **i18n: English + BCS** *(large).* In progress on `i18n-foundation`. Done:
+      locale routing (`src/pages/[...locale]/`), the dictionary + English-fallback
+      system (`src/i18n/`), the language switcher, gated publishing (`complete:false`
+      → noindex + out of sitemap/switcher), `hreflang` in each page's `<head>` (gated
+      to finished locales — the equivalent of the sitemap approach), and **all page
+      body copy authored in `en.json` and rendered via `t()`**. An offline DeepL
+      helper (`npm run translate`, `DEEPL_API_KEY`) tops up `de`/`bcs`/`sr`. Remaining:
+      run the translator, review the machine translation, then flip `complete:true`
+      per locale to publish it.
 - [ ] **Partners / recruiting funnel** *(content + feature).* Sponsor/partner page
       and a recruiting flow. Scope with the board.
 
-Deferred/among-these per the original roadmap: sitemap `hreflang` (lands with i18n).
+Deferred/among-these per the original roadmap: sitemap `hreflang` — shipped instead
+as `<link rel="alternate" hreflang>` in the page `<head>` (gated to finished locales),
+which Google treats as equivalent; no separate sitemap `hreflang` needed.
 
 ---
 

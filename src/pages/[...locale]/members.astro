@@ -21,9 +21,8 @@ const [lead, ...roster] = Array.isArray(members) ? members : [];
   <section class="page-hero">
     <div class="container">
       <p class="hero-script">Naš tim · Наш тим · Our team</p>
-      <h1>Members &amp; board</h1>
-      <p>The people who keep Yunited running — organising events, building
-      partnerships and welcoming new members every semester.</p>
+      <h1>{t("members.heroTitle")}</h1>
+      <p>{t("members.heroLede")}</p>
     </div>
   </section>
 
@@ -31,8 +30,8 @@ const [lead, ...roster] = Array.isArray(members) ? members : [];
 
   <section>
     <div class="container reveal">
-      <p class="eyebrow">Board</p>
-      <h2>Current board</h2>
+      <p class="eyebrow">{t("members.boardEyebrow")}</p>
+      <h2>{t("members.boardHeading")}</h2>
       <div id="member-grid">
         {lead ? (
           <>
@@ -44,7 +43,7 @@ const [lead, ...roster] = Array.isArray(members) ? members : [];
             )}
           </>
         ) : (
-          <p class="empty-note">The board for this semester is being confirmed. Check back shortly.</p>
+          <p class="empty-note">{t("members.boardEmpty")}</p>
         )}
       </div>
     </div>
@@ -52,10 +51,9 @@ const [lead, ...roster] = Array.isArray(members) ? members : [];
 
   <section class="section-dark">
     <div class="container reveal">
-      <h2>Want to get involved?</h2>
-      <p class="section-intro">Members can help shape events, take on board
-      roles and grow the community. Say hi at any event or drop us a line.</p>
-      <a class="btn btn-gold" href={localizePath("/contact", locale)}>Get in touch</a>
+      <h2>{t("members.involvedHeading")}</h2>
+      <p class="section-intro">{t("members.involvedBody")}</p>
+      <a class="btn btn-gold" href={localizePath("/contact", locale)}>{t("members.involvedCta")}</a>
     </div>
   </section>
 </BaseLayout>
