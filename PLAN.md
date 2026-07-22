@@ -124,14 +124,23 @@ they carry design decisions that need a person. The agent skips them.
       block, filled by `npm run translate:content` and kept current
       automatically by `.github/workflows/translate-content.yml` on every CMS
       save. Remaining, per locale:
-  - [ ] **Serbian: pick one script.** `sr.json` is currently mixed — the hand-done
-        nav/footer/meta (15 keys) are Latin, the DeepL body copy (101 keys) is
-        Cyrillic, and `htmlLang` claims `sr-Latn`. Convert one way or the other
-        (and fix `htmlLang` if Cyrillic wins) before publishing.
+  - [x] **Serbian is Latin throughout** (2026-07-22). `sr.json` and the `i18n.sr`
+        blocks in `content/**` were transliterated, so the copy finally matches the
+        `sr-Latn` / `sr-Latn-RS` tags in `config.js`. DeepL only emits Serbian in
+        Cyrillic, so `postProcess()` in `scripts/lib/deepl.mjs` now transliterates
+        it on the way in — otherwise the next `npm run translate` or CMS save would
+        quietly put the mix back. The `Dobrodošli · Добродошли · Welcome` header
+        lines in `src/pages/[...locale]/*.astro` keep their Cyrillic on purpose:
+        they show both scripts side by side and are not part of any dictionary.
   - [ ] **BCS + Serbian: speaker review.** Raw DeepL output. The worst damage is
         fixed (it had placed HSG in *Edinburgh* and *New York*, and called the board
         inbox a "forum"), but nobody fluent has read either dictionary end to end.
         Flip `complete: true` in `src/i18n/config.js` only after that review.
+        Known to need attention: **event names are being translated when they
+        should not be.** "Meet & Greet" became *Srećem i pozdravljam* ("I meet and
+        greet"), and *Svadba* — the film's actual title — became *Venčanje*. The
+        fix is to add such names to `PROTECT` in `scripts/lib/deepl.mjs`, but which
+        names count is a board call, so it is left with this review.
 - [ ] **Partners / recruiting funnel** *(content + feature).* Sponsor/partner page
       and a recruiting flow. Scope with the board.
 
