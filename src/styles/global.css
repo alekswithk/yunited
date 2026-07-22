@@ -915,12 +915,17 @@ input:focus, select:focus, textarea:focus {
 /* ---------- Scroll-spy table of contents ----------
    A fixed rail on the left, vertically centred. Only shown when there is real
    margin to put it in: below 1100px the content column already fills the
-   viewport, so the whole thing is display:none rather than squeezed. */
+   viewport, so the whole thing is display:none rather than squeezed.
+
+   Gated on `scripting: enabled` like .reveal above. Without JS neither the
+   current-section highlight nor the light/dark adaptation below can run, and an
+   unreadable rail over the dark sections is worse than no rail — every section
+   is still reachable by scrolling. */
 .page-toc {
   display: none;
 }
 
-@media (min-width: 1100px) {
+@media (min-width: 1100px) and (scripting: enabled) {
   .page-toc {
     display: block;
     position: fixed;
@@ -934,14 +939,14 @@ input:focus, select:focus, textarea:focus {
     list-style: none;
     margin: 0;
     padding: 0;
-    border-left: 2px solid color-mix(in srgb, var(--color-ink) 18%, transparent);
   }
   .page-toc li { margin: 0; }
+  /* The rail line is a border on each link rather than one border on the <ol>,
+     so it can recolour per entry along with the text — see .is-on-dark below. */
   .page-toc a {
     display: block;
     padding: var(--space-2) 0 var(--space-2) var(--space-3);
-    margin-left: -2px;
-    border-left: 2px solid transparent;
+    border-left: 2px solid color-mix(in srgb, var(--color-ink) 18%, transparent);
     font-family: var(--font-mono);
     font-size: 0.66rem;
     letter-spacing: 0.04em;
@@ -959,6 +964,23 @@ input:focus, select:focus, textarea:focus {
     color: var(--color-ink);
     border-left-color: var(--color-red);
     font-weight: 700;
+  }
+
+  /* The rail is fixed, so the page scrolls dark sections (.hero, .page-hero,
+     .section-dark, .site-footer — all --color-ink) underneath it, and the inks
+     above go invisible. Each link is told individually when ink is behind *it*
+     and flips to the paper/gold pairing this site already uses on dark
+     surfaces (.hero h1 .accent, .site-footer a:hover). Per link rather than per
+     rail: the rail is ~150px tall, so at a section boundary one toggle would
+     always leave one end of it unreadable. */
+  .page-toc a.is-on-dark {
+    color: rgba(244, 236, 221, 0.72);
+    border-left-color: rgba(244, 236, 221, 0.22);
+  }
+  .page-toc a.is-on-dark:hover { color: var(--color-paper); }
+  .page-toc a.is-on-dark[aria-current="true"] {
+    color: var(--color-paper);
+    border-left-color: var(--color-gold);
   }
 }
 

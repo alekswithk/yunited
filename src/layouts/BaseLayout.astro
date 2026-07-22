@@ -189,6 +189,79 @@ const hideFromIndex = noindex || !loc.complete;
       );
 
       watched.forEach((section) => tocObserver.observe(section));
+
+      // --- Keep each TOC entry legible against what is behind it ---
+      // The rail is position:fixed, so the page scrolls dark sections under it
+      // and its dark inks disappear. Each link gets its own observer whose root
+      // is collapsed — via rootMargin — to a band at exactly that link's
+      // vertical position, watching only the dark surfaces. When one is inside
+      // that band, ink is behind THAT link and it flips to the paper palette.
+      //
+      // Deliberately not reusing tocObserver above: its "-20% 0px -70%" root
+      // samples the upper viewport to decide what you are *reading*, while the
+      // rail sits at the centre. They measure different things.
+      //
+      // Per link rather than per rail because the rail is ~150px tall: at a
+      // section boundary a single toggle would always leave one end of it
+      // unreadable, which is the bug this fixes.
+      const darkSurfaces = document.querySelectorAll(
+        ".hero, .page-hero, .section-dark, .site-footer"
+      );
+
+      if (darkSurfaces.length > 0) {
+        let backdropObservers: IntersectionObserver[] = [];
+
+        const watchBackdrops = () => {
+          backdropObservers.forEach((o) => o.disconnect());
+          backdropObservers = [];
+
+          tocLinks.forEach((link) => {
+            const box = link.getBoundingClientRect();
+            // Zero height means the rail is hidden (below 1100px) — nothing to do.
+            if (box.height === 0) return;
+
+            const above = Math.round(box.top);
+            const below = Math.round(window.innerHeight - box.bottom);
+
+            // Track which dark surfaces are in this link's band. A Set rather
+            // than a counter: the first callback reports every observed element
+            // at once, so add/delete stays correct where +1/-1 would not.
+            const behind = new Set<Element>();
+
+            const observer = new IntersectionObserver(
+              (entries) => {
+                for (const entry of entries) {
+                  if (entry.isIntersecting) behind.add(entry.target);
+                  else behind.delete(entry.target);
+                }
+                link.classList.toggle("is-on-dark", behind.size > 0);
+              },
+              { rootMargin: `-${above}px 0px -${below}px 0px` }
+            );
+
+            darkSurfaces.forEach((surface) => observer.observe(surface));
+            backdropObservers.push(observer);
+          });
+        };
+
+        watchBackdrops();
+
+        // The bands are absolute pixel offsets measured from the rail, so they
+        // go stale whenever the rail moves or resizes. Two things do that:
+        //
+        // 1. The viewport resizing — the rail is vertically centred.
+        // 2. Webfonts swapping in. The rail is set in Space Mono with
+        //    font-display: swap, so its height changes when the real font
+        //    arrives, which is usually AFTER this script first runs.
+        let pending = 0;
+        const rebuild = () => {
+          cancelAnimationFrame(pending);
+          pending = requestAnimationFrame(watchBackdrops);
+        };
+
+        window.addEventListener("resize", rebuild);
+        document.fonts?.ready.then(rebuild);
+      }
     }
   </script>
 </body>
