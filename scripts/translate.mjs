@@ -23,6 +23,14 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import {
+  decodeEntities,
+  deeplBatch,
+  lostPlaceholders,
+  postProcess,
+  requireApiKey,
+  unprotect,
+} from "./lib/deepl.mjs";
 
 const I18N_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "i18n");
 
@@ -33,51 +41,11 @@ const TARGETS = {
   sr: "SR",
 };
 
-// Proper nouns / brand tokens that must never be translated. They are wrapped
-// in <x>…</x> before sending and DeepL is told to ignore that tag; the wrapper
-// is stripped again afterwards. Longest first so "uniclubs.ch" wins over
-// "uniclubs" in the single-pass match.
-const PROTECT = [
-  "uniclubs.ch",
-  "uniclubs",
-  "yunited@shsg.ch",
-  "@yunited.unisg",
-  "YUnited",
-  "HSG",
-  "St. Gallen",
-  "Instagram",
-  "Formspree",
-  "CHF",
-  // {placeholders} filled by t(key, vars) at render time — DeepL must return
-  // them byte-identical or the interpolation silently stops matching.
-  "{title}",
-  "{name}",
-].sort((a, b) => b.length - a.length);
-
-const PROTECT_RE = new RegExp(
-  `(${PROTECT.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`,
-  "g",
-);
-
 const args = process.argv.slice(2);
 const force = args.includes("--force");
 const onlyDicts = args.filter((a) => !a.startsWith("--"));
 
-const apiKey = process.env.DEEPL_API_KEY;
-if (!apiKey) {
-  console.error(
-    "DEEPL_API_KEY is not set.\n" +
-      "Copy .env.example to .env and paste your key (get one at\n" +
-      "https://www.deepl.com/pro-api — the free tier's 500k chars/month is\n" +
-      "plenty here), then run:  npm run translate",
-  );
-  process.exit(1);
-}
-
-// Keys ending in ":fx" are DeepL API Free; everything else is Pro.
-const API_URL = apiKey.endsWith(":fx")
-  ? "https://api-free.deepl.com/v2/translate"
-  : "https://api.deepl.com/v2/translate";
+const apiKey = requireApiKey("translate");
 
 const readJson = (name) => JSON.parse(readFileSync(join(I18N_DIR, `${name}.json`), "utf8"));
 
@@ -99,40 +67,6 @@ function setDeep(obj, dottedKey, value) {
     node = node[parts[i]];
   }
   node[parts[parts.length - 1]] = value;
-}
-
-const ENTITIES = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'", "&#x27;": "'" };
-const decodeEntities = (s) => s.replace(/&(amp|lt|gt|quot|#39|#x27);/g, (m) => ENTITIES[m] ?? m);
-
-const protect = (s) => s.replace(PROTECT_RE, "<x>$1</x>");
-const unprotect = (s) => s.replace(/<\/?x>/g, "");
-
-async function deeplBatch(texts, targetLang) {
-  const out = [];
-  const CHUNK = 40; // DeepL allows 50 text params/request; stay under it.
-  for (let i = 0; i < texts.length; i += CHUNK) {
-    const slice = texts.slice(i, i + CHUNK);
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `DeepL-Auth-Key ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        text: slice.map(protect),
-        source_lang: "EN",
-        target_lang: targetLang,
-        tag_handling: "html", // preserves <a>/<strong> in the marked-up strings
-        ignore_tags: ["x"], // ...and our brand-term wrappers
-      }),
-    });
-    if (!res.ok) {
-      throw new Error(`DeepL ${res.status} ${res.statusText}: ${await res.text()}`);
-    }
-    const data = await res.json();
-    out.push(...data.translations.map((t) => t.text));
-  }
-  return out;
 }
 
 let hadWarnings = false;
@@ -158,12 +92,12 @@ for (const dict of dictNames) {
 
   console.log(`${dict}.json (${targetLang}): translating ${keys.length} key(s)…`);
   const sources = keys.map((k) => String(enFlat[k]));
-  const translated = await deeplBatch(sources, targetLang);
+  const translated = await deeplBatch(sources, targetLang, { apiKey });
 
   const fresh = {};
   const suspect = [];
   keys.forEach((k, i) => {
-    let value = unprotect(translated[i]);
+    let value = unprotect(translated[i].text);
     // Plain strings render through auto-escaping {t()}, so they must be raw
     // text — undo any entity encoding DeepL added. Marked-up strings render
     // via set:html and keep their entities/tags as-is.
@@ -175,8 +109,7 @@ for (const dict of dictNames) {
     // "Портрет Елзе Јанец" for "Portrait of {name}" — placeholder gone and an
     // invented person in its place. A lost placeholder means t(key, vars) silently
     // stops substituting, so flag it rather than let it reach a page.
-    const want = String(enFlat[k]).match(/\{\w+\}/g) ?? [];
-    const missing = want.filter((p) => !value.includes(p));
+    const missing = lostPlaceholders(enFlat[k], value);
     if (missing.length) suspect.push(`${k} — lost ${missing.join(", ")}: "${value}"`);
   });
 

@@ -3,5 +3,18 @@
   "role": "Vice President",
   "photo": null,
   "bio": "B.A. in Business Administration",
-  "order": 3
+  "order": 3,
+  "i18n": {
+    "sourceLang": "en",
+    "sourceHash": "aac8312bf697dd8f",
+    "de": {
+      "bio": "Bachelor of Arts in Betriebswirtschaftslehre"
+    },
+    "bcs": {
+      "bio": "Prvostupnik poslovne administracije"
+    },
+    "sr": {
+      "bio": "Дипломa по пословној администрацији"
+    }
+  }
 }

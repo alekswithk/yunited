@@ -49,6 +49,10 @@ public/                    copied verbatim into dist/
   robots.txt, site.webmanifest
 scripts/vendor-cms.mjs     npm `prebuild`: copies Sveltia bundle into public/admin/
 scripts/translate.mjs      npm `translate`: offline DeepL fill of i18n dictionaries (not in build)
+scripts/translate-content.mjs  npm `translate:content`: fills the i18n block in content/**.json
+scripts/lib/deepl.mjs      shared DeepL plumbing for both scripts (one PROTECT list)
+.github/workflows/         ci.yml (build+check on PRs); translate-content.yml (auto-translate
+                           content on push to main — needs the DEEPL_API_KEY secret)
 astro.config.mjs           site, trailingSlash, build.format:'file', sitemap integration
 wrangler.jsonc             Cloudflare: assets.directory = ./dist
 ```
@@ -79,8 +83,14 @@ Earlier foundation (pre-#12): Astro migration + build-time image optimization.
 
 ## 3. Pending — human actions ⏳
 
-Manual/account steps (code is in place). **None currently open.**
+Manual/account steps (code is in place).
 
+- [ ] **Add `DEEPL_API_KEY` to the repository's Actions secrets**
+      (Settings → Secrets and variables → Actions → New repository secret).
+      The "Translate content" workflow cannot run without it — it will fail
+      loudly on every content push until the secret exists. Use the same key
+      that is in your local `.env`. *The site build never needs this; it stays
+      hermetic. Only the translation workflow reads it.*
 - [x] Deploy `sveltia-cms-auth` worker + GitHub OAuth app + secrets — login works.
 - [x] **Google Search Console**: sitemap switched to `https://yunited.ch/sitemap-index.xml`.
 
@@ -108,7 +118,12 @@ they carry design decisions that need a person. The agent skips them.
       body copy authored in `en.json` and rendered via `t()`**. An offline DeepL
       helper (`npm run translate`, `DEEPL_API_KEY`) tops up `de`/`bcs`/`sr`; all four
       dictionaries now carry all 135 keys. **German is reviewed and published**
-      (`complete: true`). Remaining, per locale:
+      (`complete: true`). The card chrome (CTAs, alt text, date formatting,
+      TBA placeholders) is localized too, and the board's **content** —
+      `content/**` titles, descriptions and bios — now carries its own `i18n`
+      block, filled by `npm run translate:content` and kept current
+      automatically by `.github/workflows/translate-content.yml` on every CMS
+      save. Remaining, per locale:
   - [ ] **Serbian: pick one script.** `sr.json` is currently mixed — the hand-done
         nav/footer/meta (15 keys) are Latin, the DeepL body copy (101 keys) is
         Cyrillic, and `htmlLang` claims `sr-Latn`. Convert one way or the other

@@ -3,5 +3,18 @@
   "role": "Head of Finance",
   "photo": null,
   "bio": "krastavac",
-  "order": 6
+  "order": 6,
+  "i18n": {
+    "sourceLang": "en",
+    "sourceHash": "6bcdb0bc01dcb10a",
+    "de": {
+      "bio": "Küstenfischer"
+    },
+    "bcs": {
+      "bio": "krastavac"
+    },
+    "sr": {
+      "bio": "краставац"
+    }
+  }
 }

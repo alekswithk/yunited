@@ -1,0 +1,77 @@
+name: Translate content
+
+# Keeps the translations inside content/**.json current.
+#
+# Every CMS save is a commit to main, so this fires when a board member adds or
+# edits an event or a bio, translates the changed entry into the other locales
+# and commits the result. Cloudflare then rebuilds and the card is localized
+# without anyone running a script.
+#
+# LOOP SAFETY — read before editing.
+# This workflow pushes to the very paths that trigger it, so it MUST refuse to
+# act on its own commits. Two independent guards, either of which is sufficient:
+#   1. the commit message marker checked in `if:` below, and
+#   2. the actor check — pushes by github-actions[bot] are ignored.
+# Removing one is survivable; removing both creates an infinite, billable loop.
+#
+# The build itself never calls DeepL and needs no key — this is the only place
+# in CI that does. It requires the DEEPL_API_KEY repository secret; without it
+# the job fails loudly rather than silently skipping.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "content/**"
+
+concurrency:
+  group: translate-content
+  cancel-in-progress: false # never interrupt a run mid-commit
+
+permissions:
+  contents: write
+
+jobs:
+  translate:
+    name: Translate changed content
+    runs-on: ubuntu-latest
+    if: >-
+      github.actor != 'github-actions[bot]' &&
+      !contains(github.event.head_commit.message, '[auto-translate]')
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Needed so the push below is attributed and accepted.
+          persist-credentials: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fill missing translations
+        env:
+          DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}
+        run: npm run translate:content
+
+      # Validates the files this job just wrote, against the same Zod schema the
+      # site build uses. If the translation step produced something the schema
+      # rejects, fail HERE rather than committing it and breaking the deploy.
+      - name: Verify the result still builds
+        run: npm run build
+
+      - name: Commit translations
+        run: |
+          if git diff --quiet -- content/; then
+            echo "No translation changes — nothing to commit."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add content/
+          git commit -m "content: fill translations [auto-translate]"
+          git push

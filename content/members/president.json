@@ -3,5 +3,18 @@
   "role": "President",
   "photo": null,
   "bio": "B.A. in Economics, also called Matemaric",
-  "order": 1
+  "order": 1,
+  "i18n": {
+    "sourceLang": "en",
+    "sourceHash": "e75245a75924483d",
+    "de": {
+      "bio": "Bachelor of Arts in Wirtschaftswissenschaften, auch „Matemaric“ genannt"
+    },
+    "bcs": {
+      "bio": "B.A. iz ekonomije, također nazvan Matemaric"
+    },
+    "sr": {
+      "bio": "Б.А. из економије, такође називан Матемариц"
+    }
+  }
 }
