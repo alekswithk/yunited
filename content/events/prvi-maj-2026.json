@@ -6,5 +6,21 @@
   "location": "Drei Weihern, St. Gallen",
   "description": "A celebration of the 1st of May with an outdoor barbecue.",
   "image": "images/events/25_26/prvi_maj_2026.webp",
-  "rsvpUrl": "https://uniclubs.ch/hsg/clubs/yunited/events/prvi-maj"
+  "rsvpUrl": "https://uniclubs.ch/hsg/clubs/yunited/events/prvi-maj",
+  "i18n": {
+    "sourceLang": "en",
+    "sourceHash": "b56bbcaceb9736fc",
+    "de": {
+      "title": "Prvi Maj",
+      "description": "Eine Feier zum 1. Mai mit einem Grillfest im Freien."
+    },
+    "bcs": {
+      "title": "Prvi Maj",
+      "description": "Proslava Prvog svibnja uz roštilj na otvorenom."
+    },
+    "sr": {
+      "title": "Prvi Maj",
+      "description": "Прослава Првог маја уз роштиљ на отвореном."
+    }
+  }
 }

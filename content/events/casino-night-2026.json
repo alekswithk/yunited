@@ -6,5 +6,21 @@
   "location": "Casino St. Gallen",
   "description": "Testing our luck at the tables of Casino St. Gallen.",
   "image": "images/events/25_26/casino_2026.webp",
-  "rsvpUrl": "https://uniclubs.ch/hsg/clubs/yunited/events/casino-night"
+  "rsvpUrl": "https://uniclubs.ch/hsg/clubs/yunited/events/casino-night",
+  "i18n": {
+    "sourceLang": "en",
+    "sourceHash": "81ad85930a944491",
+    "de": {
+      "title": "Casino-Abend",
+      "description": "Wir versuchen unser Glück an den Spieltischen des Casinos St. Gallen."
+    },
+    "bcs": {
+      "title": "Kazino noć",
+      "description": "Ispitujemo sreću za stolovima kockarnice Casino St. Gallen."
+    },
+    "sr": {
+      "title": "Ноћ казина",
+      "description": "Испробавамо нашу срећу за столовима казина St. Gallen."
+    }
+  }
 }

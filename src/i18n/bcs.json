@@ -81,7 +81,12 @@
     "pastHeading": "Prošli događaji",
     "pastIntro": "Pogled unatrag na ono što smo nedavno radili. Fotografije i priče također su dostupne na našoj stranici <a href=\"https://www.instagram.com/yunited.unisg\" target=\"_blank\" rel=\"noopener\">Instagram</a>.",
     "emptyUpcoming": "Trenutno nisu zakazani nikakvi nadolazeći događaji — pratite nas na Instagram (@yunited.unisg) ili provjerite uniclubs kako biste prvi saznali za sljedeći.",
-    "emptyPast": "Još nema prošlih događaja."
+    "emptyPast": "Još nema prošlih događaja.",
+    "rsvpCta": "Prijavi se na uniclubs →",
+    "pastCta": "Stranica događaja →",
+    "dateTba": "Datum bit će naknadno objavljen",
+    "locationTba": "Mjesto održavanja bit će naknadno objavljeno",
+    "photoAlt": "Fotografija s {title}"
   },
   "about": {
     "heroTitle": "O YUnited",
@@ -123,7 +128,9 @@
     "boardEmpty": "Odbor za ovaj semestar se potvrđuje. Provjerite uskoro.",
     "involvedHeading": "Želite li se uključiti?",
     "involvedBody": "Članovi mogu pomoći u oblikovanju događaja, preuzeti uloge u upravnom odboru i širiti zajednicu. Pozdravi nas na bilo kojem događaju ili nam pošalji poruku.",
-    "involvedCta": "Kontaktirajte nas"
+    "involvedCta": "Kontaktirajte nas",
+    "tba": "Bit će objavljeno",
+    "portraitAlt": "Portret {name}"
   },
   "exchange": {
     "heroTitle": "Studenti na razmjeni",

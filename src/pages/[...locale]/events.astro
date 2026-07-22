@@ -34,7 +34,7 @@ const description = t("meta.events.description");
       <h2>{t("events.upcomingHeading")}</h2>
       <div class="magazine-grid" id="upcoming-events">
         {upcoming.length > 0 ? (
-          upcoming.map((event) => <EventCard event={event} isPast={false} />)
+          upcoming.map((event) => <EventCard event={event} isPast={false} locale={locale} />)
         ) : (
           <p class="empty-note">{t("events.emptyUpcoming")}</p>
         )}
@@ -49,7 +49,7 @@ const description = t("meta.events.description");
       <p class="section-intro" set:html={t("events.pastIntro")}></p>
       <div class="magazine-grid" id="past-events">
         {past.length > 0 ? (
-          past.map((event) => <EventCard event={event} isPast={true} />)
+          past.map((event) => <EventCard event={event} isPast={true} locale={locale} />)
         ) : (
           <p class="empty-note">{t("events.emptyPast")}</p>
         )}

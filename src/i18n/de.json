@@ -81,7 +81,12 @@
     "pastHeading": "Vergangene Veranstaltungen",
     "pastIntro": "Ein Rückblick auf unsere letzten Aktivitäten. Fotos und Berichte findest du auch auf unserer <a href=\"https://www.instagram.com/yunited.unisg\" target=\"_blank\" rel=\"noopener\">Instagram-Seite</a>.",
     "emptyUpcoming": "Derzeit sind keine Veranstaltungen geplant – folge uns auf Instagram (@yunited.unisg) oder schau auf uniclubs vorbei, um als Erster von der nächsten Veranstaltung zu erfahren.",
-    "emptyPast": "Es gibt noch keine vergangenen Veranstaltungen."
+    "emptyPast": "Es gibt noch keine vergangenen Veranstaltungen.",
+    "rsvpCta": "Auf uniclubs anmelden →",
+    "pastCta": "Veranstaltungsseite →",
+    "dateTba": "Termin wird noch bekannt gegeben",
+    "locationTba": "Veranstaltungsort wird noch bekannt gegeben",
+    "photoAlt": "Foto von {title}"
   },
   "about": {
     "heroTitle": "Über YUnited",
@@ -123,7 +128,9 @@
     "boardEmpty": "Der Vorstand für dieses Semester wird derzeit festgelegt. Schau in Kürze wieder vorbei.",
     "involvedHeading": "Möchtest du mitmachen?",
     "involvedBody": "Mitglieder können Veranstaltungen mitgestalten, Ämter übernehmen und die Gemeinschaft stärken. Sprich uns bei einer Veranstaltung einfach an oder schreib uns eine Nachricht.",
-    "involvedCta": "Kontaktiere uns"
+    "involvedCta": "Kontaktiere uns",
+    "tba": "Wird noch bekannt gegeben",
+    "portraitAlt": "Porträt von {name}"
   },
   "exchange": {
     "heroTitle": "Austauschstudierende",

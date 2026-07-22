@@ -6,5 +6,21 @@
   "location": "Visage Gastrobar, Dübendorf",
   "description": "A traditional brunch with alumni in a beautiful location after the stressful midterm exams.",
   "image": "images/events/25_26/brunch_2026.webp",
-  "rsvpUrl": "https://uniclubs.ch/hsg/clubs/yunited/events/post-midterm-brunch"
+  "rsvpUrl": "https://uniclubs.ch/hsg/clubs/yunited/events/post-midterm-brunch",
+  "i18n": {
+    "sourceLang": "en",
+    "sourceHash": "2483d70e9c86304c",
+    "de": {
+      "title": "Brunch nach den Zwischenprüfungen",
+      "description": "Ein traditioneller Brunch mit ehemaligen Studierenden an einem wunderschönen Ort nach den stressigen Zwischenprüfungen."
+    },
+    "bcs": {
+      "title": "Brunch nakon srednjeg roka",
+      "description": "Tradicionalni brunch s alumnima na prekrasnoj lokaciji nakon stresnih ispita na sredini semestra."
+    },
+    "sr": {
+      "title": "Бранч након средњих испита",
+      "description": "Традиционални бранч са бившим студентима на прелепој локацији након стресних испита на средини семестра."
+    }
+  }
 }

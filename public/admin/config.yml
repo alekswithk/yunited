@@ -70,9 +70,11 @@ collections:
         required: false
         default: ""
         pattern: ["^([01][0-9]|2[0-3]):[0-5][0-9]$", "Use 24-hour HH:MM, e.g. 20:30"]
-      - label: Location
+      - label: "Location (leave empty for TBA)"
         name: location
         widget: string
+        required: false
+        default: ""
       - label: Description
         name: description
         widget: text
@@ -87,6 +89,43 @@ collections:
         widget: string
         required: false
         default: ""
+      # Filled automatically by the "Translate content" GitHub Action after you
+      # save — you do not need to touch it. It is declared here because a
+      # Git-based CMS writes back only the fields it knows about: leave it out
+      # and every save would silently strip the translations from the file.
+      # Open it if you want to correct a machine translation by hand.
+      - label: "Translations (filled automatically — open only to correct one)"
+        name: i18n
+        widget: object
+        required: false
+        collapsed: true
+        fields:
+          - { label: "Source language (auto)", name: sourceLang, widget: string, required: false }
+          - { label: "Source fingerprint (auto — do not edit)", name: sourceHash, widget: string, required: false }
+          - label: Deutsch
+            name: de
+            widget: object
+            required: false
+            collapsed: true
+            fields:
+              - { label: Title, name: title, widget: string, required: false }
+              - { label: Description, name: description, widget: text, required: false }
+          - label: "Bosanski / Hrvatski"
+            name: bcs
+            widget: object
+            required: false
+            collapsed: true
+            fields:
+              - { label: Title, name: title, widget: string, required: false }
+              - { label: Description, name: description, widget: text, required: false }
+          - label: Srpski
+            name: sr
+            widget: object
+            required: false
+            collapsed: true
+            fields:
+              - { label: Title, name: title, widget: string, required: false }
+              - { label: Description, name: description, widget: text, required: false }
 
   - name: members
     label: Board members
@@ -131,3 +170,35 @@ collections:
         media_folder: /src/images/members
         public_folder: /images/members
         choose_url: false
+      # Filled automatically by the "Translate content" Action — see the note in
+      # the events collection above. Declared so the CMS round-trips it instead
+      # of stripping it on save.
+      - label: "Translations (filled automatically — open only to correct one)"
+        name: i18n
+        widget: object
+        required: false
+        collapsed: true
+        fields:
+          - { label: "Source language (auto)", name: sourceLang, widget: string, required: false }
+          - { label: "Source fingerprint (auto — do not edit)", name: sourceHash, widget: string, required: false }
+          - label: Deutsch
+            name: de
+            widget: object
+            required: false
+            collapsed: true
+            fields:
+              - { label: Bio, name: bio, widget: text, required: false }
+          - label: "Bosanski / Hrvatski"
+            name: bcs
+            widget: object
+            required: false
+            collapsed: true
+            fields:
+              - { label: Bio, name: bio, widget: text, required: false }
+          - label: Srpski
+            name: sr
+            widget: object
+            required: false
+            collapsed: true
+            fields:
+              - { label: Bio, name: bio, widget: text, required: false }

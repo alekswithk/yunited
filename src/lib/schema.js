@@ -47,6 +47,27 @@ const imagePath = z
 const optional = (schema) =>
   z.preprocess((v) => (v === "" || v === undefined ? null : v), schema.nullable());
 
+// Machine translations of an entry's text, written by scripts/translate-content.mjs
+// and never by hand. Keyed by DICTIONARY name (en/de/bcs/sr — see i18n/config.js),
+// not locale code, so bs and hr keep sharing the one bcs translation.
+//
+// `sourceLang` records which language the board actually wrote the entry in, and
+// `sourceHash` fingerprints the source text: when someone edits a description the
+// hash stops matching and the entry is re-translated. Both are managed by the
+// script — the board never touches them.
+//
+// Optional throughout: an entry with no `i18n` block simply renders its source
+// text in every locale, which is exactly the behaviour before this existed.
+const translations = (fields) =>
+  optional(
+    z
+      .object({
+        sourceLang: z.string().min(2),
+        sourceHash: z.string().min(8),
+      })
+      .catchall(z.object(fields).partial()),
+  );
+
 // .strict() so a misspelled key ("titel", "rsvp") is caught instead of being
 // silently ignored — the whole point of validating hand-edited JSON.
 export const eventSchema = z
@@ -56,10 +77,19 @@ export const eventSchema = z
     // null / blank / omitted date means "TBA" and renders as an upcoming card.
     date: optional(isoDate),
     time: optional(time24),
-    location: z.string().min(1, "is required"),
+    // Blank/omitted means "venue TBA", exactly as for `date` above. Previously
+    // required, which pushed the board into typing "To be announced" — English
+    // text sitting in a field that is deliberately never translated, so it
+    // showed up untranslated on every localized page.
+    location: optional(z.string().min(1)),
     description: z.string().min(1, "is required"),
     image: imagePath,
     rsvpUrl: optional(z.string().url("must be a full URL")),
+    // Title and description only. `location` is deliberately never translated:
+    // every value is a venue name or street address ("Déja Vu Bar, St. Gallen",
+    // "Zürcherstrasse 162"), and translating those corrupts directions to a
+    // real place.
+    i18n: translations({ title: z.string(), description: z.string() }),
   })
   .strict();
 
@@ -75,5 +105,8 @@ export const memberSchema = z
     photo: optional(imagePath),
     bio: z.string(),
     order: z.number().int().positive("must be a positive whole number"),
+    // `bio` only. Board roles ("Head of Events", "President") are used in
+    // English at HSG, so translating them would read as wrong, not helpful.
+    i18n: translations({ bio: z.string() }),
   })
   .strict();

@@ -4,15 +4,19 @@
 import { Image } from "astro:assets";
 import { isUnfilled, displayName, initialOf } from "../lib/members.js";
 import { resolveImage } from "../lib/images.js";
+import { defaultLocale } from "../i18n/config.js";
+import { useTranslations } from "../i18n/utils.js";
 
-const { member } = Astro.props;
+const { member, locale = defaultLocale } = Astro.props;
+const t = useTranslations(locale);
 const photo = resolveImage(member.photo);
 const tbaClass = isUnfilled(member.name) ? " is-tba" : "";
+const name = displayName(member) ?? t("members.tba");
 ---
 
 {photo ? (
   <div class="portrait">
-    <Image src={photo} alt={`Portrait of ${displayName(member)}`} width={220} densities={[1, 2]} loading="lazy" />
+    <Image src={photo} alt={t("members.portraitAlt", { name })} width={220} densities={[1, 2]} loading="lazy" />
   </div>
 ) : (
   <div class={`portrait${tbaClass}`} aria-hidden="true">{initialOf(member.name)}</div>

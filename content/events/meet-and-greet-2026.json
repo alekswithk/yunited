@@ -3,8 +3,24 @@
   "title": "Meet & Greet",
   "date": null,
   "time": null,
-  "location": "To be announced",
+  "location": null,
   "description": "Our first casual get-together of the semester — come meet the board and other members over drinks, no agenda. Date and venue to be announced soon; follow @yunited.unisg to be first to know.",
   "image": "images/events/26_27/meet_and_greet_2026.webp",
-  "rsvpUrl": null
+  "rsvpUrl": null,
+  "i18n": {
+    "sourceLang": "en",
+    "sourceHash": "3ae07566a9d40f56",
+    "de": {
+      "title": "Meet & Greet",
+      "description": "Unser erstes zwangloses Treffen in diesem Semester – kommt vorbei und lernt den Vorstand und andere Mitglieder bei einem Drink kennen, ganz ohne Tagesordnung. Termin und Ort werden in Kürze bekannt gegeben; folgt @yunited.unisg, um als Erste/r davon zu erfahren."
+    },
+    "bcs": {
+      "title": "Susret i upoznavanje",
+      "description": "Naše prvo neformalno druženje u semestru — dođite upoznati upravni odbor i ostale članove uz piće, bez dnevnog reda. Datum i mjesto bit će uskoro objavljeni; pratite @yunited.unisg kako biste prvi saznali."
+    },
+    "sr": {
+      "title": "Срећем и поздрављам",
+      "description": "Наше прво неформално окупљање у семестру — дођите да упознате одбор и остале чланове уз пиће, без дневног реда. Датум и место биће ускоро објављени; пратите @yunited.unisg да први сазнате."
+    }
+  }
 }

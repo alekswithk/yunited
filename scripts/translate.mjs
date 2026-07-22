@@ -23,6 +23,14 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import {
+  decodeEntities,
+  deeplBatch,
+  lostPlaceholders,
+  postProcess,
+  requireApiKey,
+  unprotect,
+} from "./lib/deepl.mjs";
 
 const I18N_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "i18n");
 
@@ -33,47 +41,11 @@ const TARGETS = {
   sr: "SR",
 };
 
-// Proper nouns / brand tokens that must never be translated. They are wrapped
-// in <x>…</x> before sending and DeepL is told to ignore that tag; the wrapper
-// is stripped again afterwards. Longest first so "uniclubs.ch" wins over
-// "uniclubs" in the single-pass match.
-const PROTECT = [
-  "uniclubs.ch",
-  "uniclubs",
-  "yunited@shsg.ch",
-  "@yunited.unisg",
-  "Yunited",
-  "HSG",
-  "St. Gallen",
-  "Instagram",
-  "Formspree",
-  "CHF",
-].sort((a, b) => b.length - a.length);
-
-const PROTECT_RE = new RegExp(
-  `(${PROTECT.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`,
-  "g",
-);
-
 const args = process.argv.slice(2);
 const force = args.includes("--force");
 const onlyDicts = args.filter((a) => !a.startsWith("--"));
 
-const apiKey = process.env.DEEPL_API_KEY;
-if (!apiKey) {
-  console.error(
-    "DEEPL_API_KEY is not set.\n" +
-      "Copy .env.example to .env and paste your key (get one at\n" +
-      "https://www.deepl.com/pro-api — the free tier's 500k chars/month is\n" +
-      "plenty here), then run:  npm run translate",
-  );
-  process.exit(1);
-}
-
-// Keys ending in ":fx" are DeepL API Free; everything else is Pro.
-const API_URL = apiKey.endsWith(":fx")
-  ? "https://api-free.deepl.com/v2/translate"
-  : "https://api.deepl.com/v2/translate";
+const apiKey = requireApiKey("translate");
 
 const readJson = (name) => JSON.parse(readFileSync(join(I18N_DIR, `${name}.json`), "utf8"));
 
@@ -97,60 +69,7 @@ function setDeep(obj, dottedKey, value) {
   node[parts[parts.length - 1]] = value;
 }
 
-const ENTITIES = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'", "&#x27;": "'" };
-const decodeEntities = (s) => s.replace(/&(amp|lt|gt|quot|#39|#x27);/g, (m) => ENTITIES[m] ?? m);
-
-const protect = (s) => s.replace(PROTECT_RE, "<x>$1</x>");
-const unprotect = (s) => s.replace(/<\/?x>/g, "");
-
-// Two habits DeepL has that need undoing every single run:
-//
-// 1. It quotes the terms we asked it not to translate — "Der Start bei „HSG“",
-//    „uniclubs“-Konto, &quot;YUnited&quot;. The quotes are never wanted; these
-//    are names, not citations.
-// 2. For German it writes German-German ß. This is a Swiss club and the rest of
-//    the copy is Swiss orthography (ausschliesslich, heissen, grosse), so ß is
-//    simply wrong here.
-//
-// Neither is a judgement call, so fix both automatically rather than by hand.
-const QUOTED_PROTECT = new RegExp(
-  `[„“"«»](${PROTECT.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})[„“"«»]`,
-  "g",
-);
-
-function postProcess(text, dict) {
-  let out = text.replace(QUOTED_PROTECT, "$1");
-  if (dict === "de") out = out.replace(/ß/g, "ss");
-  return out;
-}
-
-async function deeplBatch(texts, targetLang) {
-  const out = [];
-  const CHUNK = 40; // DeepL allows 50 text params/request; stay under it.
-  for (let i = 0; i < texts.length; i += CHUNK) {
-    const slice = texts.slice(i, i + CHUNK);
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `DeepL-Auth-Key ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        text: slice.map(protect),
-        source_lang: "EN",
-        target_lang: targetLang,
-        tag_handling: "html", // preserves <a>/<strong> in the marked-up strings
-        ignore_tags: ["x"], // ...and our brand-term wrappers
-      }),
-    });
-    if (!res.ok) {
-      throw new Error(`DeepL ${res.status} ${res.statusText}: ${await res.text()}`);
-    }
-    const data = await res.json();
-    out.push(...data.translations.map((t) => t.text));
-  }
-  return out;
-}
+let hadWarnings = false;
 
 const en = readJson("en");
 const enFlat = flatten(en);
@@ -173,17 +92,28 @@ for (const dict of dictNames) {
 
   console.log(`${dict}.json (${targetLang}): translating ${keys.length} key(s)…`);
   const sources = keys.map((k) => String(enFlat[k]));
-  const translated = await deeplBatch(sources, targetLang);
+  const translated = await deeplBatch(sources, targetLang, { apiKey });
 
   const fresh = {};
+  const suspect = [];
   keys.forEach((k, i) => {
-    let value = unprotect(translated[i]);
+    let value = unprotect(translated[i].text);
     // Plain strings render through auto-escaping {t()}, so they must be raw
     // text — undo any entity encoding DeepL added. Marked-up strings render
     // via set:html and keep their entities/tags as-is.
     if (!String(enFlat[k]).includes("<")) value = decodeEntities(value);
+    // Strip the quotes DeepL puts around protected brand terms, and use Swiss
+    // ss rather than ß for German. See postProcess() in lib/deepl.mjs.
     value = postProcess(value, dict);
     fresh[k] = value;
+
+    // Placeholder integrity. Protecting a {placeholder} stops DeepL translating
+    // it but does NOT stop it dropping one: asked for Serbian, it once returned
+    // "Портрет Елзе Јанец" for "Portrait of {name}" — placeholder gone and an
+    // invented person in its place. A lost placeholder means t(key, vars) silently
+    // stops substituting, so flag it rather than let it reach a page.
+    const missing = lostPlaceholders(enFlat[k], value);
+    if (missing.length) suspect.push(`${k} — lost ${missing.join(", ")}: "${value}"`);
   });
 
   // Rebuild the dictionary in en.json's shape and order: keep existing values,
@@ -196,6 +126,17 @@ for (const dict of dictNames) {
 
   writeFileSync(join(I18N_DIR, `${dict}.json`), JSON.stringify(result, null, 2) + "\n");
   console.log(`  wrote ${dict}.json`);
+
+  if (suspect.length) {
+    console.warn(`  ⚠ ${dict}.json: ${suspect.length} string(s) came back with a`);
+    console.warn(`    placeholder missing — fix these by hand before committing:`);
+    for (const line of suspect) console.warn(`      • ${line}`);
+    hadWarnings = true;
+  }
 }
 
 console.log("Done. Review the output, then flip complete:true in src/i18n/config.js when a locale is finished.");
+if (hadWarnings) {
+  console.warn("\nSome strings need a hand-fix before committing (see ⚠ above).");
+  process.exitCode = 1;
+}

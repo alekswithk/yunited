@@ -6,5 +6,21 @@
   "location": "Déja Vu Bar, St. Gallen",
   "description": "Karaoke night at Déja Vu Bar.",
   "image": "images/events/25_26/karaoke_2025.webp",
-  "rsvpUrl": null
+  "rsvpUrl": null,
+  "i18n": {
+    "sourceLang": "en",
+    "sourceHash": "fdfa97831bdc1ccd",
+    "de": {
+      "title": "Karaoke-Abend",
+      "description": "Karaoke-Abend in der Déja Vu Bar."
+    },
+    "bcs": {
+      "title": "Karaoke večer",
+      "description": "Karaoke večer u baru Déja Vu."
+    },
+    "sr": {
+      "title": "Караоке вече",
+      "description": "Караоке вече у бару Дежа Вју."
+    }
+  }
 }

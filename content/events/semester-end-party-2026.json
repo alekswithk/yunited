@@ -6,5 +6,21 @@
   "location": "Yak Bar, St. Gallen",
   "description": "A proper end to the semester before the study phase begins.",
   "image": "images/events/25_26/sep_2026.webp",
-  "rsvpUrl": "https://uniclubs.ch/hsg/clubs/yunited/events/semester-end-party"
+  "rsvpUrl": "https://uniclubs.ch/hsg/clubs/yunited/events/semester-end-party",
+  "i18n": {
+    "sourceLang": "en",
+    "sourceHash": "2efeec4c0f45ffc7",
+    "de": {
+      "title": "Semesterabschlussfeier",
+      "description": "Ein gebührender Abschluss des Semesters, bevor die Prüfungsphase beginnt."
+    },
+    "bcs": {
+      "title": "Završna zabava semestra",
+      "description": "Pravi kraj semestra prije početka faze učenja."
+    },
+    "sr": {
+      "title": "Журка на крају семестра",
+      "description": "Прикладан крај семестра пре почетка фазе учења."
+    }
+  }
 }
