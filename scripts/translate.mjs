@@ -103,6 +103,27 @@ const decodeEntities = (s) => s.replace(/&(amp|lt|gt|quot|#39|#x27);/g, (m) => E
 const protect = (s) => s.replace(PROTECT_RE, "<x>$1</x>");
 const unprotect = (s) => s.replace(/<\/?x>/g, "");
 
+// Two habits DeepL has that need undoing every single run:
+//
+// 1. It quotes the terms we asked it not to translate — "Der Start bei „HSG“",
+//    „uniclubs“-Konto, &quot;YUnited&quot;. The quotes are never wanted; these
+//    are names, not citations.
+// 2. For German it writes German-German ß. This is a Swiss club and the rest of
+//    the copy is Swiss orthography (ausschliesslich, heissen, grosse), so ß is
+//    simply wrong here.
+//
+// Neither is a judgement call, so fix both automatically rather than by hand.
+const QUOTED_PROTECT = new RegExp(
+  `[„“"«»](${PROTECT.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})[„“"«»]`,
+  "g",
+);
+
+function postProcess(text, dict) {
+  let out = text.replace(QUOTED_PROTECT, "$1");
+  if (dict === "de") out = out.replace(/ß/g, "ss");
+  return out;
+}
+
 async function deeplBatch(texts, targetLang) {
   const out = [];
   const CHUNK = 40; // DeepL allows 50 text params/request; stay under it.
@@ -161,6 +182,7 @@ for (const dict of dictNames) {
     // text — undo any entity encoding DeepL added. Marked-up strings render
     // via set:html and keep their entities/tags as-is.
     if (!String(enFlat[k]).includes("<")) value = decodeEntities(value);
+    value = postProcess(value, dict);
     fresh[k] = value;
   });
 
