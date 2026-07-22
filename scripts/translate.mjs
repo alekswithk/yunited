@@ -42,12 +42,16 @@ const PROTECT = [
   "uniclubs",
   "yunited@shsg.ch",
   "@yunited.unisg",
-  "Yunited",
+  "YUnited",
   "HSG",
   "St. Gallen",
   "Instagram",
   "Formspree",
   "CHF",
+  // {placeholders} filled by t(key, vars) at render time — DeepL must return
+  // them byte-identical or the interpolation silently stops matching.
+  "{title}",
+  "{name}",
 ].sort((a, b) => b.length - a.length);
 
 const PROTECT_RE = new RegExp(
@@ -131,6 +135,8 @@ async function deeplBatch(texts, targetLang) {
   return out;
 }
 
+let hadWarnings = false;
+
 const en = readJson("en");
 const enFlat = flatten(en);
 const dictNames = Object.keys(TARGETS).filter((d) => onlyDicts.length === 0 || onlyDicts.includes(d));
@@ -155,6 +161,7 @@ for (const dict of dictNames) {
   const translated = await deeplBatch(sources, targetLang);
 
   const fresh = {};
+  const suspect = [];
   keys.forEach((k, i) => {
     let value = unprotect(translated[i]);
     // Plain strings render through auto-escaping {t()}, so they must be raw
@@ -162,6 +169,15 @@ for (const dict of dictNames) {
     // via set:html and keep their entities/tags as-is.
     if (!String(enFlat[k]).includes("<")) value = decodeEntities(value);
     fresh[k] = value;
+
+    // Placeholder integrity. Protecting a {placeholder} stops DeepL translating
+    // it but does NOT stop it dropping one: asked for Serbian, it once returned
+    // "Портрет Елзе Јанец" for "Portrait of {name}" — placeholder gone and an
+    // invented person in its place. A lost placeholder means t(key, vars) silently
+    // stops substituting, so flag it rather than let it reach a page.
+    const want = String(enFlat[k]).match(/\{\w+\}/g) ?? [];
+    const missing = want.filter((p) => !value.includes(p));
+    if (missing.length) suspect.push(`${k} — lost ${missing.join(", ")}: "${value}"`);
   });
 
   // Rebuild the dictionary in en.json's shape and order: keep existing values,
@@ -174,6 +190,17 @@ for (const dict of dictNames) {
 
   writeFileSync(join(I18N_DIR, `${dict}.json`), JSON.stringify(result, null, 2) + "\n");
   console.log(`  wrote ${dict}.json`);
+
+  if (suspect.length) {
+    console.warn(`  ⚠ ${dict}.json: ${suspect.length} string(s) came back with a`);
+    console.warn(`    placeholder missing — fix these by hand before committing:`);
+    for (const line of suspect) console.warn(`      • ${line}`);
+    hadWarnings = true;
+  }
 }
 
 console.log("Done. Review the output, then flip complete:true in src/i18n/config.js when a locale is finished.");
+if (hadWarnings) {
+  console.warn("\nSome strings need a hand-fix before committing (see ⚠ above).");
+  process.exitCode = 1;
+}

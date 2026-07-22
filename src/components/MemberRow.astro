@@ -3,18 +3,22 @@
 // (was buildRosterRow in members.js).
 import Portrait from "./Portrait.astro";
 import { isUnfilled, displayName } from "../lib/members.js";
+import { defaultLocale } from "../i18n/config.js";
+import { useTranslations } from "../i18n/utils.js";
 
-const { member } = Astro.props;
+const { member, locale = defaultLocale } = Astro.props;
+const t = useTranslations(locale);
 const tbaClass = isUnfilled(member.name) ? " is-tba" : "";
 const showBio = !isUnfilled(member.bio);
+const name = displayName(member) ?? t("members.tba");
 ---
 
 <article class="roster-row">
   <p class="roster-role">{member.role}</p>
   <div class="roster-person">
-    <Portrait member={member} />
+    <Portrait member={member} locale={locale} />
     <div>
-      <p class={`roster-name${tbaClass}`}>{displayName(member)}</p>
+      <p class={`roster-name${tbaClass}`}>{name}</p>
       {showBio && <p class="roster-bio">{member.bio}</p>}
     </div>
   </div>

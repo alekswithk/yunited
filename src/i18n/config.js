@@ -10,18 +10,23 @@
 // generated (so they can be reviewed at their real URLs) but are marked
 // noindex, kept out of the sitemap and hreflang, and hidden from the language
 // selector. Flip to true only when that locale's copy is actually finished.
+//
+// `dateLocale` is the BCP 47 tag used to format event dates (see
+// formatEventDate). It is deliberately separate from `htmlLang`: plain "en"
+// formats American-style ("May 13, 2026"), and this is a Swiss club, so English
+// pages ask for en-GB ("13 May 2026") and German for de-CH.
 
 export const defaultLocale = "en";
 
 export const locales = [
-  { code: "en", dict: "en", label: "English", htmlLang: "en", ogLocale: "en_GB", complete: true },
-  { code: "de", dict: "de", label: "Deutsch", htmlLang: "de", ogLocale: "de_CH", complete: true },
+  { code: "en", dict: "en", label: "English", htmlLang: "en", dateLocale: "en-GB", ogLocale: "en_GB", complete: true },
+  { code: "de", dict: "de", label: "Deutsch", htmlLang: "de", dateLocale: "de-CH", ogLocale: "de_CH", complete: true },
   // bs/hr/sr hold raw DeepL output that nobody has read yet — it still contains
   // mistranslations (wrong university names) and sr mixes Latin and Cyrillic
   // against its sr-Latn tag. Keep them gated until a speaker reviews them.
-  { code: "bs", dict: "bcs", label: "Bosanski", htmlLang: "bs", ogLocale: "bs_BA", complete: false },
-  { code: "hr", dict: "bcs", label: "Hrvatski", htmlLang: "hr", ogLocale: "hr_HR", complete: false },
-  { code: "sr", dict: "sr", label: "Srpski", htmlLang: "sr-Latn", ogLocale: "sr_RS", complete: false },
+  { code: "bs", dict: "bcs", label: "Bosanski", htmlLang: "bs", dateLocale: "bs-Latn-BA", ogLocale: "bs_BA", complete: false },
+  { code: "hr", dict: "bcs", label: "Hrvatski", htmlLang: "hr", dateLocale: "hr-HR", ogLocale: "hr_HR", complete: false },
+  { code: "sr", dict: "sr", label: "Srpski", htmlLang: "sr-Latn", dateLocale: "sr-Latn-RS", ogLocale: "sr_RS", complete: false },
 ];
 
 export const localeCodes = locales.map((l) => l.code);

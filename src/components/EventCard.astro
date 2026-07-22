@@ -5,25 +5,30 @@
 import { Image } from "astro:assets";
 import { formatEventDate } from "../lib/events.js";
 import { resolveImage } from "../lib/images.js";
+import { defaultLocale, getLocale } from "../i18n/config.js";
+import { useTranslations } from "../i18n/utils.js";
 
-const { event, isPast = false } = Astro.props;
+const { event, isPast = false, locale = defaultLocale } = Astro.props;
+const t = useTranslations(locale);
 
 const image = resolveImage(event.image);
 const timeText = event.time ? " · " + event.time : "";
 const hasRsvp = event.rsvpUrl && /^https:\/\//i.test(event.rsvpUrl);
-const linkText = isPast ? "Event page →" : "RSVP on uniclubs →";
+const linkText = isPast ? t("events.pastCta") : t("events.rsvpCta");
+// Month names follow the locale: "13 May 2026" in English, "13. Mai 2026" in German.
+const dateText = formatEventDate(event.date, getLocale(locale).dateLocale) ?? t("events.dateTba");
 ---
 
 <article class="card reveal is-visible">
   {image ? (
     <div class="card-image">
-      <Image src={image} alt={`Photo from ${event.title}`} width={480} densities={[1, 2]} loading="lazy" />
+      <Image src={image} alt={t("events.photoAlt", { title: event.title })} width={480} densities={[1, 2]} loading="lazy" />
     </div>
   ) : (
     <div class="card-image" aria-hidden="true">{event.title.charAt(0).toUpperCase()}</div>
   )}
   <div class="card-body">
-    <p class="card-date">{formatEventDate(event.date)}{timeText}</p>
+    <p class="card-date">{dateText}{timeText}</p>
     <h3>{event.title}</h3>
     <p class="card-location">{event.location}</p>
     <p class="card-description">{event.description}</p>

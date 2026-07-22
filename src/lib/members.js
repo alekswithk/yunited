@@ -7,8 +7,11 @@ export function isUnfilled(value) {
   return !value || /\[.*?\]/.test(String(value));
 }
 
+// The member's name, or null when the seat is filled but the person isn't
+// announced yet. Null rather than "To be announced" so this module stays
+// dictionary-free — the caller renders its own localized placeholder.
 export function displayName(member) {
-  return isUnfilled(member.name) ? "To be announced" : member.name;
+  return isUnfilled(member.name) ? null : member.name;
 }
 
 // Drop-cap initial, shown until a member has a real photo.

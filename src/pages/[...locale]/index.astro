@@ -67,7 +67,7 @@ const orgSchema = {
       <h2>{t("home.upcomingHeading")}</h2>
       <div class="card-grid" id="upcoming-events">
         {upcomingTeaser.length > 0 ? (
-          upcomingTeaser.map((event) => <EventCard event={event} isPast={false} />)
+          upcomingTeaser.map((event) => <EventCard event={event} isPast={false} locale={locale} />)
         ) : (
           <p class="empty-note">{t("events.emptyUpcoming")}</p>
         )}
@@ -82,7 +82,7 @@ const orgSchema = {
       <h2>{t("home.pastHeading")}</h2>
       <div class="card-grid" id="past-events">
         {pastTeaser.length > 0 ? (
-          pastTeaser.map((event) => <EventCard event={event} isPast={true} />)
+          pastTeaser.map((event) => <EventCard event={event} isPast={true} locale={locale} />)
         ) : (
           <p class="empty-note">{t("events.emptyPast")}</p>
         )}
