@@ -119,6 +119,54 @@ const hideFromIndex = noindex || !loc.complete;
     } else {
       revealElements.forEach((element) => element.classList.add("is-visible"));
     }
+
+    // --- Table-of-contents scroll spy ---
+    // Marks the entry for whichever section is currently nearest the top of the
+    // viewport. Without JS the links still work as plain anchors; they just
+    // don't highlight. aria-current is the single source of truth here, so what
+    // is announced and what is styled can never drift apart.
+    const tocLinks = document.querySelectorAll<HTMLAnchorElement>("[data-toc-link]");
+
+    if (tocLinks.length > 0 && "IntersectionObserver" in window) {
+      const linkFor = new Map<string, HTMLAnchorElement>();
+      const watched: Element[] = [];
+
+      tocLinks.forEach((link) => {
+        const id = link.dataset.tocLink;
+        if (!id) return;
+        const section = document.getElementById(id);
+        if (!section) return; // a TOC entry naming a section that isn't here
+        linkFor.set(id, link);
+        watched.push(section);
+      });
+
+      const onScreen = new Set<string>();
+
+      const setCurrent = (id: string | null) => {
+        linkFor.forEach((link, key) => {
+          if (key === id) link.setAttribute("aria-current", "true");
+          else link.removeAttribute("aria-current");
+        });
+      };
+
+      const tocObserver = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) onScreen.add(entry.target.id);
+            else onScreen.delete(entry.target.id);
+          }
+          // Several sections can be in view at once; the topmost one in document
+          // order is the one you are actually reading.
+          const first = watched.find((section) => onScreen.has(section.id));
+          setCurrent(first ? first.id : null);
+        },
+        // Bias the band toward the upper part of the viewport so the highlight
+        // moves when a heading reaches reading position, not when it exits.
+        { rootMargin: "-20% 0px -70% 0px" }
+      );
+
+      watched.forEach((section) => tocObserver.observe(section));
+    }
   </script>
 </body>
 </html>

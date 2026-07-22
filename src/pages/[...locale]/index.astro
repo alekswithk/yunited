@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageToc from "../../components/PageToc.astro";
 import EventCard from "../../components/EventCard.astro";
 import { events } from "../../lib/content.js";
 import { splitEvents } from "../../lib/events.js";
@@ -17,6 +18,14 @@ const pastTeaser = past.slice(0, 2);
 
 const title = t("meta.home.title");
 const description = t("meta.home.description");
+
+// Each id must match a <section id> below. The hero is deliberately not listed
+// — you are already there when the page loads.
+const sections = [
+  { id: "upcoming", key: "toc.upcoming" },
+  { id: "recent", key: "toc.recent" },
+  { id: "who", key: "toc.who" },
+];
 
 const orgSchema = {
   "@context": "https://schema.org",
@@ -46,6 +55,8 @@ const orgSchema = {
   <script type="application/ld+json" is:inline set:html={JSON.stringify(orgSchema)} slot="head" />
 
   <!-- Hero: answers "what is this" immediately, no info gated behind animation -->
+  <PageToc sections={sections} locale={locale} label="toc.aria" />
+
   <section class="hero">
     <div class="container">
       <p class="hero-script">Dobrodošli · Добродошли · Welcome</p>
@@ -61,7 +72,7 @@ const orgSchema = {
   <div class="motif-divider" role="presentation"></div>
 
   <!-- Upcoming events teaser (max 2, rendered from content/events.json) -->
-  <section>
+  <section id="upcoming">
     <div class="container reveal">
       <p class="eyebrow">{t("home.upcomingEyebrow")}</p>
       <h2>{t("home.upcomingHeading")}</h2>
@@ -76,7 +87,7 @@ const orgSchema = {
   </section>
 
   <!-- Recent past-event highlights (max 2, same JSON, same card) -->
-  <section>
+  <section id="recent">
     <div class="container reveal">
       <p class="eyebrow">{t("home.pastEyebrow")}</p>
       <h2>{t("home.pastHeading")}</h2>
@@ -94,7 +105,7 @@ const orgSchema = {
   </section>
 
   <!-- Short "what we stand for" teaser linking to About -->
-  <section class="section-dark">
+  <section id="who" class="section-dark">
     <div class="container reveal">
       <p class="eyebrow">{t("home.whoEyebrow")}</p>
       <h2>{t("home.whoHeading")}</h2>

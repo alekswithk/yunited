@@ -14,6 +14,16 @@
     "label": "Sprache",
     "aria": "Sprache wählen"
   },
+  "toc": {
+    "aria": "Auf dieser Seite",
+    "mission": "Mission",
+    "buddy": "Buddy-System",
+    "story": "Geschichte",
+    "values": "Werte",
+    "upcoming": "Demnächst",
+    "recent": "Aktuell",
+    "who": "Wer wir sind"
+  },
   "footer": {
     "tagline": "HSG-Studentenclub, der seit 2013 Studierende mit Wurzeln auf dem Balkan und im ehemaligen Jugoslawien verbindet — und alle, die neugierig auf die Kultur sind.",
     "pages": "Seiten",
