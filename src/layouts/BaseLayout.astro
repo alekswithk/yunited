@@ -100,6 +100,29 @@ const hideFromIndex = noindex || !loc.complete;
       });
     }
 
+    // --- Language switcher: close on outside click and on Escape ---
+    // <details> handles opening, focus and keyboard activation itself; these are
+    // the only two behaviours it doesn't provide. With JS off the menu still
+    // opens and closes on click, which is why it's a disclosure and not a
+    // scripted dropdown.
+    const langSwitch = document.querySelector<HTMLDetailsElement>(".lang-switch");
+
+    if (langSwitch) {
+      document.addEventListener("click", (event) => {
+        const target = event.target as Node | null;
+        if (langSwitch.open && target && !langSwitch.contains(target)) {
+          langSwitch.open = false;
+        }
+      });
+
+      langSwitch.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && langSwitch.open) {
+          langSwitch.open = false;
+          langSwitch.querySelector("summary")?.focus();
+        }
+      });
+    }
+
     // --- Reveal sections as they scroll into view ---
     const revealElements = document.querySelectorAll(".reveal");
 
