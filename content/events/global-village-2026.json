@@ -6,5 +6,21 @@
   "location": "TheCo by SHSG, Müller-Friedberg-Strasse 6, St. Gallen",
   "description": "Partner event with AIESEC: Global Village St. Gallen, together with East Slavic, MENA, Scandinavian Society, Persian Association and Hungarian Association.",
   "image": "images/events/25_26/global_village_2026.webp",
-  "rsvpUrl": "https://uniclubs.ch/hsg/clubs/aiesec/events/global-village-by-aiesec"
+  "rsvpUrl": "https://uniclubs.ch/hsg/clubs/aiesec/events/global-village-by-aiesec",
+  "i18n": {
+    "sourceLang": "en",
+    "sourceHash": "ce9726281f34d491",
+    "de": {
+      "title": "Global Village (mit AIESEC)",
+      "description": "Partnerveranstaltung mit AIESEC: „Global Village“ St. Gallen, gemeinsam mit der Ostslawischen Gesellschaft, der MENA-Gesellschaft, der Skandinavischen Gesellschaft, dem Persischen Verein und dem Ungarischen Verein."
+    },
+    "bcs": {
+      "title": "Globalno selo (s AIESEC)",
+      "description": "Partnerski događaj s AIESEC: Global Village St. Gallen, zajedno sa Istočno-slovenskim društvom, MENA društvom, Skandinavskim društvom, Perzijskim udruženjem i Mađarskim udruženjem."
+    },
+    "sr": {
+      "title": "Глобално село (са AIESEC)",
+      "description": "Партнерски догађај са AIESEC: Global Village St. Gallen, заједно са Источнословенским друштвом, МЕНА друштвом, Скандинавским друштвом, Персијским удружењем и Мађарским удружењем."
+    }
+  }
 }

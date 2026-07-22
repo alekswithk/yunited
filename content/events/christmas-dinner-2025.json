@@ -6,5 +6,21 @@
   "location": "Zürcherstrasse 162, St. Gallen",
   "description": "A festive dinner to close out the year together.",
   "image": "images/events/25_26/christmas_dinner_2025.webp",
-  "rsvpUrl": null
+  "rsvpUrl": null,
+  "i18n": {
+    "sourceLang": "en",
+    "sourceHash": "d2368d1f6ab0d9f6",
+    "de": {
+      "title": "Weihnachtsessen",
+      "description": "Ein festliches Abendessen, um das Jahr gemeinsam ausklingen zu lassen."
+    },
+    "bcs": {
+      "title": "Božićna večera",
+      "description": "Svečana večera za zajedničko dočekivanje kraja godine."
+    },
+    "sr": {
+      "title": "Божићна вечера",
+      "description": "Празнична вечера да заједно завршимо годину."
+    }
+  }
 }

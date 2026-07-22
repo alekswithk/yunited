@@ -6,5 +6,21 @@
   "location": "blue Cinema, St. Gallen",
   "description": "A cinema screening of Svadba.",
   "image": "images/events/25_26/cinema_2026.webp",
-  "rsvpUrl": null
+  "rsvpUrl": null,
+  "i18n": {
+    "sourceLang": "en",
+    "sourceHash": "2f131e084f09fb1f",
+    "de": {
+      "title": "Filmabend – Die Hochzeit",
+      "description": "Eine Kinovorführung von „Svadba“."
+    },
+    "bcs": {
+      "title": "Kino večer — Vjenčanje",
+      "description": "Kino projekcija Svadbe."
+    },
+    "sr": {
+      "title": "Кино вече — Венчање",
+      "description": "Кинематографска пројекција филма \"Свадба\"."
+    }
+  }
 }
