@@ -3,11 +3,12 @@
 // `path` is the current page's locale-independent route (e.g. "/events") so the
 // active link gets aria-current and the language switcher can offer the same
 // page in another language.
-import { defaultLocale, localizePath, publishedLocales } from "../i18n/config.js";
+import { defaultLocale, getLocale, localizePath, publishedLocales } from "../i18n/config.js";
 import { useTranslations } from "../i18n/utils.js";
 
 const { path = "/", locale = defaultLocale } = Astro.props;
 const t = useTranslations(locale);
+const current = getLocale(locale);
 
 const links = [
   { href: "/", key: "nav.home" },
@@ -35,19 +36,29 @@ const showSwitcher = switchable.length > 1;
         <a href={localizePath(link.href, locale)} aria-current={path === link.href ? "page" : undefined}>{t(link.key)}</a>
       ))}
       <a class="btn btn-gold nav-join" href={localizePath("/join", locale)} aria-current={path === "/join" ? "page" : undefined}>{t("nav.join")}</a>
+      {/* <details> rather than a scripted menu: it opens, closes and takes
+          keyboard focus natively, so the switcher works with JS disabled and
+          adds nothing to the CSP. The script in BaseLayout only adds the two
+          conveniences <details> lacks — close on outside-click and on Escape. */}
       {showSwitcher && (
-        <ul class="lang-switch" aria-label={t("lang.aria")}>
-          {switchable.map((l) => (
-            <li>
-              <a
-                href={localizePath(path, l.code)}
-                hreflang={l.code}
-                lang={l.htmlLang}
-                aria-current={l.code === locale ? "true" : undefined}
-              >{l.label}</a>
-            </li>
-          ))}
-        </ul>
+        <details class="lang-switch">
+          <summary aria-label={t("lang.aria")}>
+            <span class="lang-current" lang={current.htmlLang}>{current.label}</span>
+            <span class="lang-caret" aria-hidden="true"></span>
+          </summary>
+          <ul class="lang-menu">
+            {switchable.map((l) => (
+              <li>
+                <a
+                  href={localizePath(path, l.code)}
+                  hreflang={l.code}
+                  lang={l.htmlLang}
+                  aria-current={l.code === locale ? "true" : undefined}
+                >{l.label}</a>
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
     </nav>
   </div>

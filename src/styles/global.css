@@ -282,18 +282,85 @@ section { padding: var(--space-6) 0; }
 
 /* Language switcher. Rendered only once more than one translation is finished
    (see src/i18n/config.js), so it is absent from the markup until then. */
+/* Language switcher — a native <details> disclosure, styled as a square
+   print-shop dropdown. Sized to hold five locales without touching the nav. */
 .lang-switch {
+  position: relative;
+  margin-left: var(--space-2);
+  padding-left: var(--space-3);
+  border-left: 1px solid color-mix(in srgb, var(--color-ink) 25%, transparent);
+}
+
+.lang-switch > summary {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border-left: 1px solid color-mix(in srgb, var(--color-ink) 25%, transparent);
-  padding-left: var(--space-3);
+  cursor: pointer;
+  padding: 0.3rem 0.55rem;
+  border: 2px solid transparent;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  list-style: none; /* Firefox */
+  white-space: nowrap;
 }
-.lang-switch a { font-size: 0.72rem; }
-.lang-switch a[aria-current="true"] { color: var(--color-red); font-weight: 700; }
+.lang-switch > summary::-webkit-details-marker { display: none; } /* Safari */
+.lang-switch > summary:hover,
+.lang-switch[open] > summary { border-color: var(--color-ink); }
+.lang-switch > summary:focus-visible { outline: 2px solid var(--color-red); outline-offset: 2px; }
+
+/* Caret drawn from borders — no icon font, no SVG request. */
+.lang-caret {
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+}
+.lang-switch[open] .lang-caret { transform: rotate(180deg); }
+
+.lang-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 30;
+  min-width: 100%;
+  margin: 0;
+  padding: var(--space-1);
+  list-style: none;
+  background: var(--color-paper);
+  border: var(--border);
+  box-shadow: var(--shadow-hard-sm);
+}
+.lang-menu li { margin: 0; }
+.lang-menu a {
+  display: block;
+  padding: 0.4rem 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.lang-menu a:hover { background: var(--color-ink); color: var(--color-paper); }
+.lang-menu a[aria-current="true"] { color: var(--color-red); font-weight: 700; }
+
+/* In the open mobile nav (.main-nav becomes a stacked column at 768px) the menu
+   drops back into the flow instead of floating over the links below it. */
+@media (max-width: 768px) {
+  .lang-switch {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, var(--color-ink) 25%, transparent);
+    padding-top: var(--space-3);
+    margin-top: var(--space-2);
+  }
+  .lang-menu { position: static; box-shadow: none; border: 0; padding: var(--space-1) 0 0; }
+  .lang-menu a { padding-left: 0; }
+}
 
 /* Buttons: square, solid fill, hard offset shadow, tactile press */
 .btn {
