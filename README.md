@@ -1,6 +1,6 @@
 # How to update this website
 
-This is the Yunited club website. It's a static site built with
+This is the YUnited club website. It's a static site built with
 [Astro](https://astro.build) — no database, no admin panel. **All the content
 you'd ever normally change lives in two small files:**
 

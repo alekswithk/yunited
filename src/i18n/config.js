@@ -15,7 +15,10 @@ export const defaultLocale = "en";
 
 export const locales = [
   { code: "en", dict: "en", label: "English", htmlLang: "en", ogLocale: "en_GB", complete: true },
-  { code: "de", dict: "de", label: "Deutsch", htmlLang: "de", ogLocale: "de_CH", complete: false },
+  { code: "de", dict: "de", label: "Deutsch", htmlLang: "de", ogLocale: "de_CH", complete: true },
+  // bs/hr/sr hold raw DeepL output that nobody has read yet — it still contains
+  // mistranslations (wrong university names) and sr mixes Latin and Cyrillic
+  // against its sr-Latn tag. Keep them gated until a speaker reviews them.
   { code: "bs", dict: "bcs", label: "Bosanski", htmlLang: "bs", ogLocale: "bs_BA", complete: false },
   { code: "hr", dict: "bcs", label: "Hrvatski", htmlLang: "hr", ogLocale: "hr_HR", complete: false },
   { code: "sr", dict: "sr", label: "Srpski", htmlLang: "sr-Latn", ogLocale: "sr_RS", complete: false },

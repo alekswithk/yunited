@@ -22,7 +22,7 @@ backend:
 site_url: https://yunited.ch
 locale: en
 
-# Yunited branding on the login screen and header. The logo adapts to light/dark.
+# YUnited branding on the login screen and header. The logo adapts to light/dark.
 logo:
   src: /assets/yunited-logo-cms.svg
   show_in_header: true

@@ -1,11 +1,11 @@
-# PLAN.md — Yunited website: status, structure & roadmap
+# PLAN.md — YUnited website: status, structure & roadmap
 
 **Purpose.** One living document to see at a glance what the repo *is*, what's
 **done**, what's **pending**, and what's **planned** — so neither the board nor an
 AI assistant has to re-derive the layout by scanning every time. Keep it current:
 when a step ships, tick it here in the same PR.
 
-- **What this is:** the static website for **Yunited**, the Balkan / ex-Yu student
+- **What this is:** the static website for **YUnited**, the Balkan / ex-Yu student
   club at the University of St. Gallen (HSG), served at **yunited.ch**.
 - **Stack:** [Astro](https://astro.build) (build-time rendering) → static files →
   **Cloudflare Workers** static assets. No database, no server, no runtime JS data.
@@ -13,7 +13,8 @@ when a step ships, tick it here in the same PR.
   & usage → [`docs/CMS.md`](docs/CMS.md). This file is the *tracker/index*; those
   are the *reference*.
 
-_Last updated: 2026-07-21 (through PR #19; i18n in progress on `i18n-foundation`)._
+_Last updated: 2026-07-22 (through PR #22; i18n on `i18n-foundation` — German published,
+BCS/Serbian still gated)._
 
 ---
 
@@ -99,15 +100,23 @@ they carry design decisions that need a person. The agent skips them.
       site by moving the inline `style="…"` attributes (6 pages) into `global.css`
       classes, and the inline JSON-LD / contact script into hashed/external form.
       The stylesheet is already CSP-clean; this finishes the job.
-- [~] **i18n: English + BCS** *(large).* In progress on `i18n-foundation`. Done:
+- [~] **i18n: English + BCS — 🧑 human-led** *(large).* In progress on `i18n-foundation`. Done:
       locale routing (`src/pages/[...locale]/`), the dictionary + English-fallback
       system (`src/i18n/`), the language switcher, gated publishing (`complete:false`
       → noindex + out of sitemap/switcher), `hreflang` in each page's `<head>` (gated
       to finished locales — the equivalent of the sitemap approach), and **all page
       body copy authored in `en.json` and rendered via `t()`**. An offline DeepL
-      helper (`npm run translate`, `DEEPL_API_KEY`) tops up `de`/`bcs`/`sr`. Remaining:
-      run the translator, review the machine translation, then flip `complete:true`
-      per locale to publish it.
+      helper (`npm run translate`, `DEEPL_API_KEY`) tops up `de`/`bcs`/`sr`; all four
+      dictionaries now carry all 135 keys. **German is reviewed and published**
+      (`complete: true`). Remaining, per locale:
+  - [ ] **Serbian: pick one script.** `sr.json` is currently mixed — the hand-done
+        nav/footer/meta (15 keys) are Latin, the DeepL body copy (101 keys) is
+        Cyrillic, and `htmlLang` claims `sr-Latn`. Convert one way or the other
+        (and fix `htmlLang` if Cyrillic wins) before publishing.
+  - [ ] **BCS + Serbian: speaker review.** Raw DeepL output. The worst damage is
+        fixed (it had placed HSG in *Edinburgh* and *New York*, and called the board
+        inbox a "forum"), but nobody fluent has read either dictionary end to end.
+        Flip `complete: true` in `src/i18n/config.js` only after that review.
 - [ ] **Partners / recruiting funnel** *(content + feature).* Sponsor/partner page
       and a recruiting flow. Scope with the board.
 
@@ -125,6 +134,14 @@ which Google treats as equivalent; no separate sitemap `hreflang` needed.
       deploy. Point board members at `docs/CMS.md`.
 - [ ] Current `sharp` build lacks **AVIF/HEVC decode** (AV1 works). AVIF *uploads*
       would fail; not worth acting on unless it comes up. HEIC handled via clear error.
+- [ ] **Brand capitalization is provisional — the board is deciding.** Copy, chrome
+      and metadata now all say **YUnited**. The logo artwork deliberately still reads
+      "Yunited" and **stays as is** for now (the SVGs are drawn vector paths, so the
+      letterforms can't be search-and-replaced anyway — only their `<title>`/
+      `aria-label` were updated). If the team lands on a different spelling, the copy
+      is a one-line `perl -pi -e 's/\bYUnited\b/…/g'` over the same file list as the
+      rename commit. Filenames, `yunited.ch`, `yunited@shsg.ch` and `@yunited.unisg`
+      are lowercase and unaffected either way.
 
 ---
 
@@ -144,7 +161,7 @@ expected text appears in the built HTML (e.g. `grep "Casino Night" dist/events.h
 
 ## 7. Automation 🤖
 
-A **weekly cloud agent** ("Yunited weekly roadmap agent") runs every **Monday
+A **weekly cloud agent** ("YUnited weekly roadmap agent") runs every **Monday
 09:00 Europe/Zurich** (`0 7 * * 1` UTC). Manage/disable it at
 <https://claude.ai/code/routines>.
 
