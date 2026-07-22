@@ -7,11 +7,17 @@ export function hasDate(event) {
   return typeof event.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(event.date);
 }
 
-// "2026-05-13" -> "13 May 2026"; a TBA (null/invalid) date shows "Date TBA".
-export function formatEventDate(isoDate) {
-  if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return "Date TBA";
+// "2026-05-13" -> "13 May 2026" (en-GB) or "13. Mai 2026" (de-CH). `localeTag`
+// is a BCP 47 tag — pass the locale's `dateLocale` from i18n/config.js, which
+// is region-qualified precisely so month/day order comes out right.
+//
+// Returns null for a TBA (null/invalid) date rather than an English string: this
+// module stays framework- and dictionary-free, so the caller renders whatever
+// its dictionary says for "date to be announced".
+export function formatEventDate(isoDate, localeTag = "en-GB") {
+  if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return null;
   const date = new Date(isoDate + "T00:00:00");
-  return date.toLocaleDateString("en-GB", {
+  return date.toLocaleDateString(localeTag, {
     day: "numeric",
     month: "long",
     year: "numeric",

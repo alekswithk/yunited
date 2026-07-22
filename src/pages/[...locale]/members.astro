@@ -35,10 +35,10 @@ const [lead, ...roster] = Array.isArray(members) ? members : [];
       <div id="member-grid">
         {lead ? (
           <>
-            <MemberLead member={lead} />
+            <MemberLead member={lead} locale={locale} />
             {roster.length > 0 && (
               <div class="roster">
-                {roster.map((member) => <MemberRow member={member} />)}
+                {roster.map((member) => <MemberRow member={member} locale={locale} />)}
               </div>
             )}
           </>
