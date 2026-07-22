@@ -930,7 +930,11 @@ input:focus, select:focus, textarea:focus {
     display: block;
     position: fixed;
     left: max(var(--space-4), calc((100vw - var(--max-width)) / 2 - 140px));
-    top: 50%;
+    /* Sits just below the optical centre — dead centre rides too high against
+       the page-hero on About. A rem offset rather than a larger percentage, so
+       the nudge stays 48px on a laptop and on a tall external display; a
+       percentage would drift further down the taller the screen. */
+    top: calc(50% + 3rem);
     transform: translateY(-50%);
     z-index: 20;
     max-width: 150px;
