@@ -14,6 +14,16 @@
     "label": "Language",
     "aria": "Choose a language"
   },
+  "toc": {
+    "aria": "On this page",
+    "mission": "Mission",
+    "buddy": "Buddy system",
+    "story": "Story",
+    "values": "Values",
+    "upcoming": "Upcoming",
+    "recent": "Recent",
+    "who": "Who we are"
+  },
   "footer": {
     "tagline": "HSG student club connecting students with Balkan and ex-Yugoslav roots — and everyone curious about the culture — since 2013.",
     "pages": "Pages",

@@ -14,6 +14,16 @@
     "label": "Jezik",
     "aria": "Odaberi jezik"
   },
+  "toc": {
+    "aria": "Na ovoj stranici",
+    "mission": "Misija",
+    "buddy": "Sustav prijatelja",
+    "story": "Priča",
+    "values": "Vrijednosti",
+    "upcoming": "Uskoro",
+    "recent": "Nedavno",
+    "who": "Tko smo mi"
+  },
   "footer": {
     "tagline": "Studentski klub na HSG-u koji od 2013. povezuje studente s balkanskim i eks-jugoslavenskim korijenima — i sve koje zanima naša kultura.",
     "pages": "Stranice",

@@ -1,0 +1,29 @@
+---
+// A slim table of contents that tracks which section you are reading.
+//
+// Rendered as a fixed rail beside the content on wide screens and hidden
+// entirely below 1100px, where there is no room for it and the page is short
+// enough to scroll. It is progressive enhancement in both directions: with no
+// JavaScript the links are still ordinary in-page anchors, and with a narrow
+// viewport it simply is not there.
+//
+// `sections` is [{ id, key }] — the id must match a `<section id>` on the page,
+// and the key is a dictionary key so the labels translate with everything else.
+import { defaultLocale } from "../i18n/config.js";
+import { useTranslations } from "../i18n/utils.js";
+
+const { sections = [], locale = defaultLocale, label } = Astro.props;
+const t = useTranslations(locale);
+---
+
+{sections.length > 1 && (
+  <nav class="page-toc" aria-label={label ? t(label) : undefined}>
+    <ol>
+      {sections.map((section) => (
+        <li>
+          <a href={`#${section.id}`} data-toc-link={section.id}>{t(section.key)}</a>
+        </li>
+      ))}
+    </ol>
+  </nav>
+)}
