@@ -85,12 +85,12 @@ Earlier foundation (pre-#12): Astro migration + build-time image optimization.
 
 Manual/account steps (code is in place).
 
-- [ ] **Add `DEEPL_API_KEY` to the repository's Actions secrets**
-      (Settings → Secrets and variables → Actions → New repository secret).
-      The "Translate content" workflow cannot run without it — it will fail
-      loudly on every content push until the secret exists. Use the same key
-      that is in your local `.env`. *The site build never needs this; it stays
-      hermetic. Only the translation workflow reads it.*
+- [x] **`DEEPL_API_KEY` added to the repository's Actions secrets** (2026-07-22) —
+      the "Translate content" workflow reads it; it fails loudly if the secret is
+      ever removed. *The site build never needs this and stays hermetic; the
+      secret is deliberately NOT in the Cloudflare build settings, so a deploy
+      can never depend on DeepL being reachable.* To rotate: update `.env`
+      locally, then `gh secret set DEEPL_API_KEY`.
 - [x] Deploy `sveltia-cms-auth` worker + GitHub OAuth app + secrets — login works.
 - [x] **Google Search Console**: sitemap switched to `https://yunited.ch/sitemap-index.xml`.
 
