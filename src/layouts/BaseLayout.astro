@@ -189,6 +189,57 @@ const hideFromIndex = noindex || !loc.complete;
       );
 
       watched.forEach((section) => tocObserver.observe(section));
+
+      // --- Keep each TOC entry legible against what is behind it ---
+      // The rail passes over the dark sections (.hero / .page-hero /
+      // .section-dark, all --color-ink) as they scroll past, and its dark inks
+      // vanish against them. Each entry is told when ink is behind IT and flips
+      // to the paper palette.
+      //
+      // Per entry, not per rail: the rail is ~150px tall, so at a section
+      // boundary a single toggle would always leave one end of it unreadable.
+      //
+      // This measures on scroll rather than with IntersectionObserver bands.
+      // The rail is position:sticky now, so it MOVES within the viewport — it
+      // scrolls in, holds, then scrolls away with the content — and any
+      // precomputed band would be wrong the moment it stopped sticking.
+      const darkSurfaces = Array.from(
+        document.querySelectorAll(".hero, .page-hero, .section-dark, .site-footer")
+      );
+
+      if (darkSurfaces.length > 0) {
+        let queued = 0;
+
+        const syncBackdrops = () => {
+          queued = 0;
+          // All reads first, then all writes — never interleaved, so this
+          // cannot thrash layout while scrolling.
+          const darkBoxes = darkSurfaces.map((el) => el.getBoundingClientRect());
+          const linkBoxes = Array.from(tocLinks, (link) => link.getBoundingClientRect());
+
+          tocLinks.forEach((link, i) => {
+            const box = linkBoxes[i];
+            if (box.height === 0) return; // rail hidden (below 1100px)
+            // Test the entry's midpoint: it flips once it is more than half
+            // over ink, which reads as deliberate rather than flickering at the
+            // exact moment an edge touches.
+            const middle = (box.top + box.bottom) / 2;
+            const onDark = darkBoxes.some((d) => d.top < middle && d.bottom > middle);
+            link.classList.toggle("is-on-dark", onDark);
+          });
+        };
+
+        const requestSync = () => {
+          if (!queued) queued = requestAnimationFrame(syncBackdrops);
+        };
+
+        syncBackdrops();
+        window.addEventListener("scroll", requestSync, { passive: true });
+        window.addEventListener("resize", requestSync);
+        // The rail is set in Space Mono with font-display: swap, so its height
+        // changes when the real font lands — usually after this first runs.
+        document.fonts?.ready.then(syncBackdrops);
+      }
     }
   </script>
 </body>
