@@ -1,4 +1,4 @@
-# Deploying the Yunited website
+# Deploying the YUnited website
 
 This is a **static site** — plain HTML, CSS, JS and two JSON files. There is no
 backend, database or build step. That means hosting is **free** and the only

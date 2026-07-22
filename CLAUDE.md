@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-The website for **Yunited**, the Balkan / ex-Yugoslav student club at the University of St. Gallen (HSG), served at `yunited.ch`. It is a static site built with **Astro** and deployed on **Cloudflare** (Workers static assets).
+The website for **YUnited**, the Balkan / ex-Yugoslav student club at the University of St. Gallen (HSG), served at `yunited.ch`. It is a static site built with **Astro** and deployed on **Cloudflare** (Workers static assets).
 
 ## Commands
 

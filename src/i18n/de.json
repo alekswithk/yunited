@@ -1,6 +1,6 @@
 {
   "nav": {
-    "home": "Startseite",
+    "home": "Start",
     "about": "Über uns",
     "events": "Events",
     "members": "Vorstand",
@@ -18,42 +18,158 @@
     "tagline": "HSG-Studentenclub, der seit 2013 Studierende mit Wurzeln auf dem Balkan und im ehemaligen Jugoslawien verbindet — und alle, die neugierig auf die Kultur sind.",
     "pages": "Seiten",
     "connect": "Kontakt",
-    "exchangeLink": "Austauschstudierende",
+    "exchangeLink": "Exchange Studierende",
     "joinOnUniclubs": "Auf uniclubs beitreten",
     "rights": "ein Studentenclub an der Universität St. Gallen (HSG). Die Mitgliedschaft wird verwaltet über"
   },
   "meta": {
     "home": {
-      "title": "Yunited — Balkan- und Ex-Ju-Studentenclub an der HSG",
-      "description": "Yunited verbindet Studierende mit Wurzeln im ehemaligen Jugoslawien sozial und beruflich und fördert den kulturellen Austausch an der Universität St. Gallen."
+      "title": "YUnited — Balkan- und Ex-Ju-Studentenclub an der HSG",
+      "description": "YUnited verbindet Studierende mit Wurzeln im ehemaligen Jugoslawien sozial und beruflich und fördert den kulturellen Austausch an der Universität St. Gallen."
     },
     "about": {
-      "title": "Über uns — Yunited",
-      "description": "Yunited fördert den kulturellen Austausch zwischen Studierenden aus dem ehemaligen Jugoslawien an der Universität St. Gallen. Gegründet 2013."
+      "title": "Über uns — YUnited",
+      "description": "YUnited fördert den kulturellen Austausch zwischen Studierenden aus dem ehemaligen Jugoslawien an der Universität St. Gallen. Gegründet 2013."
     },
     "events": {
-      "title": "Events — Yunited",
-      "description": "Kommende Events und Rückblicke von Yunited, dem Balkan- und Ex-Ju-Studentenclub an der HSG."
+      "title": "Events — YUnited",
+      "description": "Kommende Events und Rückblicke von YUnited"
     },
     "members": {
-      "title": "Mitglieder & Vorstand — Yunited",
-      "description": "Lerne den Vorstand von Yunited kennen, dem Balkan- und Ex-Ju-Studentenclub an der HSG."
+      "title": "Mitglieder & Vorstand — YUnited",
+      "description": "Lerne den Vorstand von YUnited kennen"
     },
     "exchange": {
-      "title": "Austauschstudierende — Yunited",
-      "description": "Was Yunited ankommenden Austauschstudierenden an der HSG bietet — und wie HSG-Studierende im Ausland in Verbindung bleiben."
+      "title": "Austauschstudierende — YUnited",
+      "description": "Was YUnited ankommenden Austauschstudierenden an der HSG bietet — und wie HSG-Studierende im Ausland in Verbindung bleiben."
     },
     "join": {
-      "title": "Mitglied werden — Yunited",
-      "description": "Werde Yunited-Mitglied über uniclubs.ch — CHF 10 pro Semester für Zugang zu allen Events."
+      "title": "Mitglied werden — YUnited",
+      "description": "Werde YUnited-Mitglied über uniclubs.ch — CHF 20 pro Semester für Zugang zu allen Events."
     },
     "contact": {
-      "title": "Kontakt — Yunited",
-      "description": "Nimm Kontakt mit Yunited auf, dem Balkan- und Ex-Ju-Studentenclub an der HSG."
+      "title": "Kontakt — YUnited",
+      "description": "Nimm Kontakt mit YUnited auf"
     },
     "notFound": {
-      "title": "Seite nicht gefunden — Yunited",
+      "title": "Seite nicht gefunden — YUnited",
       "description": "Diese Seite existiert nicht."
     }
+  },
+  "home": {
+    "heroTitleMain": "Die Balkan- und Ex-Jugoslawien-Community",
+    "heroTitleAccent": "unter HSG.",
+    "heroLede": "YUnited ist ein Studentenverein an der Universität St. Gallen, der Studierende mit Wurzeln im ehemaligen Jugoslawien – sowie alle, die sich für diese Kultur interessieren – auf gesellschaftlicher und beruflicher Ebene miteinander vernetzt. Seit 2013.",
+    "heroJoin": "Werde Mitglied bei YUnited",
+    "heroEvents": "Unsere Veranstaltungen ansehen",
+    "upcomingEyebrow": "Wie geht es weiter?",
+    "upcomingHeading": "Bevorstehende Veranstaltungen",
+    "pastEyebrow": "Vor kurzem",
+    "pastHeading": "Aktuelle Highlights",
+    "allEvents": "Alle Veranstaltungen & Rückblicke",
+    "whoEyebrow": "Wer wir sind",
+    "whoHeading": "Kultur, Gemeinschaft, Verbindungen.",
+    "whoBody": "Von Grillfesten am 1. Mai über Casino-Abende bis hin zu Karriere-Netzwerken – YUnited veranstaltet gesellschaftliche und berufliche Events, die den Studierenden helfen, sich an der HSG wie zu Hause zu fühlen und Freundschaften zu schliessen, die weit über das Studium hinaus bestehen bleiben.",
+    "whoCta": "Mehr über den Verein"
+  },
+  "events": {
+    "heroTitle": "Veranstaltungen",
+    "heroLede": "Brunchs, Grillpartys, Karaoke und Karriereveranstaltungen – das sind unsere Aktivitäten. Mitglieder erhalten über uniclubs Zugang zu allen Veranstaltungen.",
+    "upcomingEyebrow": "Save the date",
+    "upcomingHeading": "Bevorstehende Veranstaltungen",
+    "pastEyebrow": "Recaps",
+    "pastHeading": "Vergangene Veranstaltungen",
+    "pastIntro": "Ein Rückblick auf unsere letzten Aktivitäten. Fotos und Berichte findest du auch auf unserer <a href=\"https://www.instagram.com/yunited.unisg\" target=\"_blank\" rel=\"noopener\">Instagram-Seite</a>.",
+    "emptyUpcoming": "Derzeit sind keine Veranstaltungen geplant – folge uns auf Instagram (@yunited.unisg) oder schau auf uniclubs vorbei, um als Erster von der nächsten Veranstaltung zu erfahren.",
+    "emptyPast": "Es gibt noch keine vergangenen Veranstaltungen."
+  },
+  "about": {
+    "heroTitle": "Über YUnited",
+    "heroLede": "Förderung des kulturellen Austauschs zwischen Studierenden aus dem ehemaligen Jugoslawien an der Universität St. Gallen – seit 2013.",
+    "missionEyebrow": "Unsere Mission",
+    "missionHeading": "Was wir tun",
+    "missionP1": "YUnited bringt Studierende mit Wurzeln im ehemaligen Jugoslawien auf sozialer und beruflicher Ebene zusammen und fördert gleichzeitig den kulturellen Austausch an der Universität St. Gallen.",
+    "missionP2": "Wir veranstalten eine Vielzahl von gesellschaftlichen und beruflichen Veranstaltungen für Studierende aus den Ländern des ehemaligen Jugoslawiens, um sie während und nach ihrem Studium an der HSG in ihrer persönlichen und beruflichen Entwicklung zu unterstützen – und alle, die sich für diese Kultur interessieren, sind herzlich willkommen, unabhängig davon, ob ihre Wurzeln in dieser Region liegen oder nicht.",
+    "missionP3": "Über den Campus hinaus baut YUnited ein Netzwerk zwischen Studierenden auf, fördert deren akademische Entwicklung, fungiert als Brücke zu Unternehmen und Organisationen mit ex-jugoslawischem Hintergrund und unterstützt sowie fördert Spendenaktionen.",
+    "missionP4": "Unser Buddy-System bietet Austausch- und Mitstudierenden Unterstützung und fördert gleichzeitig den Austausch zwischen allen Studiengängen und Jahrgängen.",
+    "storyEyebrow": "Seit 2013",
+    "storyHeading": "Unsere Geschichte",
+    "storyIntro": "YUnited wurde 2013 als Kulturverein für Studierende aus der Region des ehemaligen Jugoslawiens an der HSG gegründet.",
+    "valuesEyebrow": "Werte",
+    "valuesHeading": "Wofür wir stehen",
+    "valueCommunityTitle": "Gemeinschaft",
+    "valueCommunityBody": "Ein zweites Zuhause: Freundschaften über alle Studiengänge und Semester hinweg, vom Assessmentjahr bis zum Masterstudium und darüber hinaus.",
+    "valueCultureTitle": "Kultur",
+    "valueCultureBody": "Die Küche, die Musik, den Humor und die Traditionen der Region in St. Gallen am Leben zu erhalten – und sie mit allen zu teilen, die neugierig darauf sind.",
+    "valueCareersTitle": "Karriere",
+    "valueCareersBody": "Fachveranstaltungen und eine Brücke zu Unternehmen und Organisationen mit Wurzeln im ehemaligen Jugoslawien – sowohl während des Studiums als auch danach."
+  },
+  "members": {
+    "heroTitle": "Mitglieder & Vorstand",
+    "heroLede": "Diejenigen, die YUnited am Laufen halten – sie organisieren Veranstaltungen, bauen Partnerschaften auf und heissen jedes Semester neue Mitglieder willkommen.",
+    "boardEyebrow": "Vorstand",
+    "boardHeading": "Derzeitiger Vorstand",
+    "boardEmpty": "Der Vorstand für dieses Semester wird derzeit festgelegt. Schau in Kürze wieder vorbei.",
+    "involvedHeading": "Möchtest du mitmachen?",
+    "involvedBody": "Mitglieder können Veranstaltungen mitgestalten, Ämter übernehmen und die Gemeinschaft stärken. Sprich uns bei einer Veranstaltung einfach an oder schreib uns eine Nachricht.",
+    "involvedCta": "Kontaktiere uns"
+  },
+  "exchange": {
+    "heroTitle": "Austauschstudierende",
+    "heroLede": "Ganz gleich, ob du für ein Semester an die HSG kommst oder selbst ins Ausland gehst – hier erfährst du, wie YUnited in deinen Austausch passt.",
+    "incomingEyebrow": "An der HSG ankommen",
+    "incomingHeading": "Ankommende Austauschstudierende",
+    "incomingLede": "Verbringst du ein Semester in St. Gallen? Dann bist du herzlich eingeladen – balkanische Wurzeln sind nicht erforderlich.",
+    "incomingBuddy": "<strong>Buddy-System:</strong> Unser Buddy-System bietet Austausch- und Mitstudierenden Unterstützung – ein freundlicher erster Ansprechpartner bei Fragen zur HSG und zum Leben in St. Gallen.",
+    "incomingEvents": "<strong>Veranstaltungen:</strong> Nehmt schon ab der ersten Woche an unseren Events teil. Mit einer Mitgliedschaft (über uniclubs) habt ihr Zugang zu allen Veranstaltungen.",
+    "incomingHome": "<strong>Ein Stück Heimat:</strong> Wenn deine Wurzeln in dieser Region liegen, bieten wir dir die Möglichkeit, auch im Ausland mit der Kultur in Verbindung zu bleiben. Und wenn nicht, kannst du sie auf unterhaltsame Weise entdecken.",
+    "incomingCta": "Frag uns alles",
+    "outgoingEyebrow": "Ins Ausland gehen",
+    "outgoingHeading": "HSG-Studierende im Auslandssemester",
+    "outgoingLede": "Auf Austauschreise – nach Singapur, Lissabon, Mailand oder sonst wohin? Hier ist die ehrliche Einschätzung:",
+    "outgoingItem1": "YUnited bietet derzeit kein offizielles Programm für Studierende im Ausland an.",
+    "outgoingItem2": "Die Mitglieder bleiben oft auf informellem Wege auf dem Laufenden – folge uns auf <a href=\"https://www.instagram.com/yunited.unisg\" target=\"_blank\" rel=\"noopener\">Instagram</a>, um auch während deiner Abwesenheit mit der Community in Kontakt zu bleiben.",
+    "outgoingItem3Pre": "Wir geben gerne Tipps weiter: Wenn ein Mitglied von YUnited an deinem Reiseziel studiert hat, stellen wir gerne den Kontakt her.",
+    "outgoingItem3Link": "Kontakt aufnehmen",
+    "outgoingItem3Post": ".",
+    "outgoingCta": "Bleibe in Kontakt"
+  },
+  "join": {
+    "heroTitle": "Werde Mitglied bei YUnited",
+    "heroLede": "Die Mitgliedschaft wird vollständig über uniclubs.ch abgewickelt – die offizielle Plattform des HSG-Clubs. Die Anmeldung dauert nur wenige Minuten; diese Website soll dir zeigen, warum sich die Mitgliedschaft lohnt.",
+    "getEyebrow": "Mitgliedschaft",
+    "getHeading": "Was du erhältst",
+    "semesterTitle": "Semester-Mitgliedschaft — CHF 20",
+    "semesterBody": "Zugang zu <strong>allen YUnited Events</strong> in diesem Semester: Brunchs, Grillfeste, Karaoke, Casino-Abende, Karriereveranstaltungen und vieles mehr.",
+    "freeTitle": "Kostenlos",
+    "freeBody": "Noch unsicher? Mit der kostenlosen Option auf uniclubs erhältst du Zugang zum Meet & Greet, damit du uns zunächst kennenlernen kannst.",
+    "cta": "Werde Mitglied auf uniclubs.ch →",
+    "note": "Du musst dich mit deinem uniclubs-Konto anmelden. Die Zahlungsabwicklung und die Verwaltung der Mitgliedschaft erfolgen ausschliesslich auf uniclubs – auf dieser Website werden diese Vorgänge nicht abgewickelt.",
+    "questionsHeading": "Hast du noch Fragen, bevor du beitrittst?",
+    "questionsBody": "Du bist dir nicht sicher, ob der Verein das Richtige für dich ist, oder möchtest wissen, was in diesem Semester auf dem Programm steht? Frag einfach nach.",
+    "questionsCta": "Kontaktiere uns"
+  },
+  "contact": {
+    "heroTitle": "Kontaktiere uns",
+    "heroLede": "Fragen zur Mitgliedschaft, zu Veranstaltungen, Partnerschaften oder zu anderen Themen – wir freuen uns, von dir zu hören.",
+    "formEyebrow": "Schreib uns eine Nachricht",
+    "formHeading": "Kontaktformular",
+    "formSuccess": "Vielen Dank – Deine Nachricht wird an den Vorstand weitergeleitet. Wir antworten in der Regel innerhalb weniger Tage.",
+    "labelName": "Name *",
+    "labelEmail": "E-Mail *",
+    "labelTopic": "Thema *",
+    "labelMessage": "Nachricht *",
+    "topicChoose": "Bitte wählen...",
+    "topicMembership": "Mitgliedschaft",
+    "topicEvents": "Veranstaltungen",
+    "topicPartnerships": "Partnerschaften",
+    "topicExchange": "Austausch / Buddy-System",
+    "topicOther": "Sonstiges",
+    "formError": "Bitte fülle vor dem Absenden alle Felder aus (einschliesslich einer gültigen E-Mail-Adresse).",
+    "formSend": "Nachricht senden",
+    "formSending": "Wird gesendet…",
+    "formFallback": "Leider ist der Versand fehlgeschlagen. Bitte sende uns direkt eine E-Mail an yunited@shsg.ch.",
+    "formNote": "Deine Nachricht wird direkt an den Posteingang des YUnited-Vorstands (yunited@shsg.ch) gesendet und ausschliesslich dazu verwendet, dir zu antworten – zu keinem anderen Zweck.",
+    "plainEmail": "Bevorzugst du eine einfache E-Mail? Schreibe an <a href=\"mailto:yunited@shsg.ch\">yunited@shsg.ch</a> – oder sende uns eine Direktnachricht auf <a href=\"https://www.instagram.com/yunited.unisg\" target=\"_blank\" rel=\"noopener\">Instagram</a>."
   }
 }
