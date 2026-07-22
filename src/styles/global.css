@@ -775,6 +775,9 @@ input:focus, select:focus, textarea:focus {
 }
 .info-panel.panel-red { border-top-color: var(--color-red); }
 .info-panel h3 { margin-bottom: var(--space-3); }
+/* A call-to-action closing a section. A class rather than an inline style —
+   PLAN.md §4 is trying to drop style-src 'unsafe-inline', not add to it. */
+.section-cta { margin-top: var(--space-4); }
 .info-panel ul { padding-left: 1.2rem; margin-top: var(--space-3); }
 .info-panel li { margin-bottom: var(--space-2); }
 

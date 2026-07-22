@@ -102,6 +102,9 @@ for (const dict of dictNames) {
     // text — undo any entity encoding DeepL added. Marked-up strings render
     // via set:html and keep their entities/tags as-is.
     if (!String(enFlat[k]).includes("<")) value = decodeEntities(value);
+    // Strip the quotes DeepL puts around protected brand terms, and use Swiss
+    // ss rather than ß for German. See postProcess() in lib/deepl.mjs.
+    value = postProcess(value, dict);
     fresh[k] = value;
 
     // Placeholder integrity. Protecting a {placeholder} stops DeepL translating

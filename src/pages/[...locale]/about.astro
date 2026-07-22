@@ -1,6 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { localePaths } from "../../i18n/config.js";
+import { localePaths, localizePath } from "../../i18n/config.js";
 import { useTranslations } from "../../i18n/utils.js";
 
 export const getStaticPaths = localePaths;
@@ -33,6 +33,28 @@ const description = t("meta.about.description");
         <p style="margin-bottom: var(--space-3);">{t("about.missionP3")}</p>
         <p>{t("about.missionP4")}</p>
       </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container reveal">
+      <p class="eyebrow">{t("about.buddyEyebrow")}</p>
+      <h2>{t("about.buddyHeading")}</h2>
+      <p class="section-intro">{t("about.buddyLede")}</p>
+      <div class="split-grid">
+        <div class="info-panel panel-red">
+          <h3>{t("about.buddyStudentsTitle")}</h3>
+          <p>{t("about.buddyStudentsBody")}</p>
+        </div>
+        <div class="info-panel">
+          <h3>{t("about.buddyExchangeTitle")}</h3>
+          <p>{t("about.buddyExchangeBody")}</p>
+          <p>{t("about.buddyMorePre")}<a href={localizePath("/exchange", locale)}>{t("about.buddyMoreLink")}</a>{t("about.buddyMorePost")}</p>
+        </div>
+      </div>
+      <p class="section-cta">
+        <a class="btn btn-outline" href={localizePath("/contact", locale)}>{t("about.buddyCta")}</a>
+      </p>
     </div>
   </section>
 
