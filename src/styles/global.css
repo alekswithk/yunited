@@ -189,6 +189,11 @@ p + p { margin-top: var(--space-3); }
 
 section { padding: var(--space-6) 0; }
 
+/* Containing block for the table-of-contents rail, which is an absolutely
+   positioned column spanning exactly this element. No offsets, so nothing about
+   the existing layout changes. */
+main { position: relative; }
+
 .section-intro {
   max-width: 62ch;
   font-size: 1.2rem;
@@ -926,23 +931,38 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media (min-width: 1100px) and (scripting: enabled) {
+  /* The rail is bound to the CONTENT, not the viewport. It used to be
+     position:fixed, which meant it followed the screen the whole way down and
+     ended up floating over the footer, straddling the motif divider.
+
+     Instead: an absolutely-positioned column spanning <main> (the footer and
+     the trailing divider live outside <main>, so the column stops exactly where
+     the content does), with the list sticky inside it. The list is held at the
+     offset below while you scroll the content, then scrolls up and away with
+     the column before the footer is ever reached. */
   .page-toc {
     display: block;
-    position: fixed;
+    position: absolute;
+    top: 0;
+    bottom: 0;
     left: max(var(--space-4), calc((100vw - var(--max-width)) / 2 - 140px));
-    /* Sits just below the optical centre — dead centre rides too high against
-       the page-hero on About. A rem offset rather than a larger percentage, so
-       the nudge stays 48px on a laptop and on a tall external display; a
-       percentage would drift further down the taller the screen. */
-    top: calc(50% + 3rem);
-    transform: translateY(-50%);
+    width: 150px;
     z-index: 20;
-    max-width: 150px;
   }
   .page-toc ol {
     list-style: none;
     margin: 0;
     padding: 0;
+    position: sticky;
+    /* Sits just below the optical centre — dead centre rides too high against
+       the page-hero on About. A rem offset rather than a larger percentage, so
+       the nudge stays 48px on a laptop and on a tall external display; a
+       percentage would drift further down the taller the screen.
+       translateY is visual only — sticking is computed on the untransformed
+       box — so the rail's CENTRE lands on the offset, and it detaches from the
+       bottom of the column half a rail early, clearing the footer. */
+    top: calc(50vh + 3rem);
+    transform: translateY(-50%);
   }
   .page-toc li { margin: 0; }
   /* The rail line is a border on each link rather than one border on the <ol>,
