@@ -1,155 +1,170 @@
-# How to update this website
+# YUnited website
 
-This is the YUnited club website. It's a static site built with
-[Astro](https://astro.build) — no database, no admin panel. **All the content
-you'd ever normally change lives in two small files:**
+The website for **YUnited**, the Balkan / ex-Yugoslav student club at the
+University of St. Gallen (HSG), live at **[yunited.ch](https://yunited.ch)**.
 
-- `content/events.json` — every event (upcoming and past)
-- `content/members.json` — the board members
+Static site built with [Astro](https://astro.build) and deployed on Cloudflare
+(Workers static assets). Content is authored as JSON and rendered to HTML **at
+build time** — no database, no server, no client-side data fetching. The site is
+available in English and German, with Bosnian/Croatian/Serbian in progress.
 
-You edit those files, save, and push the change. That's it. You never need to
-touch the HTML, CSS or JavaScript to add an event or a board member.
+There are two ways to work on it. Pick the one that matches what you're doing:
 
-> Tip: you can also just open this folder with an AI coding assistant (like
-> Claude Code) and say "add an event called X on date Y" — these files are
-> deliberately simple so that works reliably.
-
----
-
-## Add or edit an event
-
-Open `content/events.json`. It's a list of events. Copy an existing block,
-paste it at the top, and change the values:
-
-```json
-{
-  "id": "spring-mixer-2027",
-  "title": "Spring Mixer",
-  "date": "2027-03-14",
-  "time": "19:00",
-  "location": "Rosenberg, St. Gallen",
-  "description": "One to three short sentences about the event.",
-  "image": "images/events/spring-mixer-2027.webp",
-  "rsvpUrl": "https://uniclubs.ch/hsg/clubs/yunited/events/spring-mixer"
-}
-```
-
-Field notes:
-
-- **id** — any unique short name, lowercase with dashes.
-- **date** — always `YYYY-MM-DD`. **You never mark events as "past"** — the
-  site compares the date to today and automatically shows the event under
-  "Upcoming" or "Past events".
-- **time** — `"19:00"` format, or `null` if unknown.
-- **image** — path to a photo (see "Swap or add a photo" below), or `null`
-  to show a colored placeholder tile.
-- **rsvpUrl** — the uniclubs event page for tickets/RSVP, or `null`.
-
-Careful with commas: every event block ends with a comma **except the last
-one in the list**. If the events page suddenly shows nothing, a missing or
-extra comma in this file is the most likely cause — paste the file into
-https://jsonlint.com to find the typo.
-
-## Add or edit a board member
-
-Open `content/members.json` and edit the same way:
-
-```json
-{
-  "name": "Ana Marković",
-  "role": "President",
-  "photo": "images/members/ana-markovic.webp",
-  "bio": "Optional one-liner — leave as \"\" to show nothing."
-}
-```
-
-If `photo` is `null`, the site shows the person's initials instead. Members
-appear on the page in the same order as in this file.
-
-## Swap or add a photo
-
-1. Use a normal photo — JPG, PNG or WebP, **any size is fine** (you can drop
-   in a photo straight from a phone). The build automatically resizes it and
-   creates responsive versions, so you no longer need to shrink it yourself.
-   Use a simple lowercase filename with dashes.
-2. Put event photos in `src/images/events/` and member photos in
-   `src/images/members/`. (In the JSON you write the path relative to `src/`,
-   e.g. `images/events/prvi-maj-2026.webp`.)
-3. Point the `image` / `photo` field in the JSON at it, e.g.
-   `"images/events/prvi-maj-2026.webp"`. A path with no matching file makes
-   the build fail with a clear message, so a typo can't ship a broken image.
-
-Every photo gets its alt text generated from the event/member name
-automatically, so descriptive titles and names matter.
-
-## Change text on a page
-
-Page text (About story, Exchange info, etc.) lives in the page files under
-`src/pages/` — `about.astro`, `exchange.astro`, and so on. Open the file, find
-the text, and change it between the tags (everything below the `---` line at the
-top is plain HTML). Anything marked `[PLACEHOLDER: …]` is waiting for real
-content from the board — replace the whole bracket.
-
-The shared header and footer live once in `src/components/` and
-`src/layouts/BaseLayout.astro`, so a change there updates every page at once.
-
-## The contact form
-
-The form on the contact page (`src/pages/contact.astro`) sends messages via **Formspree** (free tier), which
-forwards them to the club inbox (yunited@shsg.ch). It posts to
-`https://formspree.io/f/xeeyoryk` — set up under the club Formspree account,
-where submissions are also archived.
-
-Submissions go out over `fetch`, so the visitor stays on the page and sees an
-in-page confirmation. The `action` attribute points at the same endpoint, so if
-JavaScript fails the browser posts the form natively and Formspree shows its own
-thank-you page — nothing gets lost either way.
-
-Two things to know before changing it:
-
-- **Recipients** are configured in the Formspree dashboard, not in this repo.
-  Adding a board member to the notification list is a dashboard change.
-- **The CSP in `_headers`** allow-lists `https://formspree.io` under both
-  `connect-src` (the fetch) and `form-action` (the no-JS fallback). Pointing the
-  form at a different provider means updating both.
-
-## Publish your change
-
-The site is built by Astro and deployed on Cloudflare. To publish:
-
-1. Commit and push your edit to the `main` branch.
-2. Cloudflare runs `npm run build` and deploys the result — the live site
-   updates in a minute or two.
-
-To preview locally before pushing, you need Node installed, then from this
-folder run:
-
-```
-npm install      # once, the first time
-npm run dev       # starts a local preview at http://localhost:4321
-```
-
-Open the address it prints. To reproduce exactly what gets deployed, run
-`npm run build` and it writes the finished site to `dist/`.
+- **Editing content** (events, board members) → [I'm on the board](#for-the-board).
+- **Changing the site itself** (design, pages, code) → [I'm a developer](#for-developers).
 
 ---
 
-## What's where (for the curious)
+## For the board
+
+You almost never need this repo directly. Edit the site through the admin panel:
+
+### **[yunited.ch/admin](https://yunited.ch/admin)**
+
+Add or edit events and board members through a simple form. Every save is a
+commit to this repo; Cloudflare rebuilds and the change is live in about a
+minute. Photos you upload are resized and optimized automatically.
+
+Full walkthrough — logging in, adding an event, swapping a photo, getting a new
+board member access — is in **[docs/CMS.md](docs/CMS.md)**.
+
+A few things the site does for you, so they don't surprise you:
+
+- **Events are never marked "past" by hand.** The site compares each event's
+  date to today and files it under Upcoming or Past automatically. Leave the
+  date empty for a "TBA" event — it shows at the top of Upcoming.
+- **Membership prices, page copy, etc.** live in the code, not the CMS. Ask a
+  developer, or [open an issue](../../issues).
+- **German is translated automatically.** When you save an event, its title and
+  description are machine-translated for the German site within a minute or two.
+  (Bosnian/Croatian/Serbian are prepared the same way but not published yet.)
+
+If you'd rather edit the JSON files directly, they're one-file-per-entry under
+`content/events/` and `content/members/` — the field shapes are described below.
+
+---
+
+## For developers
+
+### Prerequisites
+
+Node 22 (matches CI). No other global tooling.
+
+### Commands
+
+```bash
+npm install          # once
+npm run dev          # local preview at http://localhost:4321
+npm run build        # writes the finished static site to dist/
+npm run preview      # serve the built dist/ locally
+npm run check        # astro check — type/diagnostics, must be 0 errors
+```
+
+"A change is verified" when `npm run build` succeeds, `npm run check` is clean,
+and — for content or rendering changes — the expected text appears in the built
+HTML (e.g. `grep "Casino Night" dist/events.html`). There is no test suite.
+
+### Architecture
+
+The load-bearing idea: **content is authored as JSON and rendered to static HTML
+at build time.** Pages never fetch data at runtime.
+
+- `content/events/*.json` and `content/members/*.json` — one JSON file per entry,
+  the entire content layer. An event's filename is its `id`.
+- `src/lib/content.js` globs every entry, validates it against the Zod schemas in
+  `src/lib/schema.js`, and is the only module pages import content through. A bad
+  field fails `npm run build` with a message naming the file and field.
+- `src/pages/[...locale]/*.astro` — one file per page, emitting both the English
+  route (`/events`) and every localized one (`/de/events`) via a rest parameter.
+- `src/layouts/BaseLayout.astro` — the single source of every page's `<head>`,
+  the header/footer, and the small client script.
+- `src/styles/global.css` — one stylesheet; all colours, spacing and shadows are
+  CSS custom properties in the `:root` block at the top.
+
+`CLAUDE.md` is the full architecture reference and the conventions that matter
+(extensionless URLs, image paths relative to `src/`, the CSP, etc.).
+`PLAN.md` is the living status tracker and roadmap.
+
+### Content shape
+
+The Zod schemas in `src/lib/schema.js` are authoritative. In brief:
+
+**Event** (`content/events/<id>.json`)
+
+| field | required | notes |
+|---|---|---|
+| `id` | ✓ | lowercase-with-dashes; must equal the filename |
+| `title` | ✓ | |
+| `date` | — | `YYYY-MM-DD`; empty = TBA (floats to top of Upcoming) |
+| `time` | — | `HH:MM` 24-hour |
+| `location` | — | empty = "Venue TBA"; never translated (it's an address) |
+| `description` | ✓ | |
+| `image` | ✓ | path relative to `src/`, e.g. `images/events/25_26/x.webp` |
+| `rsvpUrl` | — | full URL to the uniclubs event page |
+| `i18n` | — | **auto-managed** — machine translations; don't hand-edit |
+
+**Board member** (`content/members/<role>.json`): `role` (required), `name`
+(blank = "to be announced"), `bio`, `photo`, `order` (1 = the large lead card),
+and the same auto-managed `i18n` block (translates `bio` only).
+
+Images live under `src/images/` (not `public/`) so they go through Astro's sharp
+pipeline — drop in any size/format and it's resized to WebP with a 1×/2× srcset.
+
+### Internationalization
+
+- `src/i18n/{en,de,bcs,sr}.json` are the UI dictionaries; `en.json` is the source
+  of truth. Anything missing from a translation falls back to English.
+- `src/i18n/config.js` is the locale registry. `complete: false` gates a locale:
+  its pages generate and are viewable at their real URLs but are `noindex`, kept
+  out of the sitemap, and hidden from the language switcher until the flag flips.
+- Translations are filled **offline**, never during the build: `npm run translate`
+  (UI strings) and `npm run translate:content` (event/member content) call DeepL
+  and write the JSON, which you review and commit. Both need a `DEEPL_API_KEY` —
+  copy `.env.example` to `.env` and paste one in. The build itself is hermetic:
+  no network, no secrets.
+
+Full i18n conventions are in `CLAUDE.md`.
+
+### Deploy
+
+Cloudflare builds the repo with `npm run build` and serves `dist/` as Workers
+static assets (`wrangler.jsonc` sets `assets.directory: "./dist"`). Publishing is
+just merging to `main`:
+
+```bash
+git push        # to main → Cloudflare rebuilds and redeploys in ~1 minute
+```
+
+Two things live **outside** the repo and are worth knowing:
+
+- **The build command** (`npm run build`) is configured in the Cloudflare Workers
+  Builds dashboard, not in any file here. If the Cloudflare project is ever
+  recreated, set it there.
+- **`DEEPL_API_KEY`** is a GitHub Actions secret, used only by the auto-translate
+  workflow (`.github/workflows/translate-content.yml`) — never by the site build.
+
+`public/_headers` carries the Content-Security-Policy and cache rules and is
+copied verbatim into `dist/`. The public site's CSP is strict (`script-src
+'self'`, self-hosted fonts); `/admin` has its own looser policy scoped to that
+path.
+
+### Repository map
 
 ```
-content/    ← events.json + members.json — 95% of edits happen here
-public/     ← files served as-is: images/, assets/ (fonts, favicon), _headers
+content/          one JSON file per event / board member (the edit surface)
 src/
-  pages/       ← one file per page (index.astro, about.astro, …)
-  layouts/     ← BaseLayout.astro: the <head>, header and footer, once
-  components/  ← EventCard, MemberLead, Header, Footer, …
-  styles/      ← global.css — colors & fonts are variables at the top
-  lib/         ← the small helpers that sort events and members at build time
-astro.config.mjs, package.json  ← build config
+  pages/          one .astro per page; [...locale] emits /events and /de/events
+  layouts/        BaseLayout.astro — <head>, header, footer, once
+  components/     EventCard, MemberLead, MemberRow, Portrait, Header, Footer
+  lib/            build-time logic: content loading, Zod schema, event/date helpers
+  i18n/           locale registry + {en,de,bcs,sr}.json dictionaries
+  styles/         global.css — design tokens at the top
+  images/         source images (optimized at build)
+public/           copied verbatim into dist/ — /admin (CMS), _headers, assets/
+scripts/          vendor-cms + the offline DeepL translation helpers
+.github/          CI (build+check on PRs) + the auto-translate workflow
+astro.config.mjs, wrangler.jsonc   build & deploy config
 ```
 
-Design rules baked in: colors and spacing come from CSS variables at the top
-of `src/styles/global.css`; one `card` style is shared by events and members;
-the same event card renders both upcoming and past events from the same JSON.
-Event and member content is rendered into the HTML **at build time**, so it's
-visible to search engines and link previews (no JavaScript required to see it).
+More detail: **[CLAUDE.md](CLAUDE.md)** (architecture & conventions),
+**[PLAN.md](PLAN.md)** (status & roadmap), **[docs/CMS.md](docs/CMS.md)** (the CMS).
