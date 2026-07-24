@@ -5,7 +5,7 @@
 // `npm run build` with a readable message instead of shipping a broken page.
 //
 // Keep this framework-free — zod is a plain library, not Astro-specific — and
-// keep it in lockstep with content/events.json and content/members.json. A
+// keep it in lockstep with content/events/*.json and content/members/*.json. A
 // change here is a change to what the board is allowed to write.
 import { z } from "zod";
 

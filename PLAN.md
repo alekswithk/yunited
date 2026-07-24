@@ -13,8 +13,8 @@ when a step ships, tick it here in the same PR.
   & usage → [`docs/CMS.md`](docs/CMS.md). This file is the *tracker/index*; those
   are the *reference*.
 
-_Last updated: 2026-07-22 (through PR #22; i18n on `i18n-foundation` — German published,
-BCS/Serbian still gated)._
+_Last updated: 2026-07-24 (README rewritten + DEPLOY.md removed; Serbian now Latin;
+German published, BCS/Serbian still gated pending speaker review)._
 
 ---
 
@@ -143,10 +143,13 @@ which Google treats as equivalent; no separate sitemap `hreflang` needed.
 
 ## 5. Known cleanup / tech debt 🧹
 
-- [ ] **`README.md` and `DEPLOY.md` are stale** — they predate the Astro migration
-      and CMS ("two small files", "no admin panel", "no build step"). Rewrite to
-      describe: edit via `/admin` (or `content/**` files), `npm run build`, Cloudflare
-      deploy. Point board members at `docs/CMS.md`.
+- [x] **`README.md` rewritten, `DEPLOY.md` deleted** (2026-07-24). README is now a
+      front door for both audiences — board → `/admin` + `docs/CMS.md`; developers →
+      commands, current content shape, i18n, deploy, repo map — linking out to
+      CLAUDE.md / PLAN.md instead of duplicating them. `DEPLOY.md` was obsolete and
+      partly wrong ("no build step"; `python3 -m http.server` preview) and nothing
+      linked to it; its still-true deploy facts (push to `main` → Cloudflare, the
+      dashboard-only build command, the `DEEPL_API_KEY` secret) moved into README.
 - [ ] Current `sharp` build lacks **AVIF/HEVC decode** (AV1 works). AVIF *uploads*
       would fail; not worth acting on unless it comes up. HEIC handled via clear error.
 - [ ] **Brand capitalization is provisional — the board is deciding.** Copy, chrome
