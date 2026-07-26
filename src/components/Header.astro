@@ -3,10 +3,16 @@
 // `path` is the current page's locale-independent route (e.g. "/events") so the
 // active link gets aria-current and the language switcher can offer the same
 // page in another language.
+//
+// `switchPath` is what the switcher points at, and defaults to `path` — the two
+// differ only on a page that has no twin in the other locales. The 404 is the
+// one such page: it lives outside src/pages/[...locale]/, so "the same page in
+// German" would be /de/404, which is never built. BaseLayout sends it "/" so
+// the switcher lands on that language's home page instead of a dead link.
 import { defaultLocale, getLocale, localizePath, publishedLocales } from "../i18n/config.js";
 import { useTranslations } from "../i18n/utils.js";
 
-const { path = "/", locale = defaultLocale } = Astro.props;
+const { path = "/", switchPath = path, locale = defaultLocale } = Astro.props;
 const t = useTranslations(locale);
 const current = getLocale(locale);
 
@@ -28,10 +34,10 @@ const showSwitcher = switchable.length > 1;
 <header class="site-header">
   <div class="container">
     <a class="logo" href={localizePath("/", locale)}><img src="/assets/yunited-logo.svg" alt="YUnited" width="916" height="344"></a>
-    <button class="nav-toggle" aria-label={t("nav.openMenu")} aria-expanded="false">
+    <button class="nav-toggle" aria-label={t("nav.openMenu")} aria-expanded="false" aria-controls="main-nav">
       <span></span><span></span><span></span>
     </button>
-    <nav class="main-nav" aria-label={t("nav.aria")}>
+    <nav class="main-nav" id="main-nav" aria-label={t("nav.aria")}>
       {links.map((link) => (
         <a href={localizePath(link.href, locale)} aria-current={path === link.href ? "page" : undefined}>{t(link.key)}</a>
       ))}
@@ -50,7 +56,7 @@ const showSwitcher = switchable.length > 1;
             {switchable.map((l) => (
               <li>
                 <a
-                  href={localizePath(path, l.code)}
+                  href={localizePath(switchPath, l.code)}
                   hreflang={l.code}
                   lang={l.htmlLang}
                   aria-current={l.code === locale ? "true" : undefined}
