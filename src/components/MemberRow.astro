@@ -6,6 +6,7 @@ import { isUnfilled, displayName } from "../lib/members.js";
 import { defaultLocale } from "../i18n/config.js";
 import { useTranslations } from "../i18n/utils.js";
 
+// See MemberLead.astro: a member's own text is the same in every language.
 const { member, locale = defaultLocale } = Astro.props;
 const t = useTranslations(locale);
 const tbaClass = isUnfilled(member.name) ? " is-tba" : "";

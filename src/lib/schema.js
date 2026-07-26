@@ -98,6 +98,14 @@ export const eventSchema = z
 // announced" — so name is intentionally not required. The role is the news.
 // `order` sets the display sequence (lowest = the large lead card); it replaces
 // the old "first entry wins" rule now that each member is its own file.
+//
+// NOTHING HERE IS TRANSLATED, and there is deliberately no `i18n` block: a
+// board member's name, role and bio read the same on every language's page.
+// Roles ("Head of Events", "President") are used in English at HSG, and a bio
+// is a person describing themselves in their own words — machine-translating
+// that turned "krastavac" into "Küstenfischer" on the German page. Events are
+// different (see eventSchema above): those are announcements, not self-
+// description, so they do carry translations.
 export const memberSchema = z
   .object({
     name: z.string(),
@@ -105,8 +113,5 @@ export const memberSchema = z
     photo: optional(imagePath),
     bio: z.string(),
     order: z.number().int().positive("must be a positive whole number"),
-    // `bio` only. Board roles ("Head of Events", "President") are used in
-    // English at HSG, so translating them would read as wrong, not helpful.
-    i18n: translations({ bio: z.string() }),
   })
   .strict();

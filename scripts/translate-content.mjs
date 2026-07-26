@@ -1,5 +1,5 @@
-// Translates the board's CONTENT (content/events/*.json, content/members/*.json)
-// into every locale, and keeps those translations current as entries are edited.
+// Translates the board's CONTENT (content/events/*.json) into every locale, and
+// keeps those translations current as entries are edited.
 //
 //   npm run translate:content              # translate what needs it
 //   npm run translate:content -- --dry-run # report only, write nothing
@@ -22,7 +22,12 @@
 // Only the fields listed in TRANSLATABLE. Notably NOT an event's `location`:
 // those are venue names and street addresses ("Déja Vu Bar, St. Gallen",
 // "Zürcherstrasse 162"), and translating them corrupts directions to a real
-// place. Not member `role` either — board titles are used in English at HSG.
+// place.
+//
+// And NOT content/members/** at all. A board member's name, role and bio are
+// the same on every language's page: roles are used in English at HSG, and a
+// bio is a person describing themselves in their own words, which machine
+// translation mangles rather than serves.
 //
 // The build never runs this. It stays hermetic: no network, no secrets.
 
@@ -41,10 +46,10 @@ import {
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-// Which fields may be translated, per collection.
+// Which fields may be translated, per collection. Members are absent on
+// purpose — see WHAT IT WILL NOT TOUCH above.
 const TRANSLATABLE = {
   events: ["title", "description"],
-  members: ["bio"],
 };
 
 // Dictionary name -> DeepL language code. Mirrors src/i18n/config.js `dict`
