@@ -32,4 +32,15 @@ export default defineConfig({
     // style-src 'unsafe-inline' for the stylesheet.
     inlineStylesheets: 'never',
   },
+  vite: {
+    build: {
+      // The script counterpart of inlineStylesheets: 'never' above. Astro
+      // inlines a bundled <script> straight into the HTML when the chunk is
+      // small enough, which would need script-src 'unsafe-inline'. A 0 limit
+      // forces every one out to a hashed file under /_astro, so the CSP can
+      // stay 'self'. Costs one cached request per page; buys a policy that
+      // actually stops injected script from running.
+      assetsInlineLimit: 0,
+    },
+  },
 });
