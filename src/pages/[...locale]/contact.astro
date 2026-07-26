@@ -75,7 +75,16 @@ const description = t("meta.contact.description");
         <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true"
           style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;">
 
-        <p class="form-error" id="form-error">{t("contact.formError")}</p>
+        <!--
+          Deliberately empty: role="alert" announces on a CONTENT CHANGE, so a
+          paragraph that already holds the error text stays silent when it is
+          merely un-hidden. The script writes the message in, which is the
+          mutation a screen reader acts on. Without JS this line never appears
+          — the form posts natively to Formspree instead, which reports its own
+          errors on its own page. The message text itself lives in
+          data-msg-invalid on the <form> above, so it stays localized.
+        -->
+        <p class="form-error" id="form-error" role="alert"></p>
         <div>
           <button class="btn btn-red" type="submit" id="form-submit">{t("contact.formSend")}</button>
         </div>
@@ -114,15 +123,33 @@ const description = t("meta.contact.description");
       contactForm.addEventListener("submit", async function (submitEvent) {
         submitEvent.preventDefault();
 
-        const name = document.querySelector("#field-name").value.trim();
-        const email = document.querySelector("#field-email").value.trim();
-        const topic = document.querySelector("#field-topic").value;
-        const message = document.querySelector("#field-message").value.trim();
+        const nameField = document.querySelector("#field-name");
+        const emailField = document.querySelector("#field-email");
+        const topicField = document.querySelector("#field-topic");
+        const messageField = document.querySelector("#field-message");
 
-        const emailLooksValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        const emailLooksValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailField.value.trim());
 
-        if (!name || !emailLooksValid || !topic || !message) {
+        // In document order, so "the first thing that's wrong" is also the
+        // first one you'd reach by tabbing.
+        const checks = [
+          [nameField, Boolean(nameField.value.trim())],
+          [emailField, emailLooksValid],
+          [topicField, Boolean(topicField.value)],
+          [messageField, Boolean(messageField.value.trim())],
+        ];
+
+        for (const [field, ok] of checks) {
+          field.setAttribute("aria-invalid", ok ? "false" : "true");
+        }
+
+        const firstInvalid = checks.find(([, ok]) => !ok);
+        if (firstInvalid) {
           showError(MSG_INVALID);
+          // One generic message for the whole form is only usable if it also
+          // says WHERE the problem is — otherwise a keyboard or screen-reader
+          // visitor has to hunt for it.
+          firstInvalid[0].focus();
           return;
         }
 
