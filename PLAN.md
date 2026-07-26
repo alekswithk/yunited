@@ -28,7 +28,7 @@ src/
   pages/[...locale]/*.astro 7 localized routes (index, about, events, members, exchange,
                            join, contact); rest param emits both /events and /de/events
   pages/404.astro          not-found page (not localized)
-  components/*.astro       EventCard, MemberLead, MemberRow, Portrait, Header, Footer
+  components/*.astro       EventCard, MemberLead, MemberRow, Portrait, PageToc, Header, Footer
   layouts/BaseLayout.astro single source of <head> (canonical + hreflang) + chrome + script
   i18n/                    locale registry (config.js), t()/fallback (utils.js), {en,de,
                            bcs,sr}.json dictionaries; en.json is the source of truth
@@ -119,11 +119,12 @@ they carry design decisions that need a person. The agent skips them.
       helper (`npm run translate`, `DEEPL_API_KEY`) tops up `de`/`bcs`/`sr`; all four
       dictionaries now carry all 135 keys. **German is reviewed and published**
       (`complete: true`). The card chrome (CTAs, alt text, date formatting,
-      TBA placeholders) is localized too, and the board's **content** —
-      `content/**` titles, descriptions and bios — now carries its own `i18n`
+      TBA placeholders) is localized too, and the board's **event content** —
+      `content/events/` titles and descriptions — now carries its own `i18n`
       block, filled by `npm run translate:content` and kept current
       automatically by `.github/workflows/translate-content.yml` on every CMS
-      save. Remaining, per locale:
+      save. **Board members are deliberately excluded**: a name, role and bio
+      read the same in every language. Remaining, per locale:
   - [ ] **Serbian: pick one script.** `sr.json` is currently mixed — the hand-done
         nav/footer/meta (15 keys) are Latin, the DeepL body copy (101 keys) is
         Cyrillic, and `htmlLang` claims `sr-Latn`. Convert one way or the other

@@ -84,11 +84,16 @@ collections:
         media_folder: /src/images/events
         public_folder: /images/events
         choose_url: false
+      # schema.js requires a FULL url here, so a pasted "uniclubs.ch/…" saved
+      # cleanly through the CMS and then failed the next build. Catch it in the
+      # editor instead. The `(…)?` wrapper keeps an empty value legal, since the
+      # field is optional.
       - label: "RSVP / event-page link (optional)"
         name: rsvpUrl
         widget: string
         required: false
         default: ""
+        pattern: ["^(https://.+)?$", "Paste the whole link, starting with https:// — or leave it empty"]
       # Filled automatically by the "Translate content" GitHub Action after you
       # save — you do not need to touch it. It is declared here because a
       # Git-based CMS writes back only the fields it knows about: leave it out
@@ -170,35 +175,7 @@ collections:
         media_folder: /src/images/members
         public_folder: /images/members
         choose_url: false
-      # Filled automatically by the "Translate content" Action — see the note in
-      # the events collection above. Declared so the CMS round-trips it instead
-      # of stripping it on save.
-      - label: "Translations (filled automatically — open only to correct one)"
-        name: i18n
-        widget: object
-        required: false
-        collapsed: true
-        fields:
-          - { label: "Source language (auto)", name: sourceLang, widget: string, required: false }
-          - { label: "Source fingerprint (auto — do not edit)", name: sourceHash, widget: string, required: false }
-          - label: Deutsch
-            name: de
-            widget: object
-            required: false
-            collapsed: true
-            fields:
-              - { label: Bio, name: bio, widget: text, required: false }
-          - label: "Bosanski / Hrvatski"
-            name: bcs
-            widget: object
-            required: false
-            collapsed: true
-            fields:
-              - { label: Bio, name: bio, widget: text, required: false }
-          - label: Srpski
-            name: sr
-            widget: object
-            required: false
-            collapsed: true
-            fields:
-              - { label: Bio, name: bio, widget: text, required: false }
+      # NOTE: no "i18n" field here, unlike the events collection above — and it
+      # must stay that way. What you type into a board member's name, role and
+      # bio is what every language's page shows. Adding an i18n field back would
+      # be rejected by src/lib/schema.js on the next build.

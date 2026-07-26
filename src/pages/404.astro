@@ -1,8 +1,15 @@
 ---
+// Not localized, and deliberately so: Cloudflare serves this one file for every
+// unknown path in every language prefix, so there is nothing to switch on. The
+// head strings still come from the English dictionary rather than being typed
+// here, so all of the site's metadata lives in one place.
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { useTranslations } from "../i18n/utils.js";
+
+const t = useTranslations();
 ---
 
-<BaseLayout title="Page not found — YUnited" description="The page you were looking for doesn't exist." path="/404" noindex={true}>
+<BaseLayout title={t("meta.notFound.title")} description={t("meta.notFound.description")} path="/404" noindex={true}>
   <section class="error-page">
     <div class="container">
       <p class="error-code">404</p>

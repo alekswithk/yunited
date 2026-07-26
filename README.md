@@ -104,8 +104,9 @@ The Zod schemas in `src/lib/schema.js` are authoritative. In brief:
 | `i18n` | — | **auto-managed** — machine translations; don't hand-edit |
 
 **Board member** (`content/members/<role>.json`): `role` (required), `name`
-(blank = "to be announced"), `bio`, `photo`, `order` (1 = the large lead card),
-and the same auto-managed `i18n` block (translates `bio` only).
+(blank = "to be announced"), `bio`, `photo`, `order` (1 = the large lead card).
+Members carry **no `i18n` block and are never translated** — a person's name,
+role and bio show the same on every language's page.
 
 Images live under `src/images/` (not `public/`) so they go through Astro's sharp
 pipeline — drop in any size/format and it's resized to WebP with a 1×/2× srcset.
@@ -155,7 +156,7 @@ content/          one JSON file per event / board member (the edit surface)
 src/
   pages/          one .astro per page; [...locale] emits /events and /de/events
   layouts/        BaseLayout.astro — <head>, header, footer, once
-  components/     EventCard, MemberLead, MemberRow, Portrait, Header, Footer
+  components/     EventCard, MemberLead, MemberRow, Portrait, PageToc, Header, Footer
   lib/            build-time logic: content loading, Zod schema, event/date helpers
   i18n/           locale registry + {en,de,bcs,sr}.json dictionaries
   styles/         global.css — design tokens at the top

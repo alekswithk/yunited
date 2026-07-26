@@ -6,7 +6,11 @@
     "enabled": true
   },
   "assets": {
-    "directory": "./dist"
+    "directory": "./dist",
+    // Without this, an unknown path returns a bare 404 with an EMPTY body — the
+    // styled dist/404.html is built but never served. "404-page" makes Workers
+    // serve the nearest 404.html, which is the one at the root.
+    "not_found_handling": "404-page"
   },
   "compatibility_flags": [
     "nodejs_compat"

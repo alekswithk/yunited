@@ -168,11 +168,37 @@ img { max-width: 100%; display: block; }
 
 a { color: var(--color-azure); }
 
+/* ---------- Focus ----------
+   One visible ring for everything reachable by keyboard. The browser default
+   is a dark ring, which all but disappears against the ink-coloured hero,
+   footer and .section-dark blocks; these two rules pick the colour that
+   actually shows on each surface. :focus-visible, not :focus, so a mouse click
+   doesn't leave a ring behind. Form fields and the language switcher keep
+   their own bespoke focus styling below. */
+:focus-visible {
+  outline: 3px solid var(--color-red);
+  outline-offset: 3px;
+}
+.hero :focus-visible,
+.page-hero :focus-visible,
+.section-dark :focus-visible,
+.site-footer :focus-visible {
+  outline-color: var(--color-gold);
+}
+
 h1, h2, h3 {
   font-family: var(--font-display);
   font-optical-sizing: auto;
   line-height: 1.04;
   letter-spacing: -0.015em;
+  /* German compounds are longer than the phone column is wide — a single
+     "Austauschstudierende" set at 2.2rem is wider than a 375px screen and used
+     to push the whole page sideways. `hyphens` uses the <html lang> the layout
+     already sets, so it breaks at real German syllables; `overflow-wrap` is the
+     backstop for anything hyphenation can't split. */
+  overflow-wrap: break-word;
+  -webkit-hyphens: auto;  /* Safari only dropped the prefix in 17 */
+  hyphens: auto;
 }
 
 h1 { font-size: clamp(2.6rem, 7vw, 5rem); font-weight: 900; }
@@ -487,9 +513,12 @@ main { position: relative; }
 .section-dark .section-intro { color: rgba(244, 236, 221, 0.78); }
 
 /* ---------- Cards (events + members share this base) ---------- */
+/* min() on the track floor: below ~350px the bare 280px minimum wins over the
+   container and the grid sticks out past the screen edge. `min(280px, 100%)`
+   lets the last narrow phone collapse the track instead of overflowing. */
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
   gap: var(--space-4);
 }
 
@@ -761,6 +790,14 @@ input:focus, select:focus, textarea:focus {
   border-color: var(--color-azure);
   box-shadow: 3px 3px 0 var(--color-azure);
 }
+/* The submit handler sets aria-invalid on whatever failed. Mirror it visually,
+   so the state is not carried by the screen-reader layer alone. */
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] { border-color: var(--color-red); }
+input[aria-invalid="true"]:focus,
+select[aria-invalid="true"]:focus,
+textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow: 3px 3px 0 var(--color-red); }
 
 .form-note { font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.02em; color: var(--color-muted); }
 .form-error { color: var(--color-red); font-size: 0.9rem; font-weight: 600; display: none; }
@@ -791,7 +828,7 @@ input:focus, select:focus, textarea:focus {
 
 .footer-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
   gap: var(--space-5);
   margin-bottom: var(--space-5);
 }
@@ -1035,9 +1072,10 @@ input:focus, select:focus, textarea:focus {
 .page-hero p { color: rgba(244, 236, 221, 0.8); font-size: 1.2rem; max-width: 62ch; margin-top: var(--space-3); }
 
 /* ---------- Two-column info blocks (Exchange page) ---------- */
+/* Same narrow-screen guard as .card-grid above. */
 .split-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   gap: var(--space-4);
 }
 

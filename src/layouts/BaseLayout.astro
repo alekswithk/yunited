@@ -24,8 +24,13 @@ const ogImage = new URL("/assets/og-image.png", Astro.site).href;
 // still renders (so it can be reviewed at its real URL) but is kept out of the
 // alternates and marked noindex, so a half-translated page is never indexed.
 const alternates = publishedLocales();
-const showAlternates = alternates.length > 1;
 const hideFromIndex = noindex || !loc.complete;
+// `noindex` also means "this page is not part of the localized route set", and
+// only 404.astro passes it: that page lives outside src/pages/[...locale]/, so
+// it has no per-locale twin and the usual hreflang set pointed at /de/404 — a
+// URL that is never built. Draft locales keep their alternates; they do have
+// real twins, they are just not finished yet.
+const showAlternates = alternates.length > 1 && !noindex;
 ---
 
 <!DOCTYPE html>
@@ -75,7 +80,7 @@ const hideFromIndex = noindex || !loc.complete;
 </head>
 <body>
 
-  <Header path={path} locale={loc.code} />
+  <Header path={path} switchPath={noindex ? "/" : path} locale={loc.code} />
 
   <main>
     <slot />

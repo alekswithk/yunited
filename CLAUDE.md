@@ -54,20 +54,27 @@ Pages live under `src/pages/[...locale]/` — a **rest parameter that matches ze
 
 - `src/i18n/config.js` is the locale registry and the only place locales are defined. `localePaths()` feeds every page's `getStaticPaths`; `localizePath(path, code)` builds locale-aware hrefs — **use it for every internal link**, including in page bodies. On default-locale pages `Astro.params.locale` is `undefined`, which `localizePath`/`getLocale` treat as English.
 - `src/i18n/{en,de,bcs,sr}.json` are the dictionaries; `useTranslations(locale)` returns `t("dotted.key")` and **falls back to English** for anything missing, so an unfinished locale still renders a complete page. `en.json` is the source of truth — add every new string there first. Strings that contain inline markup (links, `<strong>`) are rendered with `set:html`; keep those as HTML in the dictionary. Internal links inside a sentence are split into `…Pre`/`…Link`/`…Post` keys so the href can stay locale-aware via `localizePath`.
-- **The board's content is translated too, not just the UI strings.** Each entry in
-  `content/**` carries an optional `i18n` block keyed by *dictionary* name (`en`/`de`/
-  `bcs`/`sr`, so `bs`+`hr` share one translation) plus `sourceLang` and a `sourceHash`
-  of the source text. `localizeEntry(entry, dict)` in `src/lib/content.js` swaps the
-  translated fields in at render time and falls back field-by-field to the authored
-  text. `scripts/translate-content.mjs` (`npm run translate:content`) detects what
-  language the board wrote in, fills the rest, and re-translates an entry when its
-  hash changes; `.github/workflows/translate-content.yml` runs it automatically on
-  every push to `content/**` (i.e. every CMS save). **Only `title`/`description`
-  (events) and `bio` (members) are translated** — an event's `location` is a venue
-  name or street address and translating it would corrupt directions. The `i18n`
-  block *must* stay declared in `public/admin/config.yml`: a Git-based CMS writes
-  back only the fields it knows, so omitting it makes every board save silently
-  strip the translations.
+- **Events — but only events — are translated too, not just the UI strings.** Each
+  entry in `content/events/` carries an optional `i18n` block keyed by *dictionary*
+  name (`en`/`de`/`bcs`/`sr`, so `bs`+`hr` share one translation) plus `sourceLang`
+  and a `sourceHash` of the source text. `localizeEntry(entry, dict)` in
+  `src/lib/content.js` swaps the translated fields in at render time and falls back
+  field-by-field to the authored text. `scripts/translate-content.mjs`
+  (`npm run translate:content`) detects what language the board wrote in, fills the
+  rest, and re-translates an entry when its hash changes;
+  `.github/workflows/translate-content.yml` runs it automatically on every push to
+  `content/**` (i.e. every CMS save). **Only an event's `title`/`description` are
+  translated** — its `location` is a venue name or street address and translating it
+  would corrupt directions. The `i18n` block *must* stay declared in
+  `public/admin/config.yml`: a Git-based CMS writes back only the fields it knows, so
+  omitting it makes every board save silently strip the translations.
+- **`content/members/` is never translated, and has no `i18n` block at all.** A board
+  member's name, role and bio render identically on every language's page. Roles are
+  used in English at HSG, and a bio is a person describing themselves in their own
+  words — machine translation mangles that (it once turned the bio "krastavac" into
+  "Küstenfischer" on the German page). `memberSchema` is `.strict()` and declares no
+  `i18n`, so reintroducing one fails the build; keep it out of `config.yml` and out
+  of `TRANSLATABLE` in `scripts/translate-content.mjs` too.
 - **Translations are filled offline, never at build time.** `scripts/translate.mjs` (`npm run translate`, gated on `DEEPL_API_KEY` — put it in a gitignored `.env`, copied from `.env.example`; `npm run translate` loads it automatically) reads `en.json` and tops up the missing keys in `de`/`bcs`/`sr` via DeepL — `de.json`←`DE`, `sr.json`←`SR` (Ekavian), `bcs.json`←`HR` (Ijekavian, shared by bs+hr). It preserves existing (hand-checked) translations unless run with `--force`, protects brand terms, and keeps tags intact. The build itself stays hermetic; you run this by hand, review the output, and commit the JSON.
 - Serbian/Croatian/Bosnian share the one `bcs` dictionary but keep separate locale codes and URL prefixes, so no community is folded into another's label. They can diverge later by giving one its own dictionary.
 - **`complete: false` gates a locale**: its pages are generated (reviewable at real URLs) but marked `noindex`, excluded from the sitemap (`isIndexable` in `astro.config.mjs`) and from `hreflang`, and hidden from the language switcher. Flip to `true` only when that locale's copy is genuinely finished — that one flag publishes it everywhere.

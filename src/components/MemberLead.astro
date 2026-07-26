@@ -6,6 +6,9 @@ import { isUnfilled, displayName } from "../lib/members.js";
 import { defaultLocale } from "../i18n/config.js";
 import { useTranslations } from "../i18n/utils.js";
 
+// Nothing here is localized but the "to be announced" placeholder: a board
+// member's name, role and bio read the same in every language (see the note on
+// memberSchema in lib/schema.js). Only the surrounding UI follows the locale.
 const { member, locale = defaultLocale } = Astro.props;
 const t = useTranslations(locale);
 const tbaClass = isUnfilled(member.name) ? " is-tba" : "";
