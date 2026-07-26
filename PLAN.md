@@ -13,8 +13,9 @@ when a step ships, tick it here in the same PR.
   & usage → [`docs/CMS.md`](docs/CMS.md). This file is the *tracker/index*; those
   are the *reference*.
 
-_Last updated: 2026-07-24 (README rewritten + DEPLOY.md removed; Serbian now Latin;
-German published, BCS/Serbian still gated pending speaker review)._
+_Last updated: 2026-07-26 (CSP hardened — no `'unsafe-inline'` left on the public
+site; board members no longer machine-translated; 404 now actually served. Serbian
+is Latin; German published, BCS/Serbian still gated pending speaker review)._
 
 ---
 
@@ -53,8 +54,10 @@ scripts/translate-content.mjs  npm `translate:content`: fills the i18n block in 
 scripts/lib/deepl.mjs      shared DeepL plumbing for both scripts (one PROTECT list)
 .github/workflows/         ci.yml (build+check on PRs); translate-content.yml (auto-translate
                            content on push to main — needs the DEEPL_API_KEY secret)
-astro.config.mjs           site, trailingSlash, build.format:'file', sitemap integration
-wrangler.jsonc             Cloudflare: assets.directory = ./dist
+astro.config.mjs           site, trailingSlash, build.format:'file', sitemap integration,
+                           and the two settings that keep the CSP inline-free
+                           (inlineStylesheets:'never', vite assetsInlineLimit:0)
+wrangler.jsonc             Cloudflare: assets.directory = ./dist, not_found_handling
 ```
 
 **Load-bearing rules** (full list in `CLAUDE.md`): pages import content only via
@@ -76,6 +79,8 @@ extensionless; events are never marked "past" by hand; shared chrome lives once 
 | #17 | Image loader accepts **any raster format, any case**; HEIC gives a clear board-facing error |
 | #18 | This tracker (`PLAN.md`) + `CLAUDE.md` pointer to it |
 | #19 | **CI on every PR** — `npm ci` + `build` + `check` (Node 22); catches bad content before merge |
+| #30 | Table-of-contents rail: legible over dark sections, bound to the content rather than the viewport |
+| #33 | Board members no longer machine-translated (`memberSchema` forbids `i18n`); **404 actually served** (`not_found_handling`) with no dead `/de/404` hreflang; visible focus ring, real form-error announcement, no sideways scroll on narrow phones |
 
 Earlier foundation (pre-#12): Astro migration + build-time image optimization.
 
@@ -106,10 +111,15 @@ Items tagged **🧑 human-led** must NOT be auto-implemented by the weekly agent
 they carry design decisions that need a person. The agent skips them.
 
 - [x] **CI check on PRs** — shipped in #19 (`.github/workflows/ci.yml`).
-- [ ] **CSP hardening** *(medium).* Drop `style-src 'unsafe-inline'` from the public
-      site by moving the inline `style="…"` attributes (6 pages) into `global.css`
-      classes, and the inline JSON-LD / contact script into hashed/external form.
-      The stylesheet is already CSP-clean; this finishes the job.
+- [x] **CSP hardening** — **`'unsafe-inline'` is now gone from both `script-src` and
+      `style-src`** on the public site. The 16 inline `style="…"` attributes across 6
+      pages became classes in `global.css` (`.prose-column`, `.panel-gold`,
+      `.split-narrow`, `.section-cta-lg`, `.eyebrow-azure`, `.honeypot`, `.form-alt`,
+      `.error-lede`); the contact form's `is:inline` script became a processed one; and
+      `vite.build.assetsInlineLimit: 0` in `astro.config.mjs` stops Astro inlining the
+      bundled scripts, so every one is a hashed file under `/_astro` (already cached
+      immutable). The inline JSON-LD stays: a script element with a non-JavaScript type
+      is a data block that is never executed, so `script-src` does not apply to it.
 - [~] **i18n: English + BCS — 🧑 human-led** *(large).* In progress on `i18n-foundation`. Done:
       locale routing (`src/pages/[...locale]/`), the dictionary + English-fallback
       system (`src/i18n/`), the language switcher, gated publishing (`complete:false`

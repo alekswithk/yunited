@@ -145,9 +145,11 @@ Two things live **outside** the repo and are worth knowing:
   workflow (`.github/workflows/translate-content.yml`) — never by the site build.
 
 `public/_headers` carries the Content-Security-Policy and cache rules and is
-copied verbatim into `dist/`. The public site's CSP is strict (`script-src
-'self'`, self-hosted fonts); `/admin` has its own looser policy scoped to that
-path.
+copied verbatim into `dist/`. The public site's CSP is strict — `script-src`
+and `style-src` are `'self'` with **no `'unsafe-inline'`**, and fonts are
+self-hosted — so don't add `style="…"` attributes or `<script is:inline>` to a
+page; put the rules in `global.css` and let Astro bundle the script. `/admin`
+has its own looser policy scoped to that path.
 
 ### Repository map
 

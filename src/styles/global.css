@@ -227,6 +227,11 @@ main { position: relative; }
   margin-bottom: var(--space-5);
 }
 
+/* A run of body paragraphs held to a readable measure. Only the measure — the
+   `p + p` rule above already spaces them, which is why the per-paragraph
+   margins these used to carry inline were doing nothing. */
+.prose-column { max-width: 680px; }
+
 /* Small mono label above section headings */
 .eyebrow {
   display: inline-block;
@@ -240,6 +245,10 @@ main { position: relative; }
   padding-bottom: var(--space-1);
   border-bottom: 2px solid var(--color-red);
 }
+/* Marks the second of two side-by-side panels as the other audience, the way
+   .panel-red / .panel-gold do for the panels themselves. Text only — the rule
+   under it stays red, as it was when this was an inline style. */
+.eyebrow-azure { color: var(--color-azure); }
 
 /* ---------- Folk-motif divider (SVG pattern, used sparingly) ---------- */
 .motif-divider {
@@ -799,6 +808,14 @@ input[aria-invalid="true"]:focus,
 select[aria-invalid="true"]:focus,
 textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow: 3px 3px 0 var(--color-red); }
 
+/* Honeypot: off-screen rather than display:none, because a bot that fills in
+   forms reads the DOM and skips hidden fields. Sighted people never see it and
+   aria-hidden + tabindex="-1" keep it out of everyone else's way. */
+.honeypot { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+/* "…or just email us" — the way around the form, set apart from it. */
+.form-alt { margin-top: var(--space-5); }
+
 .form-note { font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.02em; color: var(--color-muted); }
 .form-error { color: var(--color-red); font-size: 0.9rem; font-weight: 600; display: none; }
 .form-error.is-visible { display: block; }
@@ -1078,6 +1095,8 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
   grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   gap: var(--space-4);
 }
+/* Two panels of short text don't need the full container width to read well. */
+.split-grid.split-narrow { max-width: 860px; }
 
 .info-panel {
   background: #fffdf8;
@@ -1087,15 +1106,20 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
   padding: var(--space-5);
 }
 .info-panel.panel-red { border-top-color: var(--color-red); }
+.info-panel.panel-gold { border-top-color: var(--color-gold); }
 .info-panel h3 { margin-bottom: var(--space-3); }
 /* A call-to-action closing a section. A class rather than an inline style —
    PLAN.md §4 is trying to drop style-src 'unsafe-inline', not add to it. */
 .section-cta { margin-top: var(--space-4); }
+/* The same, but closing a panel grid, which needs more air than a list does.
+   The footnote under it needs no rule: `p + p` already spaces it. */
+.section-cta-lg { margin-top: var(--space-5); }
 .info-panel ul { padding-left: 1.2rem; margin-top: var(--space-3); }
 .info-panel li { margin-bottom: var(--space-2); }
 
 /* ---------- 404 ---------- */
 .error-page { text-align: center; padding: var(--space-7) 0; }
+.error-lede { color: var(--color-muted); margin-bottom: var(--space-5); }
 .error-code {
   font-family: var(--font-display);
   font-weight: 900;

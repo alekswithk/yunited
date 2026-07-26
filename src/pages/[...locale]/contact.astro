@@ -72,8 +72,7 @@ const description = t("meta.contact.description");
         <!-- Formspree uses this as the subject line of the notification email. -->
         <input type="hidden" name="_subject" value="YUnited website — contact form">
         <!-- Honeypot: real people never see it, bots fill it in and get dropped. -->
-        <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true"
-          style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;">
+        <input class="honeypot" type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true">
 
         <!--
           Deliberately empty: role="alert" announces on a CONTENT CHANGE, so a
@@ -93,46 +92,52 @@ const description = t("meta.contact.description");
         </p>
       </form>
 
-      <p style="margin-top: var(--space-5);" set:html={t("contact.plainEmail")}></p>
+      <p class="form-alt" set:html={t("contact.plainEmail")}></p>
     </div>
   </section>
 
-  <script is:inline>
+  <script>
     // Contact form: client-side validation, then submit to Formspree over
     // fetch so the visitor stays on the page. If this script never runs the
     // form still posts natively to the same endpoint — the only thing lost is
     // the in-page success message.
-    const contactForm = document.querySelector("#contact-form");
-    const errorLine = document.querySelector("#form-error");
-    const successLine = document.querySelector("#form-success");
-    const submitButton = document.querySelector("#form-submit");
+    //
+    // A processed <script>, not is:inline: Astro bundles it to a hashed file
+    // under /_astro, which is what lets script-src stay 'self' with no
+    // 'unsafe-inline' (PLAN.md §4).
+    const contactForm = document.querySelector<HTMLFormElement>("#contact-form");
+    const errorLine = document.querySelector<HTMLElement>("#form-error");
+    const successLine = document.querySelector<HTMLElement>("#form-success");
+    const submitButton = document.querySelector<HTMLButtonElement>("#form-submit");
 
-    // Localized copy comes from data-* attributes on the form, so these strings
-    // follow the page's language instead of being hardcoded English here.
-    const MSG_INVALID = contactForm?.dataset.msgInvalid || "";
-    const CONTACT_FALLBACK = contactForm?.dataset.msgFallback || "";
-    const LABEL_SEND = contactForm?.dataset.labelSend || submitButton?.textContent || "";
-    const LABEL_SENDING = contactForm?.dataset.labelSending || "";
+    if (contactForm && errorLine && successLine && submitButton) {
+      // Localized copy comes from data-* attributes on the form, so these
+      // strings follow the page's language instead of being hardcoded English
+      // here.
+      const MSG_INVALID = contactForm.dataset.msgInvalid || "";
+      const CONTACT_FALLBACK = contactForm.dataset.msgFallback || "";
+      const LABEL_SEND = contactForm.dataset.labelSend || submitButton.textContent || "";
+      const LABEL_SENDING = contactForm.dataset.labelSending || "";
 
-    function showError(text) {
-      errorLine.textContent = text;
-      errorLine.classList.add("is-visible");
-    }
+      const showError = (text: string) => {
+        errorLine.textContent = text;
+        errorLine.classList.add("is-visible");
+      };
 
-    if (contactForm) {
-      contactForm.addEventListener("submit", async function (submitEvent) {
+      contactForm.addEventListener("submit", async (submitEvent) => {
         submitEvent.preventDefault();
 
-        const nameField = document.querySelector("#field-name");
-        const emailField = document.querySelector("#field-email");
-        const topicField = document.querySelector("#field-topic");
-        const messageField = document.querySelector("#field-message");
+        const nameField = document.querySelector<HTMLInputElement>("#field-name");
+        const emailField = document.querySelector<HTMLInputElement>("#field-email");
+        const topicField = document.querySelector<HTMLSelectElement>("#field-topic");
+        const messageField = document.querySelector<HTMLTextAreaElement>("#field-message");
+        if (!nameField || !emailField || !topicField || !messageField) return;
 
         const emailLooksValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailField.value.trim());
 
         // In document order, so "the first thing that's wrong" is also the
         // first one you'd reach by tabbing.
-        const checks = [
+        const checks: [HTMLElement, boolean][] = [
           [nameField, Boolean(nameField.value.trim())],
           [emailField, emailLooksValid],
           [topicField, Boolean(topicField.value)],
@@ -174,7 +179,7 @@ const description = t("meta.contact.description");
 
           const body = await response.json().catch(() => null);
           const detail = body && body.errors && body.errors.length
-            ? body.errors.map((error) => error.message).join(" ")
+            ? body.errors.map((error: { message: string }) => error.message).join(" ")
             : null;
           showError(detail || CONTACT_FALLBACK);
         } catch {

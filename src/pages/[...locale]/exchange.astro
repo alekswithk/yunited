@@ -37,14 +37,14 @@ const description = t("meta.exchange.description");
             <li set:html={t("exchange.incomingEvents")}></li>
             <li set:html={t("exchange.incomingHome")}></li>
           </ul>
-          <p style="margin-top: var(--space-4);">
+          <p class="section-cta">
             <a class="btn btn-red" href={localizePath("/contact", locale)}>{t("exchange.incomingCta")}</a>
           </p>
         </div>
 
         <!-- Audience 2: outgoing HSG students -->
         <div class="info-panel">
-          <p class="eyebrow" style="color: var(--color-azure);">{t("exchange.outgoingEyebrow")}</p>
+          <p class="eyebrow eyebrow-azure">{t("exchange.outgoingEyebrow")}</p>
           <h3>{t("exchange.outgoingHeading")}</h3>
           <p>{t("exchange.outgoingLede")}</p>
           <ul>
@@ -52,7 +52,7 @@ const description = t("meta.exchange.description");
             <li set:html={t("exchange.outgoingItem2")}></li>
             <li>{t("exchange.outgoingItem3Pre")}<a href={localizePath("/contact", locale)}>{t("exchange.outgoingItem3Link")}</a>{t("exchange.outgoingItem3Post")}</li>
           </ul>
-          <p style="margin-top: var(--space-4);">
+          <p class="section-cta">
             <a class="btn btn-outline" href={localizePath("/contact", locale)}>{t("exchange.outgoingCta")}</a>
           </p>
         </div>

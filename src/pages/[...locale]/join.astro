@@ -27,22 +27,22 @@ const description = t("meta.join.description");
     <div class="container reveal">
       <p class="eyebrow">{t("join.getEyebrow")}</p>
       <h2>{t("join.getHeading")}</h2>
-      <div class="split-grid" style="max-width: 860px;">
+      <div class="split-grid split-narrow">
         <div class="info-panel panel-red">
           <h3>{t("join.semesterTitle")}</h3>
           <p set:html={t("join.semesterBody")}></p>
         </div>
-        <div class="info-panel" style="border-top-color: var(--color-gold);">
+        <div class="info-panel panel-gold">
           <h3>{t("join.freeTitle")}</h3>
           <p set:html={t("join.freeBody")}></p>
         </div>
       </div>
-      <p style="margin-top: var(--space-5);">
+      <p class="section-cta-lg">
         <a class="btn btn-red" href="https://uniclubs.ch/hsg/clubs/yunited" target="_blank" rel="noopener">
           {t("join.cta")}
         </a>
       </p>
-      <p class="form-note" style="margin-top: var(--space-3);">
+      <p class="form-note">
         {t("join.note")}
       </p>
     </div>
