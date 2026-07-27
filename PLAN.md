@@ -13,9 +13,10 @@ when a step ships, tick it here in the same PR.
   & usage → [`docs/CMS.md`](docs/CMS.md). This file is the *tracker/index*; those
   are the *reference*.
 
-_Last updated: 2026-07-26 (CSP hardened — no `'unsafe-inline'` left on the public
-site; board members no longer machine-translated; 404 now actually served. Serbian
-is Latin; German published, BCS/Serbian still gated pending speaker review)._
+_Last updated: 2026-07-27 (added a `/partners` sponsor pitch page — see §4;
+CSP hardened — no `'unsafe-inline'` left on the public site; board members no
+longer machine-translated; 404 now actually served. Serbian is Latin; German
+published, BCS/Serbian still gated pending speaker review)._
 
 ---
 
@@ -26,8 +27,8 @@ content/                 CONTENT LAYER — one JSON file per entry (board's edit
   events/<id>.json         9 events; filename = the event id
   members/<role>.json      6 board members; each has an `order` (1 = lead card)
 src/
-  pages/[...locale]/*.astro 7 localized routes (index, about, events, members, exchange,
-                           join, contact); rest param emits both /events and /de/events
+  pages/[...locale]/*.astro 8 localized routes (index, about, events, members, exchange,
+                           partners, join, contact); rest param emits both /events and /de/events
   pages/404.astro          not-found page (not localized)
   components/*.astro       EventCard, MemberLead, MemberRow, Portrait, PageToc, Header, Footer
   layouts/BaseLayout.astro single source of <head> (canonical + hreflang) + chrome + script
@@ -143,8 +144,22 @@ they carry design decisions that need a person. The agent skips them.
         fixed (it had placed HSG in *Edinburgh* and *New York*, and called the board
         inbox a "forum"), but nobody fluent has read either dictionary end to end.
         Flip `complete: true` in `src/i18n/config.js` only after that review.
-- [ ] **Partners / recruiting funnel** *(content + feature).* Sponsor/partner page
-      and a recruiting flow. Scope with the board.
+- [~] **Partners / recruiting funnel** *(content + feature).* Sponsor/partner page
+      and a recruiting flow. Scope with the board. Done: a `/partners` pitch page
+      (`src/pages/[...locale]/partners.astro`) explaining why a company would
+      partner with YUnited (community, event/social visibility, bridge to
+      ex-Yugoslav-background employers) and pointing at the contact form's
+      existing "Partnerships" topic — linked from the main nav and footer. No
+      partner logos/names are listed (there are none yet; nothing was invented),
+      and there is no content collection for partners — add one once the board
+      has real partners to show, the same way `content/events`/`content/members`
+      exist. Remaining, and still needs the board: the **recruiting funnel**
+      half (attracting new student members — likely a distinct feature with its
+      own scope, possibly needing a form/backend this static site doesn't have
+      yet), the `/partners` copy and nav placement itself (first pass, not
+      board-reviewed), and translating the new strings into `de`/`bcs`/`sr`
+      (`npm run translate`, needs `DEEPL_API_KEY` — not run here since content/
+      translation dictionaries are a protected path for this agent).
 
 Deferred/among-these per the original roadmap: sitemap `hreflang` — shipped instead
 as `<link rel="alternate" hreflang>` in the page `<head>` (gated to finished locales),

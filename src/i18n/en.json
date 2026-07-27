@@ -5,6 +5,7 @@
     "events": "Events",
     "members": "Members",
     "exchange": "Exchange",
+    "partners": "Partners",
     "contact": "Contact",
     "join": "Join",
     "aria": "Main navigation",
@@ -51,6 +52,10 @@
     "exchange": {
       "title": "Exchange Students — YUnited",
       "description": "What YUnited offers incoming exchange students at HSG — and how outgoing HSG students can stay connected while abroad."
+    },
+    "partners": {
+      "title": "Partners — YUnited",
+      "description": "Partner with YUnited to reach HSG students with roots from former Yugoslavia through our events and community."
     },
     "join": {
       "title": "Join — YUnited",
@@ -160,6 +165,22 @@
     "outgoingItem3Link": "reach out",
     "outgoingItem3Post": ".",
     "outgoingCta": "Stay in touch"
+  },
+  "partners": {
+    "heroTitle": "Partner with YUnited",
+    "heroLede": "We connect HSG students with roots from former Yugoslavia — and everyone curious about the culture — socially and professionally. Here's how a partnership works.",
+    "whyEyebrow": "Why partner with us",
+    "whyHeading": "What a partnership offers",
+    "reachTitle": "Community",
+    "reachBody": "YUnited has run social and professional events for HSG students since 2013, connecting a community that spans every major and semester.",
+    "visibilityTitle": "Visibility",
+    "visibilityBody": "Partners are featured at our events and across our website and social media, in front of an engaged, close-knit audience.",
+    "networkTitle": "Talent & network",
+    "networkBody": "We act as a bridge to companies and organisations with an ex-Yugoslav background, connecting students to opportunities during and after their studies.",
+    "ctaEyebrow": "Get involved",
+    "ctaHeading": "Interested in partnering?",
+    "ctaBody": "Whether it's sponsoring an event or a longer-term partnership, we'd love to hear from you. Reach out and tell us what you have in mind.",
+    "ctaButton": "Contact us about partnering"
   },
   "join": {
     "heroTitle": "Join YUnited",
