@@ -5,6 +5,7 @@
     "events": "Events",
     "members": "Vorstand",
     "exchange": "Austausch",
+    "partners": "Partner",
     "contact": "Kontakt",
     "join": "Mitglied werden",
     "aria": "Hauptnavigation",
@@ -51,6 +52,10 @@
     "exchange": {
       "title": "Austauschstudierende — YUnited",
       "description": "Was YUnited ankommenden Austauschstudierenden an der HSG bietet — und wie HSG-Studierende im Ausland in Verbindung bleiben."
+    },
+    "partners": {
+      "title": "Partner — YUnited",
+      "description": "Arbeiten Sie mit YUnited zusammen, um über unsere Veranstaltungen und unsere Community Studierende der HSG mit Wurzeln im ehemaligen Jugoslawien zu erreichen."
     },
     "join": {
       "title": "Mitglied werden — YUnited",
@@ -160,6 +165,22 @@
     "outgoingItem3Link": "Kontakt aufnehmen",
     "outgoingItem3Post": ".",
     "outgoingCta": "Bleibe in Kontakt"
+  },
+  "partners": {
+    "heroTitle": "Werden Sie Partner von YUnited",
+    "heroLede": "Wir bringen Studierende der HSG mit Wurzeln im ehemaligen Jugoslawien – sowie alle, die sich für diese Kultur interessieren – auf sozialer und beruflicher Ebene zusammen. So funktioniert eine Partnerschaft.",
+    "whyEyebrow": "Warum eine Partnerschaft",
+    "whyHeading": "Was eine Partnerschaft bietet",
+    "reachTitle": "Gemeinschaft",
+    "reachBody": "YUnited organisiert seit 2013 gesellschaftliche und berufliche Veranstaltungen für Studierende der HSG und schafft so eine Gemeinschaft, die alle Studiengänge und Semester umfasst.",
+    "visibilityTitle": "Sichtbarkeit",
+    "visibilityBody": "Unsere Partner werden bei unseren Veranstaltungen sowie auf unserer Website und in den sozialen Medien einem engagierten, eng verbundenen Publikum präsentiert.",
+    "networkTitle": "Talent & Netzwerk",
+    "networkBody": "Wir fungieren als Bindeglied zu Unternehmen und Organisationen mit ex-jugoslawischem Hintergrund und vermitteln Studierenden während und nach ihrem Studium entsprechende Möglichkeiten.",
+    "ctaEyebrow": "Zusammenarbeiten",
+    "ctaHeading": "Haben Sie Interesse an einer Partnerschaft?",
+    "ctaBody": "Ob es sich nun um das Sponsoring einer Veranstaltung oder eine längerfristige Partnerschaft handelt – wir würden uns sehr freuen, von Ihnen zu hören. Nehmen Sie Kontakt mit uns auf und teilen Sie uns Ihre Ideen mit.",
+    "ctaButton": "Kontaktieren Sie uns bezüglich einer Partnerschaft"
   },
   "join": {
     "heroTitle": "Werde Mitglied bei YUnited",

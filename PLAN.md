@@ -137,9 +137,10 @@ they carry design decisions that need a person. The agent skips them.
       save. **Board members are deliberately excluded**: a name, role and bio
       read the same in every language. Remaining, per locale:
   - [ ] **Serbian: pick one script.** `sr.json` is currently mixed — the hand-done
-        nav/footer/meta (15 keys) are Latin, the DeepL body copy (101 keys) is
-        Cyrillic, and `htmlLang` claims `sr-Latn`. Convert one way or the other
-        (and fix `htmlLang` if Cyrillic wins) before publishing.
+        nav/footer/meta and the `partners` block (52 keys) are Latin, the DeepL
+        body copy (123 keys) is Cyrillic, and `htmlLang` claims `sr-Latn`.
+        Convert one way or the other (and fix `htmlLang` if Cyrillic wins)
+        before publishing.
   - [ ] **BCS + Serbian: speaker review.** Raw DeepL output. The worst damage is
         fixed (it had placed HSG in *Edinburgh* and *New York*, and called the board
         inbox a "forum"), but nobody fluent has read either dictionary end to end.
@@ -156,10 +157,14 @@ they carry design decisions that need a person. The agent skips them.
       exist. Remaining, and still needs the board: the **recruiting funnel**
       half (attracting new student members — likely a distinct feature with its
       own scope, possibly needing a form/backend this static site doesn't have
-      yet), the `/partners` copy and nav placement itself (first pass, not
-      board-reviewed), and translating the new strings into `de`/`bcs`/`sr`
-      (`npm run translate`, needs `DEEPL_API_KEY` — not run here since content/
-      translation dictionaries are a protected path for this agent).
+      yet) and the `/partners` copy and nav placement itself (first pass, not
+      board-reviewed). The new strings **are** translated: `npm run translate`
+      filled `de`/`bcs`/`sr` and the machine output was hand-corrected — it had
+      again put HSG in *Edinburgh* (bcs), called the club a *tvrtka* (company),
+      and mixed Latin letters into a Cyrillic word (sr). The Serbian partners
+      strings were written in **Latin**, matching the `sr-Latn` tag and the
+      existing Latin nav rather than the Cyrillic body copy (see the script
+      item above).
 
 Deferred/among-these per the original roadmap: sitemap `hreflang` — shipped instead
 as `<link rel="alternate" hreflang>` in the page `<head>` (gated to finished locales),
