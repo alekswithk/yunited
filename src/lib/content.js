@@ -7,6 +7,7 @@
 // throws with a message naming the offending file and field, readable enough
 // for a board member to fix without reading a stack trace.
 import { eventSchema, memberSchema } from "./schema.js";
+import { splitEvents, hasDate } from "./events.js";
 
 /**
  * Swap an entry's translatable fields for the given dictionary's versions.
@@ -64,6 +65,7 @@ function loadCollection(modules, schema, extraChecks = () => []) {
   return entries.map((e) => e.data);
 }
 
+/** @type {import("./schema.js").Event[]} */
 export const events = loadCollection(eventModules, eventSchema, (entries) => {
   const errors = [];
   const seen = new Map();
@@ -83,6 +85,35 @@ export const events = loadCollection(eventModules, eventSchema, (entries) => {
   return errors;
 });
 
+// An empty calendar is a WARNING, never an error.
+//
+// Because events are filed as past purely by date, the events page drains
+// itself: the last party of the semester slips into "Past events" on its own and
+// nothing announces that "Upcoming" is now empty. The build stays green, the
+// deploy succeeds, and the site quietly advertises a club whose most recent
+// event was months ago — which is exactly what happened between May and July
+// 2026, unnoticed for about eleven weeks.
+//
+// Between semesters that state is entirely legitimate, so this must not fail the
+// build; a static site that refuses to deploy in August would be worse than the
+// problem. It just makes the situation visible in the build log — and to the
+// board, in the Cloudflare deploy output.
+{
+  const { upcoming } = splitEvents(events);
+  const dated = upcoming.filter(hasDate);
+  if (dated.length === 0) {
+    const tba = upcoming.length;
+    console.warn(
+      `\n⚠  No upcoming event has a date.` +
+        (tba > 0
+          ? ` The events page will show ${tba} TBA card${tba === 1 ? "" : "s"} and nothing else.`
+          : ` The "Upcoming events" section will render its empty state.`) +
+        `\n   Fine between semesters — add the next term's events in /admin when they are set.\n`,
+    );
+  }
+}
+
+/** @type {import("./schema.js").Member[]} */
 export const members = loadCollection(memberModules, memberSchema, (entries) => {
   const errors = [];
   const seen = new Map();

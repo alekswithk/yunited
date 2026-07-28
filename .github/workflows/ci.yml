@@ -33,6 +33,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Unit tests for src/lib — the build-time logic that decides what the
+      # events page shows. A bug there does not fail a build, it just renders
+      # the wrong thing, so this runs before the build rather than after.
+      - name: Test
+        run: npm test
+
       # Runs the `prebuild` step (vendors the CMS bundle) then `astro build`,
       # which is also where content validation happens.
       - name: Build
@@ -40,3 +46,11 @@ jobs:
 
       - name: Type-check
         run: npm run check
+
+      # Asserts on the BUILT output: no style="…" attributes and no inline
+      # <script>, both of which the site's CSP forbids without 'unsafe-inline'.
+      # Nothing else catches this — build and check both stay green while the
+      # page silently breaks in any browser that enforces the header. See the
+      # comment at the top of scripts/check-dist.mjs.
+      - name: Check built output
+        run: npm run check:dist

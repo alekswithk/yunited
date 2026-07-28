@@ -13,10 +13,14 @@ npm install        # once
 npm run dev        # local preview at http://localhost:4321
 npm run build      # writes the finished static site to dist/
 npm run preview    # serve the built dist/ locally
-npm run check      # astro check (type/diagnostics); must be 0 errors
+npm run check      # astro check (type/diagnostics); must be 0 errors AND 0 hints
+npm test           # node:test unit tests for src/lib (no framework, no network)
+npm run check:dist # post-build assertions on dist/ (CSP-inline-free, brand spelling)
 ```
 
-There is no test suite. "Verifying a change" means `npm run build` succeeds, `npm run check` is clean, and — for content or rendering changes — the relevant text appears in the built HTML (e.g. `grep "Meet & Greet" dist/events.html`).
+**Tests cover `src/lib` only, and that is deliberate.** Pages and components are verified by building them; `src/lib/events.js` is the one module whose bugs are *invisible* — get the past/upcoming boundary or the sort wrong and every command still passes while the events page shows the wrong thing. `src/lib/events.test.js` uses `node:test` (built in, no framework, no new dependency) and injects `now` so the assertions do not rot. Add tests there when you add logic to `src/lib`; don't add a test runner for the rest.
+
+"Verifying a change" means `npm test`, `npm run build`, `npm run check` and `npm run check:dist` all pass — that is exactly what CI runs — and, for content or rendering changes, the relevant text appears in the built HTML (e.g. `grep "Meet & Greet" dist/events.html`).
 
 ## Deploy
 
@@ -38,7 +42,7 @@ The load-bearing idea: **content is authored as JSON and rendered to static HTML
 - **Events are never marked "past" by hand.** `splitEvents()` compares each event's `date` to today. A `null`/missing date means "TBA" and renders as an upcoming card floated to the top (see `hasDate`).
 - **URLs are extensionless.** Internal links use `/about`, not `/about.html`; `astro.config.mjs` sets `build.format: 'file'` so Cloudflare serves them, and the canonicals match. Keep new links extensionless.
 - **Image paths in JSON are relative to `src/`.** A photo at `src/images/events/x.webp` is referenced in the JSON as `"images/events/x.webp"`. `src/lib/images.js` (`resolveImage`) maps that string to the imported asset via `import.meta.glob`, and Astro's `<Image>` optimizes it at build time — resized, 1×/2× srcset, hashed under `/_astro/`. A path with **no matching file fails the build** (this is intentional). Images live in `src/`, not `public/`, precisely so they go through the sharp pipeline.
-- **The CSP in `public/_headers` carries no `'unsafe-inline'`, and two build settings are what hold that up.** `astro.config.mjs` sets `inlineStylesheets: 'never'` (no `<style>` in the page) and `vite.build.assetsInlineLimit: 0` (every `<script>` is emitted as a hashed file under `/_astro` instead of being inlined). Don't flip either. The same rule applies to what you author: **no `style="…"` attributes and no `<script is:inline>`** — put the declarations in `global.css` and let Astro bundle the script. Inline `<script type="application/ld+json">` is fine: a non-JS script type is a data block, never executed, so `script-src` never applies to it. Nothing in the build fails if you break this — the page just silently stops working in a browser that enforces the header, so check `dist/` for `style="` and inline `<script>` after touching markup.
+- **The CSP in `public/_headers` carries no `'unsafe-inline'`, and two build settings are what hold that up.** `astro.config.mjs` sets `inlineStylesheets: 'never'` (no `<style>` in the page) and `vite.build.assetsInlineLimit: 0` (every `<script>` is emitted as a hashed file under `/_astro` instead of being inlined). Don't flip either. The same rule applies to what you author: **no `style="…"` attributes and no `<script is:inline>`** — put the declarations in `global.css` and let Astro bundle the script. Inline `<script type="application/ld+json">` is fine: a non-JS script type is a data block, never executed, so `script-src` never applies to it. Neither `astro build` nor `astro check` fails if you break this — the page just silently stops working in a browser that enforces the header — so **`npm run check:dist` asserts it on the built output** and CI runs it on every PR. Run it after touching markup, or after changing anything in `astro.config.mjs`.
 
 ### CMS
 
