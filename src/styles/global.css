@@ -269,8 +269,30 @@ main { position: relative; }
   height: 16px;
   border-top: 2px solid var(--color-ink);
   border-bottom: 2px solid var(--color-ink);
-  overflow: hidden;
   position: relative;
+  /* `overflow: clip`, and it has to be exactly this. Not hidden, not clip-path.
+     The strip inside is deliberately wider than the divider, so it needs
+     clipping — but the two obvious ways to clip both break something:
+
+       overflow: hidden  makes the box a SCROLL CONTAINER, even though nothing
+                         can scroll it by hand. `animation-timeline: view()`
+                         measures its subject against the nearest ancestor
+                         scroll container, so the strip's timeline became this
+                         16px divider instead of the page. The strip fills it
+                         exactly and never moves through it: a degenerate
+                         timeline, frozen at frame one, with
+                         animation-fill-mode:both holding that pose. Everything
+                         looked correct and nothing moved.
+
+       clip-path: inset(0)  clips at paint time and creates no scroll container,
+                         which fixes the timeline — but it does NOT keep the
+                         oversized strip out of the page's scrollable overflow.
+                         Measured: 384px of sideways scroll at every viewport,
+                         phone included.
+
+     `overflow: clip` is the one that does both: it clips, it contains the
+     overflow, and it is explicitly NOT a scroll container. */
+  overflow: clip;
 }
 
 .motif-divider::after {

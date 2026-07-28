@@ -346,10 +346,75 @@ function checkAnimationShorthands() {
   return folded.length;
 }
 
+// ---------------------------------------------------------------------------
+// An oversized strip must be clipped with `overflow: clip` — not hidden, not
+// clip-path, not left unclipped.
+//
+// The pattern: a pseudo-element made deliberately wider than its parent
+// (`width: calc(100% + …)`) so it can slide inside it. That has two separate
+// requirements, and getting either wrong is silent.
+//
+//   NOT CLIPPED AT ALL, or clipped with clip-path: the oversized box still
+//   counts towards the page's scrollable overflow, so the whole site scrolls
+//   sideways. Measured on the motif divider: 384px of horizontal scroll at
+//   every viewport, phone included. clip-path clips PAINT, not overflow.
+//
+//   CLIPPED WITH overflow:hidden: correct visually, but `hidden` makes the box
+//   a SCROLL CONTAINER. `animation-timeline: view()` measures its subject
+//   against the nearest ancestor scroll container, so the strip's timeline
+//   becomes the 16px parent instead of the page — a degenerate timeline frozen
+//   at frame one. The animation is there, the browser supports it, and nothing
+//   moves.
+//
+// `overflow: clip` is the only value that clips, contains the overflow, and is
+// explicitly not a scroll container. Both wrong versions were shipped before
+// this check existed.
+function checkClippedStrips() {
+  const cssFiles = readdirSync(join(DIST, "_astro")).filter((f) => f.endsWith(".css"));
+  const problems = [];
+
+  for (const file of cssFiles) {
+    const css = readFileSync(join(DIST, "_astro", file), "utf8");
+
+    // Pseudo-element rules whose width overhangs their parent.
+    for (const [, selector] of css.matchAll(
+      /([^{}]*::?(?:after|before))\{[^}]*width:\s*calc\(\s*100%\s*\+[^}]*\}/g,
+    )) {
+      const origin = selector.trim().replace(/::?(?:after|before)$/, "");
+      // Every declaration block for the originating selector, anywhere.
+      const owner = [
+        ...css.matchAll(
+          new RegExp(`(?:^|[},])${escapeForRegExp(origin)}\\{([^}]*)\\}`, "g"),
+        ),
+      ]
+        .map((m) => m[1])
+        .join(";");
+
+      if (/overflow:\s*clip/.test(owner)) continue;
+
+      problems.push(
+        /overflow:\s*(hidden|auto|scroll)/.test(owner)
+          ? `${origin} uses overflow:${/overflow:\s*(\w+)/.exec(owner)[1]} — that is a scroll container, and it breaks view() timelines inside it`
+          : `${origin} does not clip its oversized ::after — the page will scroll sideways`,
+      );
+    }
+  }
+
+  if (problems.length === 0) return 0;
+
+  console.error("✗ dist/_astro — an oversized sliding strip is clipped wrongly");
+  for (const p of [...new Set(problems)].slice(0, 5)) console.error(`    ${p}`);
+  console.error("    Use `overflow: clip` on the parent. See the note in global.css.");
+  return problems.length;
+}
+
+const escapeForRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 failures += checkAdminIsFirstParty();
 failures += checkAdminWiring();
 failures += checkLinkSpacing();
 failures += checkAnimationShorthands();
+failures += checkClippedStrips();
 failures += checkMediaMirror();
 
 if (failures > 0) {
