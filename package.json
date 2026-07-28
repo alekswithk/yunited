@@ -16,8 +16,8 @@
     "translate:content": "node --env-file-if-exists=.env scripts/translate-content.mjs"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.4",
-    "@sveltia/cms": "^0.172.1",
+    "@astrojs/check": "^0.9.10",
+    "@sveltia/cms": "^0.174.0",
     "astro": "^5.13.0",
     "typescript": "^5.9.0"
   },
