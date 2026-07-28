@@ -287,6 +287,34 @@ h1, h2, h3 {
   font-size: 2rem;
 }
 
+.list-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.sort-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.sort-select {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border: var(--border);
+  box-shadow: var(--shadow-hard-sm);
+  padding: var(--space-2);
+  cursor: pointer;
+  /* Keep the platform arrow — a hand-drawn one would be one more thing to
+     keep legible in both colour schemes for no gain. */
+}
+
 .loading,
 .empty {
   color: var(--color-muted);

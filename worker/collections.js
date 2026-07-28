@@ -51,6 +51,24 @@ export const COLLECTIONS = {
     // through every save untouched; dropping it would strip every translation.
     carry: ["id", "i18n"],
 
+    // How the board can order the list. The first entry is the default.
+    //
+    // Sorting happens in the browser — the whole collection is already there,
+    // so re-ordering is instant and costs no round trip. These are declared as
+    // DATA rather than as comparator functions so they can be sent to the page
+    // with the field definitions; admin.js has one generic comparator that
+    // reads them. See sortEntries there.
+    //
+    // `nullsAre: "latest"` on date: an event with no date yet is one that has
+    // been announced but not scheduled, so it belongs with the future, not
+    // before events from last year. That puts it at the top of "newest first"
+    // and at the bottom of "oldest first", which is right in both directions.
+    sorts: [
+      { key: "date-desc", label: "Date — newest first", field: "date", type: "date", dir: "desc", nullsAre: "latest" },
+      { key: "date-asc", label: "Date — oldest first", field: "date", type: "date", dir: "asc", nullsAre: "latest" },
+      { key: "title", label: "Title — A to Z", field: "title", type: "text", dir: "asc" },
+    ],
+
     /** @type {Field[]} */
     fields: [
       {
@@ -125,6 +143,14 @@ export const COLLECTIONS = {
     // see memberSchema. There is nothing to carry but the filename identity.
     carry: [],
 
+    // Default matches the page: lowest `order` first, so the list on screen is
+    // the board in the order visitors see it. See the note on events' sorts.
+    sorts: [
+      { key: "order", label: "Board order — 1 first", field: "order", type: "number", dir: "asc" },
+      { key: "role", label: "Role — A to Z", field: "role", type: "text", dir: "asc" },
+      { key: "name", label: "Name — A to Z", field: "name", type: "text", dir: "asc" },
+    ],
+
     /** @type {Field[]} */
     fields: [
       {
@@ -179,6 +205,11 @@ export const COLLECTIONS = {
     imageDir: () => "images/partners",
     slugFor: (data) => slugify(data.name),
     carry: [],
+
+    sorts: [
+      { key: "order", label: "Display order — 1 first", field: "order", type: "number", dir: "asc" },
+      { key: "name", label: "Name — A to Z", field: "name", type: "text", dir: "asc" },
+    ],
 
     /** @type {Field[]} */
     fields: [
@@ -252,6 +283,7 @@ export function publicShape() {
     label: c.label,
     singular: c.singular,
     fields: c.fields,
+    sorts: c.sorts,
     image: {
       field: c.imageField,
       label: c.imageLabel,
