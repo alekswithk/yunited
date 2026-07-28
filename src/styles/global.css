@@ -147,12 +147,13 @@
   --dur-base: 0.28s;   /* state changes you should notice */
   --dur-slow: 0.6s;    /* entrances */
 
-  /* The flag rule (see "Flag rule" below). One tile is three equal stripes;
-     the stripe travels exactly one tile per cycle, which is what makes the
-     loop seamless. Change the tile and the loop stays seamless; change one
-     without the other and you get a visible jump every cycle. */
+  /* The flag rule (see "Flag rule" below). One tile is three equal stripes.
+     --flag-travel is how far the band slides across a full page scroll, and it
+     must stay a whole multiple of the tile so the stripes stay in register at
+     both ends. It is also the pseudo-element's overhang, so the band cannot
+     run out of stripe at the end of the travel. */
   --flag-tile: 180px;
-  --flag-cycle: 14s;
+  --flag-travel: calc(var(--flag-tile) * 6);
 }
 
 /* ---------- Base ---------- */
@@ -277,27 +278,34 @@ main { position: relative; }
 }
 /* ---------- Flag rule ----------
    The red / azure / gold band that closes the header and opens the footer, so
-   the page is bracketed top and bottom by the same mark. It drifts sideways —
-   slowly, and forever.
+   the page is bracketed top and bottom by the same mark.
 
-   HOW THE LOOP IS SEAMLESS. The stripe is a repeating gradient one --flag-tile
-   wide, on a pseudo-element a whole tile wider than its container. Travelling
-   exactly one tile puts an identical stripe where the last one started, so the
-   restart is invisible. That is the entire trick, and it is why the keyframe
-   and the background both key off --flag-tile: change one alone and a jump
-   appears once every cycle.
+   IT IS DRIVEN BY THE SCROLL POSITION, NOT BY A TIMER. The band tracks how far
+   down the page you are: at the top it sits at one end of its travel, at the
+   bottom the other, and it follows your scroll continuously in between —
+   forwards when you scroll down, backwards when you scroll up. Nothing moves
+   while you are reading, which is the point. An earlier version looped on a
+   timer and was wrong: perpetual motion in a sticky header is a distraction,
+   and it animated whether anyone was there or not.
+
+   It doubles as a quiet progress indicator, which is why the footer band runs
+   the OTHER way — the two close towards each other as you reach the end.
 
    IT MOVES BY transform, NOT background-position. Both would look the same, but
-   only transform is handed to the compositor — a background-position animation
-   repaints a full-width strip every frame, forever, on every page. The clipping
-   container is what makes that possible: the header itself can't be
-   overflow:hidden, or it would cut off the language dropdown. */
+   only transform is handed to the compositor; a background-position animation
+   repaints a full-width strip on every scroll frame. The clipping container is
+   what makes that possible: the header itself can't be overflow:hidden, or it
+   would cut off the language dropdown.
+
+   The stripes stay in register because --flag-travel is a whole number of
+   tiles, so the gradient lands on an identical stripe at the end of the travel
+   as at the start. */
 .flag-rule {
   height: 4px;
   overflow: hidden;
   position: relative;
-  /* Its own stacking context, so the moving stripe cannot paint over the
-     sticky header's shadow or the nav dropdown above it. */
+  /* Its own stacking context, so the band cannot paint over the sticky
+     header's shadow or the nav dropdown above it. */
   isolation: isolate;
 }
 
@@ -305,9 +313,9 @@ main { position: relative; }
   content: "";
   position: absolute;
   inset: 0;
-  /* One tile wider than the container: the extra tile is what covers the gap
-     the stripe leaves behind as it travels. */
-  width: calc(100% + var(--flag-tile));
+  /* Wider than its container by exactly the travel distance, so there is
+     always stripe to spare at whichever end the band has slid towards. */
+  width: calc(100% + var(--flag-travel));
   background-image: repeating-linear-gradient(
     90deg,
     var(--color-red) 0 calc(var(--flag-tile) / 3),
@@ -316,22 +324,41 @@ main { position: relative; }
   );
 }
 
-/* Static by default; the motion is added only where it is welcome. With
-   reduced motion the band is exactly the hard-stop rule it has always been. */
-@media (prefers-reduced-motion: no-preference) {
-  @keyframes flag-drift {
-    from { transform: translateX(0); }
-    to   { transform: translateX(calc(var(--flag-tile) * -1)); }
-  }
+/* Static unless the browser can tie an animation to the scroller AND the
+   visitor hasn't asked for less motion. Everywhere else the band is exactly
+   the hard-stop flag rule it has always been — nothing is lost, it simply
+   doesn't move. Same progressive-enhancement shape as the motif divider and
+   the heading rules below. */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes flag-drift {
+      from { transform: translateX(0); }
+      to   { transform: translateX(calc(var(--flag-travel) * -1)); }
+    }
 
-  .flag-rule::after {
-    animation: flag-drift var(--flag-cycle) linear infinite;
-  }
+    /* LONGHANDS, NOT THE `animation` SHORTHAND — do not "tidy" this.
+       `animation-timeline` is one of the shorthand's constituent properties, so
+       writing `animation: flag-drift linear both scroll(root)` is legal and the
+       minifier will happily fold these four lines into exactly that. The catch:
+       a browser that supports the timeline LONGHAND but not a timeline inside
+       the shorthand throws away the whole declaration — and since the @supports
+       test above asks about the longhand, the guard would pass and the band
+       would then have no animation at all, not even the static fallback.
+       Kept as longhands so what ships is what the guard actually tested. */
+    .flag-rule::after {
+      animation-name: flag-drift;
+      animation-timing-function: linear;
+      /* Holds the end states, so the band is parked correctly before any
+         scrolling has happened and stays put at the bottom of the page. */
+      animation-fill-mode: both;
+      /* The document's own scrollport: 0% at the top of the page, 100% at the
+         bottom. No duration — on a scroll timeline the range IS the duration. */
+      animation-timeline: scroll(root block);
+    }
 
-  /* The footer's band runs the other way, so the two read as one motif the
-     page is held between rather than two copies of the same loop. */
-  .flag-rule.is-reverse::after {
-    animation-direction: reverse;
+    .flag-rule.is-reverse::after {
+      animation-direction: reverse;
+    }
   }
 }
 
