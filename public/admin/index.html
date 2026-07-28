@@ -49,7 +49,13 @@
 
         <div class="list-head">
           <h1 class="list-title" id="list-title">Events</h1>
-          <button class="btn btn-primary" id="add-btn" type="button">Add event</button>
+          <div class="list-actions">
+            <label class="sort-label" for="sort-select">Sort by</label>
+            <!-- Options are filled from the collection's `sorts`, so the list
+                 can only be ordered in ways the registry declares. -->
+            <select class="sort-select" id="sort-select"></select>
+            <button class="btn btn-primary" id="add-btn" type="button">Add event</button>
+          </div>
         </div>
 
         <p class="loading" id="loading">Loading the current content from GitHub…</p>
@@ -135,6 +141,16 @@
           <strong>You never mark an event as “past”.</strong> The website compares
           the date to today and files it under Upcoming or Past by itself. An
           event with no date is always treated as upcoming.
+        </p>
+
+        <h3>Finding something in the list</h3>
+        <p>
+          Use <strong>Sort by</strong> above the list. Events start with the
+          newest first (anything without a date yet sits at the very top, since
+          that's what still needs planning), and you can switch to oldest first
+          or A–Z. Board members and partners start in the order they appear on
+          the website — 1, 2, 3 — and can be sorted by name instead. Each
+          section remembers what you picked while you're on the page.
         </p>
 
         <h3>Editing or removing an event</h3>

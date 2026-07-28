@@ -28,6 +28,7 @@ const el = {
   loading: $("loading"),
   entries: $("entries"),
   empty: $("empty"),
+  sortSelect: $("sort-select"),
   backBtn: $("back-btn"),
   formTitle: $("form-title"),
   form: $("entry-form"),
@@ -56,6 +57,8 @@ const state = {
   active: "events",
   /** The entry being edited, or null when adding a new one. */
   editing: null,
+  /** Chosen sort key per collection, e.g. { events: "date-desc" }. */
+  sort: {},
 };
 
 // ---------------------------------------------------------------------------
@@ -135,9 +138,86 @@ function renderList() {
   el.listTitle.textContent = c.label;
   el.addBtn.textContent = `Add ${c.singular}`;
 
-  const items = state.entries[c.name] ?? [];
+  renderSortOptions(c);
+
+  const items = sortEntries(state.entries[c.name] ?? [], currentSort(c));
   el.empty.hidden = items.length > 0;
   el.entries.replaceChildren(...items.map((item) => renderRow(c, item)));
+}
+
+/** The sort this collection is currently showing; the registry's first by default. */
+function currentSort(c) {
+  const chosen = c.sorts.find((s) => s.key === state.sort[c.name]);
+  return chosen ?? c.sorts[0];
+}
+
+function renderSortOptions(c) {
+  const active = currentSort(c);
+  el.sortSelect.replaceChildren(
+    ...c.sorts.map((s) => {
+      const option = document.createElement("option");
+      option.value = s.key;
+      option.textContent = s.label;
+      option.selected = s.key === active.key;
+      return option;
+    }),
+  );
+}
+
+/**
+ * Order a collection by one of the sorts its registry entry declares.
+ *
+ * One comparator for every collection, driven by data rather than a function
+ * per list — the sorts arrive from the Worker as {field, type, dir, nullsAre}
+ * (see worker/collections.js), so adding a way to sort is a line there and
+ * nothing here.
+ *
+ * Sorting is done in the browser because the whole collection is already
+ * loaded: re-ordering is instant and costs no round trip to GitHub.
+ */
+function sortEntries(items, sort) {
+  const copy = [...items];
+
+  copy.sort((a, b) => {
+    const cmp = compareValues(a.data[sort.field], b.data[sort.field], sort);
+    // Ties fall back to the filename so the order is stable and never
+    // reshuffles between renders — two events on the same date, or two
+    // board members who both have no name yet, must not swap places.
+    return cmp !== 0 ? cmp : a.file.localeCompare(b.file);
+  });
+
+  return copy;
+}
+
+function compareValues(a, b, sort) {
+  const direction = sort.dir === "desc" ? -1 : 1;
+
+  if (sort.type === "date") {
+    // An empty date means "announced but not scheduled", which belongs with
+    // the future rather than before last year's events — so it sorts as the
+    // latest possible date. That puts it first under "newest first" and last
+    // under "oldest first", which reads correctly both ways.
+    const rank = (v) => (v ? Date.parse(v) : sort.nullsAre === "latest" ? Infinity : -Infinity);
+    const ra = rank(a);
+    const rb = rank(b);
+    return ra === rb ? 0 : (ra < rb ? -1 : 1) * direction;
+  }
+
+  if (sort.type === "number") {
+    const na = typeof a === "number" ? a : Infinity;
+    const nb = typeof b === "number" ? b : Infinity;
+    return na === nb ? 0 : (na < nb ? -1 : 1) * direction;
+  }
+
+  // Text. localeCompare so č/š/ž sort where a reader expects them, and blanks
+  // ("to be announced") go last whichever direction is asked for — an empty
+  // name at the top of an A–Z list is just noise.
+  const sa = String(a ?? "").trim();
+  const sb = String(b ?? "").trim();
+  if (sa === "" && sb === "") return 0;
+  if (sa === "") return 1;
+  if (sb === "") return -1;
+  return sa.localeCompare(sb, undefined, { sensitivity: "base" }) * direction;
 }
 
 function renderRow(c, item) {
@@ -480,6 +560,13 @@ function wireUpChrome() {
   el.addBtn.addEventListener("click", () => openForm(null));
   el.backBtn.addEventListener("click", showList);
   el.cancelBtn.addEventListener("click", showList);
+
+  // Remembered per collection, so switching tabs and coming back keeps the
+  // order you chose rather than snapping back to the default.
+  el.sortSelect.addEventListener("change", () => {
+    state.sort[state.active] = el.sortSelect.value;
+    renderList();
+  });
 
   el.helpToggle.addEventListener("click", () => toggleHelp(el.helpPanel.hidden));
   el.helpClose.addEventListener("click", () => toggleHelp(false));

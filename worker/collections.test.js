@@ -51,6 +51,29 @@ for (const [name, collection] of Object.entries(COLLECTIONS)) {
     }
   });
 
+  test(`${name}: every sort orders by a field that actually exists`, () => {
+    const schemaKeys = new Set(Object.keys(collection.schema.shape));
+    assert.ok(collection.sorts?.length, `${name}: declares no sorts`);
+
+    for (const sort of collection.sorts) {
+      // A sort naming a field the entries do not have would read `undefined`
+      // for every row and quietly leave the list in whatever order it arrived
+      // — no error, no empty list, just an ordering that ignores the choice.
+      assert.ok(
+        schemaKeys.has(sort.field),
+        `${name}: sort "${sort.key}" orders by "${sort.field}", which is not in the schema`,
+      );
+      assert.ok(
+        ["date", "number", "text"].includes(sort.type),
+        `${name}: sort "${sort.key}" has type "${sort.type}"; admin.js only handles date/number/text`,
+      );
+      assert.ok(["asc", "desc"].includes(sort.dir), `${name}: sort "${sort.key}" has no valid dir`);
+    }
+
+    const keys = collection.sorts.map((s) => s.key);
+    assert.equal(new Set(keys).size, keys.length, `${name}: duplicate sort keys`);
+  });
+
   test(`${name}: a minimal entry — required fields only — validates`, () => {
     // What a board member creating their first entry actually submits: the
     // required fields typed in, every optional one left alone. If the empty

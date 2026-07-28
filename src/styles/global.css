@@ -149,9 +149,17 @@
 
   /* The folk-motif divider. The tile is pinned rather than derived from the
      SVG's aspect ratio, so --motif-travel can be a whole number of tiles and
-     the diamonds land back in register at the end of the slide. */
+     the diamonds land back in register at the end of the slide.
+
+     TWO tiles, not six. The divider crosses the viewport over roughly one
+     screen of scrolling, so six tiles meant the diamonds travelled ~0.43px for
+     every pixel scrolled — fast enough to read as an effect rather than as
+     depth, which is what made it look tacky. Two tiles is ~0.14px per pixel: a
+     parallax you notice only because the strip feels like it sits behind the
+     page. This is the one number to tune if it still feels wrong; keep it a
+     whole multiple of the tile. */
   --motif-tile: 64px;
-  --motif-travel: calc(var(--motif-tile) * 6);
+  --motif-travel: calc(var(--motif-tile) * 2);
 }
 
 /* ---------- Base ---------- */
