@@ -116,6 +116,28 @@ export const memberSchema = z
   })
   .strict();
 
+// A company or organisation that supports the club. There are none yet — the
+// collection exists so that when the board lands its first, adding it is a CMS
+// save rather than a code change, exactly like an event or a board member.
+//
+// NOTHING HERE IS TRANSLATED, and there is deliberately no `i18n` block, for the
+// same reason as members: a company's name is its name in every language. There
+// is no free-text blurb field at all — that is what would need translating, and
+// a logo linking to the partner's own site says everything a strip of sponsors
+// needs to say. If the board later wants prose about a partner, add the field
+// and the `i18n` block together, the way eventSchema does.
+export const partnerSchema = z
+  .object({
+    name: z.string().min(1, "is required"),
+    // Optional so a partner can be listed before its link is confirmed.
+    url: optional(z.string().url("must be a full URL, starting with https://")),
+    // Optional so a partner can be listed before its logo arrives; the card
+    // falls back to the name set in type (see partners.astro).
+    logo: optional(imagePath),
+    order: z.number().int().positive("must be a positive whole number"),
+  })
+  .strict();
+
 // The schemas above already describe the shape exactly, so the types are derived
 // from them rather than written out a second time — a field added to a schema
 // cannot then drift from its type. Exported for the JSDoc annotations in
@@ -124,3 +146,4 @@ export const memberSchema = z
 
 /** @typedef {import("zod").infer<typeof eventSchema>} Event */
 /** @typedef {import("zod").infer<typeof memberSchema>} Member */
+/** @typedef {import("zod").infer<typeof partnerSchema>} Partner */

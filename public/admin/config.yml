@@ -179,3 +179,50 @@ collections:
       # must stay that way. What you type into a board member's name, role and
       # bio is what every language's page shows. Adding an i18n field back would
       # be rejected by src/lib/schema.js on the next build.
+
+  - name: partners
+    label: Partners
+    label_singular: Partner
+    description: >-
+      Companies and organisations that support the club. Each one is a logo on
+      the /partners page, linking to their own site. The logo strip only appears
+      once there is at least one partner here — until then the page shows just
+      the pitch, which is deliberate.
+    folder: content/partners
+    extension: json
+    format: json
+    identifier_field: name
+    slug: "{{fields.name}}"
+    create: true
+    delete: true
+    summary: "{{order}}. {{name}}"
+    sortable_fields: [order, name]
+    fields:
+      - label: "Name (of the company or organisation)"
+        name: name
+        widget: string
+      - label: "Order (1 shows first)"
+        name: order
+        widget: number
+        value_type: int
+        min: 1
+        default: 1
+      # Same trap as the event RSVP link: schema.js requires a FULL url, so a
+      # pasted "example.com" would save cleanly and fail the next build. The
+      # `(…)?` wrapper keeps an empty value legal, since the field is optional.
+      - label: "Website (optional)"
+        name: url
+        widget: string
+        required: false
+        default: ""
+        pattern: ["^(https://.+)?$", "Paste the whole link, starting with https:// — or leave it empty"]
+      - label: "Logo (optional — the name is shown as text without one)"
+        name: logo
+        widget: image
+        required: false
+        media_folder: /src/images/partners
+        public_folder: /images/partners
+        choose_url: false
+      # As with board members, and for the same reason: there is deliberately no
+      # "i18n" field. A company's name is its name in every language, and there
+      # is no prose field here that would need translating.

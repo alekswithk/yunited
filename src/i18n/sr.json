@@ -180,7 +180,9 @@
     "ctaEyebrow": "Uključite se",
     "ctaHeading": "Zanima li vas partnerstvo?",
     "ctaBody": "Bilo da se radi o sponzorisanju događaja ili dugoročnom partnerstvu, voleli bismo da vas čujemo. Obratite nam se i recite nam šta imate na umu.",
-    "ctaButton": "Kontaktirajte nas u vezi sa partnerstvom"
+    "ctaButton": "Kontaktirajte nas u vezi sa partnerstvom",
+    "currentEyebrow": "Sa kim sarađujemo",
+    "currentHeading": "Naši partneri"
   },
   "join": {
     "heroTitle": "Pridruži se YUnited",

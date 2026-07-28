@@ -180,7 +180,9 @@
     "ctaEyebrow": "Get involved",
     "ctaHeading": "Interested in partnering?",
     "ctaBody": "Whether it's sponsoring an event or a longer-term partnership, we'd love to hear from you. Reach out and tell us what you have in mind.",
-    "ctaButton": "Contact us about partnering"
+    "ctaButton": "Contact us about partnering",
+    "currentEyebrow": "Who we work with",
+    "currentHeading": "Our partners"
   },
   "join": {
     "heroTitle": "Join YUnited",

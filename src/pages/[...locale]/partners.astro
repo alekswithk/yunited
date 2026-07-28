@@ -1,7 +1,10 @@
 ---
+import { Image } from "astro:assets";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { localePaths, localizePath } from "../../i18n/config.js";
 import { useTranslations } from "../../i18n/utils.js";
+import { partners } from "../../lib/content.js";
+import { resolveImage } from "../../lib/images.js";
 
 export const getStaticPaths = localePaths;
 
@@ -43,6 +46,43 @@ const description = t("meta.partners.description");
       </div>
     </div>
   </section>
+
+  {/*
+    The logo strip renders only when there is something in content/partners/.
+    There are no partners yet and none are invented here — an empty section
+    headed "Our partners" would advertise the opposite of what it intends. Once
+    the board adds the first entry in /admin this appears on its own, in every
+    locale, with no code change.
+  */}
+  {partners.length > 0 && (
+    <section>
+      <div class="container reveal">
+        <p class="eyebrow">{t("partners.currentEyebrow")}</p>
+        <h2>{t("partners.currentHeading")}</h2>
+        <ul class="partner-strip">
+          {partners.map((partner) => {
+            const logo = partner.logo ? resolveImage(partner.logo) : undefined;
+            // A logo is optional, so a partner without one shows its name as
+            // text rather than an empty box.
+            const mark = logo ? (
+              <Image src={logo} alt={partner.name} width={220} height={110} loading="lazy" />
+            ) : (
+              <span class="partner-name">{partner.name}</span>
+            );
+            return (
+              <li class="partner-item">
+                {partner.url ? (
+                  <a href={partner.url} target="_blank" rel="noopener noreferrer">{mark}</a>
+                ) : (
+                  mark
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </section>
+  )}
 
   <section class="section-dark">
     <div class="container reveal">
