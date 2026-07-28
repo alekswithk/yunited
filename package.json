@@ -4,24 +4,24 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "predev": "node scripts/vendor-cms.mjs && node scripts/mirror-media.mjs",
+    "predev": "node scripts/mirror-media.mjs",
     "dev": "astro dev",
-    "vendor:cms": "node scripts/vendor-cms.mjs",
     "mirror:media": "node scripts/mirror-media.mjs",
-    "prebuild": "node scripts/vendor-cms.mjs && node scripts/mirror-media.mjs",
+    "prebuild": "node scripts/mirror-media.mjs",
     "build": "astro build",
     "preview": "astro preview",
+    "admin:dev": "wrangler dev",
     "check": "astro check",
-    "test": "node --test \"src/lib/**/*.test.js\"",
+    "test": "node --test \"src/lib/**/*.test.js\" \"worker/**/*.test.js\"",
     "check:dist": "node scripts/check-dist.mjs",
     "translate": "node --env-file-if-exists=.env scripts/translate.mjs",
     "translate:content": "node --env-file-if-exists=.env scripts/translate-content.mjs"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
-    "@sveltia/cms": "^0.174.0",
     "astro": "^7.1.4",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "wrangler": "^4.114.0"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",

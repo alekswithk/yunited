@@ -47,6 +47,14 @@ const SCRIPT_TAG = /<script\b([^>]*)>/gi;
 // site's JSON-LD relies on exactly this.
 const DATA_BLOCK = /type\s*=\s*["'](application\/ld\+json|application\/json)["']/i;
 
+// HTML comments are not markup and cannot execute, so they are removed before
+// any of the checks below run. This is not a convenience: public/admin/index.html
+// documents the no-inline-script rule *in a comment*, which means it contains
+// the literal text "<script>" — and matching that produced a build failure over
+// a sentence explaining why build failures happen. A comment that talks about
+// markup is normal in this repo; treating it as markup is the bug.
+const HTML_COMMENT = /<!--[\s\S]*?-->/g;
+
 const checks = [
   {
     name: "no style= attributes (style-src has no 'unsafe-inline')",
@@ -72,12 +80,12 @@ const checks = [
 let failures = 0;
 
 for (const file of htmlFiles(DIST)) {
-  // The CMS is a third-party single-page app under its own, looser CSP (see the
-  // /admin block in public/_headers). Its markup is not ours to police.
+  // /admin used to be exempt here: it was a third-party single-page app under
+  // its own looser CSP, and Sveltia's markup was not ours to police. It is now
+  // our own hand-written page under a policy at least as strict as the public
+  // site's, so it gets checked like everything else.
   const rel = relative(DIST, file);
-  if (rel.startsWith("admin/")) continue;
-
-  const html = readFileSync(file, "utf8");
+  const html = readFileSync(file, "utf8").replace(HTML_COMMENT, "");
   for (const check of checks) {
     const hits = check.find(html);
     if (hits.length === 0) continue;
@@ -90,57 +98,92 @@ for (const file of htmlFiles(DIST)) {
 }
 
 // ---------------------------------------------------------------------------
-// The CMS font origin, which is Sveltia's to change and not ours.
+// The admin panel must stay entirely first-party.
 //
-// Sveltia loads its Material Symbols icon font as .woff2 from a CDN. If the
-// /admin font-src does not allow that origin, the font is blocked, the icon
-// ligatures never resolve, and the whole toolbar renders as literal words —
-// "cloud_upload", "delete", "save". The board sees a broken editor; the build,
-// the type-check and every other assertion here stay perfectly green.
+// HISTORY, because it is the reason this check exists at all. The old Sveltia
+// admin app pulled its icon font from a CDN, and *which* CDN was Sveltia's
+// choice, not ours — it moved from Google Fonts to jsDelivr in a patch release
+// and the /admin toolbar silently rendered as the literal words "cloud_upload",
+// "delete", "save". A dependency bump, with no change to any file in this repo,
+// invalidated a hand-maintained line in public/_headers.
 //
-// This already happened twice. #16 allowed Google Fonts. Then @sveltia/cms 0.174
-// moved the fonts to Fontsource on cdn.jsdelivr.net and the icons broke again —
-// a *dependency bump*, with no change to any file we wrote, silently invalidated
-// a hand-maintained line in public/_headers.
-//
-// So rather than pinning a URL that is not ours, read the font URLs out of the
-// vendored bundle and require the policy to cover them. When Sveltia moves hosts
-// again this fails loudly at build time, naming the origin to add.
-function checkCmsFontOrigins() {
-  const bundle = new URL("../public/admin/sveltia-cms.js", import.meta.url).pathname;
-  const headers = new URL("../public/_headers", import.meta.url).pathname;
-
-  let js;
-  try {
-    js = readFileSync(bundle, "utf8");
-  } catch {
-    // Vendored by the `prebuild` step and gitignored, so it is legitimately
-    // absent if someone runs this script without building first.
-    console.warn("⚠  public/admin/sveltia-cms.js not vendored — skipping the CMS font check.");
-    console.warn("   Run `npm run vendor:cms` (or a full `npm run build`) to include it.");
-    return 0;
+// The replacement panel is our own HTML/CSS/JS with no third-party anything, so
+// that whole class of breakage is gone — as long as it STAYS that way. Adding a
+// CDN font, an icon set or an analytics snippet to public/admin/ would be
+// blocked by the /admin CSP (default-src 'self') with no build failure and no
+// visible error outside the browser console. So: assert that nothing under
+// /admin references an off-site origin.
+function checkAdminIsFirstParty() {
+  const adminDir = join(DIST, "admin");
+  if (!existsSync(adminDir)) {
+    console.error("✗ dist/admin — the admin panel was not built");
+    console.error("    public/admin/ is copied verbatim into dist/. Is it still there?");
+    return 1;
   }
 
-  const fontUrls = [...js.matchAll(/https:\/\/[^"'`)\s]+\.(?:woff2?|ttf|otf)/g)].map((m) => m[0]);
-  const origins = [...new Set(fontUrls.map((u) => new URL(u).origin))];
-  if (origins.length === 0) return 0; // self-hosted or inlined: nothing to allow
+  const offSite = [];
+  for (const file of readdirSync(adminDir)) {
+    if (!/\.(html|css|js)$/.test(file)) continue;
+    const text = readFileSync(join(adminDir, file), "utf8");
+    // Bare scheme-relative and absolute URLs alike. Anything pointing at a host
+    // is off-site by definition; same-origin references are all root-relative.
+    for (const [url] of text.matchAll(/\bhttps?:\/\/[^\s"'`)<]+/g)) {
+      // Links the board is meant to click are fine — they navigate away rather
+      // than pulling a subresource, and form-action/navigation is not what
+      // default-src governs. Only yunited.ch and github.com appear, both as
+      // plain <a href>.
+      if (/^https:\/\/(yunited\.ch|github\.com)\b/.test(url)) continue;
+      offSite.push(`admin/${file} → ${url}`);
+    }
+  }
 
-  // The /admin policy is the last Content-Security-Policy line in the file; the
-  // global one for /* comes first and is dropped for this path by "!".
-  const policies = readFileSync(headers, "utf8").match(/^\s*Content-Security-Policy:.*$/gm) ?? [];
-  const adminPolicy = policies.at(-1) ?? "";
-  const fontSrc = adminPolicy.match(/font-src([^;]*)/)?.[1] ?? "";
+  if (offSite.length === 0) return 0;
 
-  const missing = origins.filter((origin) => !fontSrc.includes(origin));
+  console.error("✗ dist/admin — the panel references an off-site origin");
+  for (const hit of offSite.slice(0, 5)) console.error(`    ${hit}`);
+  console.error(
+    "    The /admin CSP is default-src 'self' (see public/_headers), so this is\n" +
+      "    blocked at runtime with no build failure — the board just gets a panel\n" +
+      "    missing a font or a script. Either vendor the asset into public/admin/\n" +
+      "    or, if it genuinely must be remote, allow the origin in the /admin/*\n" +
+      "    policy deliberately.",
+  );
+  return offSite.length;
+}
+
+// ---------------------------------------------------------------------------
+// The admin panel's script must be able to find the elements it wires up.
+//
+// admin.js reaches for its elements once, by id, at load. Rename or drop an id
+// in index.html and the lookup returns null — then the first `el.something.
+// addEventListener` throws, the module dies before it renders anything, and the
+// board gets a page with a header, an empty list and no working buttons. There
+// is no build error and no server error; the whole failure lives in a console
+// nobody has open.
+//
+// The two files are hand-written and hand-matched, which is exactly the kind of
+// pairing that drifts. So check it, on the built output, the way the browser
+// will resolve it.
+function checkAdminWiring() {
+  const dir = join(DIST, "admin");
+  if (!existsSync(dir)) return 0; // already reported by checkAdminIsFirstParty
+
+  const js = readFileSync(join(dir, "admin.js"), "utf8");
+  const html = readFileSync(join(dir, "index.html"), "utf8");
+
+  const ids = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]));
+  // admin.js looks everything up through its `$` helper: $("banner").
+  const wanted = [...js.matchAll(/\$\("([^"]+)"\)/g)].map((m) => m[1]);
+  const missing = [...new Set(wanted.filter((id) => !ids.has(id)))];
+
   if (missing.length === 0) return 0;
 
-  console.error("✗ public/_headers — the /admin font-src does not allow the CMS icon font");
-  for (const origin of missing) console.error(`    missing: ${origin}`);
-  console.error(`    font-src is currently:${fontSrc}`);
+  console.error("✗ dist/admin — admin.js looks up ids that index.html does not have");
+  for (const id of missing) console.error(`    #${id}`);
   console.error(
-    "    Sveltia moved its font host. Add the origin above to font-src in the\n" +
-      "    /admin/* block and remove any origin no longer listed here. Left as is,\n" +
-      "    the CMS toolbar renders as raw text like \"cloud_upload\".",
+    "    The script throws on the first missing element and stops, leaving the\n" +
+      "    board a page whose buttons do nothing. Add the element, or update the\n" +
+      "    lookup in public/admin/admin.js.",
   );
   return missing.length;
 }
@@ -149,10 +192,10 @@ function checkCmsFontOrigins() {
 // Every content image must also be reachable at its own path.
 //
 // Pages render the optimized /_astro/ copies, so the build and every page render
-// perfectly whether or not the originals are served. But Sveltia previews an
-// image by fetching its PUBLIC URL — the literal string in the content JSON —
-// and if that 404s the admin panel shows broken thumbnails while everything else
-// stays green. That is what happened here.
+// perfectly whether or not the originals are served. But /admin shows each
+// entry's current photo by fetching its PUBLIC URL — the literal string in the
+// content JSON — and if that 404s the admin panel shows broken thumbnails while
+// everything else stays green. That is what happened here.
 //
 // scripts/mirror-media.mjs publishes src/images -> /images to make those strings
 // resolve. Drop the mirror step from `prebuild` and nothing fails; the board just
@@ -185,27 +228,37 @@ function checkMediaMirror() {
 
   if (missing.length === 0) return 0;
 
-  console.error("✗ dist/ — content images are not served at the path the CMS asks for");
+  console.error("✗ dist/ — content images are not served at the path /admin asks for");
   for (const m of missing.slice(0, 5)) console.error(`    ${m}`);
   if (missing.length > 5) console.error(`    …and ${missing.length - 5} more`);
   console.error(
-    "    Pages are fine (they use the optimized /_astro/ copies), but the CMS\n" +
-      "    previews these by public URL, so the admin panel will show broken\n" +
+    "    Pages are fine (they use the optimized /_astro/ copies), but /admin\n" +
+      "    shows these by public URL, so the admin panel will render broken\n" +
       "    thumbnails. Check that `prebuild` still runs scripts/mirror-media.mjs.",
   );
   return missing.length;
 }
 
-failures += checkCmsFontOrigins();
+// The old "optional CMS fields that are secretly mandatory" check lived here.
+// It tested every `required: false` field in Sveltia's config.yml against the
+// empty string, because Sveltia evaluated `required` and `pattern`
+// independently and so made optional fields impossible to leave blank. Both the
+// config and the trap are gone: /admin now validates with the very same Zod
+// schemas the build uses (src/lib/schema.js), so "what the editor accepts" and
+// "what the build accepts" are one rule rather than two that can drift.
+// worker/collections.test.js asserts the form and the schema still agree.
+
+failures += checkAdminIsFirstParty();
+failures += checkAdminWiring();
 failures += checkMediaMirror();
 
 if (failures > 0) {
   console.error(
     `\n${failures} violation(s). See the comments in scripts/check-dist.mjs.\n` +
       "Everything asserted here is invisible to `astro build` and `astro check`:\n" +
-      "it breaks the live site only under the CSP, or breaks only the CMS.",
+      "it breaks the live site only under the CSP, or breaks only /admin.",
   );
   process.exit(1);
 }
 
-console.log("✓ dist/ — CSP-clean, on-brand, CMS font origin allowed, media previewable");
+console.log("✓ dist/ — CSP-clean, on-brand, /admin first-party and wired, media previewable");

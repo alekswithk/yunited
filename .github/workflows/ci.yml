@@ -2,7 +2,7 @@ name: CI
 
 # Runs on every PR to main and on pushes to main. The build step loads the
 # content collections through src/lib/content.js, so it validates every
-# events/members entry against the Zod schema — a bad CMS edit or hand-edit fails
+# events/members entry against the Zod schema — a bad /admin edit or hand-edit fails
 # here, before merge, instead of only when Cloudflare tries to deploy.
 on:
   pull_request:
@@ -33,13 +33,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Unit tests for src/lib — the build-time logic that decides what the
-      # events page shows. A bug there does not fail a build, it just renders
-      # the wrong thing, so this runs before the build rather than after.
+      # Unit tests for src/lib and worker/ — the build-time logic that decides
+      # what the events page shows, and the admin Worker's logic that decides
+      # what gets committed. A bug in either does not fail a build, it just
+      # renders or writes the wrong thing, so this runs before the build.
       - name: Test
         run: npm test
 
-      # Runs the `prebuild` step (vendors the CMS bundle) then `astro build`,
+      # Runs the `prebuild` step (mirrors src/images for /admin) then `astro build`,
       # which is also where content validation happens.
       - name: Build
         run: npm run build

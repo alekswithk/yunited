@@ -21,23 +21,28 @@ You almost never need this repo directly. Edit the site through the admin panel:
 
 ### **[yunited.ch/admin](https://yunited.ch/admin)**
 
-Add or edit events and board members through a simple form. Every save is a
-commit to this repo; Cloudflare rebuilds and the change is live in about a
-minute. Photos you upload are resized and optimized automatically.
+Add or edit events, board members and partners through a simple form. Sign in
+with your email — Cloudflare sends you a one-time code, and that's the whole
+login. Every save is a commit to this repo; Cloudflare rebuilds and the change is
+live in a minute or two. Photos you upload are resized and optimized
+automatically.
 
-Full walkthrough — logging in, adding an event, swapping a photo, getting a new
-board member access — is in **[docs/CMS.md](docs/CMS.md)**.
+The page has a **`?` button in the corner** with the full walkthrough — every
+field, whether it's required, and an example. Signing in, giving a new board
+member access and what to do when something goes wrong are in
+**[docs/ADMIN.md](docs/ADMIN.md)**.
 
 A few things the site does for you, so they don't surprise you:
 
 - **Events are never marked "past" by hand.** The site compares each event's
   date to today and files it under Upcoming or Past automatically. Leave the
   date empty for a "TBA" event — it shows at the top of Upcoming.
-- **Membership prices, page copy, etc.** live in the code, not the CMS. Ask a
-  developer, or [open an issue](../../issues).
-- **German is translated automatically.** When you save an event, its title and
-  description are machine-translated for the German site within a minute or two.
-  (Bosnian/Croatian/Serbian are prepared the same way but not published yet.)
+- **Membership prices, page copy, etc.** live in the code, not the admin panel.
+  Ask a developer, or [open an issue](../../issues).
+- **Events are translated automatically.** When you save an event, its title and
+  description are machine-translated for the German, Bosnian, Croatian and
+  Serbian sites within a few minutes. Board members' names, roles and bios are
+  deliberately *not* translated — they appear as you typed them everywhere.
 
 If you'd rather edit the JSON files directly, they're one-file-per-entry under
 `content/events/` and `content/members/` — the field shapes are described below.
@@ -58,11 +63,15 @@ npm run dev          # local preview at http://localhost:4321
 npm run build        # writes the finished static site to dist/
 npm run preview      # serve the built dist/ locally
 npm run check        # astro check — type/diagnostics, must be 0 errors
+npm test             # unit tests for src/lib and worker/
+npm run check:dist   # post-build assertions on dist/
+npm run admin:dev    # the admin panel + its Worker, on http://localhost:8787
 ```
 
-"A change is verified" when `npm run build` succeeds, `npm run check` is clean,
-and — for content or rendering changes — the expected text appears in the built
-HTML (e.g. `grep "Casino Night" dist/events.html`). There is no test suite.
+"A change is verified" when `npm test`, `npm run build`, `npm run check` and
+`npm run check:dist` all pass — that is exactly what CI runs — and, for content
+or rendering changes, the expected text appears in the built HTML (e.g.
+`grep "Casino Night" dist/events.html`).
 
 ### Architecture
 
@@ -81,6 +90,14 @@ at build time.** Pages never fetch data at runtime.
 - `src/styles/global.css` — one stylesheet; all colours, spacing and shadows are
   CSS custom properties in the `:root` block at the top.
 
+The one exception to "no server" is `/admin`:
+
+- `worker/` — a small Cloudflare Worker serving `/admin/api/*`. It is the only
+  server-side code in the project, and the only thing that holds a GitHub token.
+  It commits the board's edits, validating them against the same Zod schemas the
+  build uses. **[`worker/README.md`](worker/README.md)** covers it in full.
+- `public/admin/` — the panel itself: three plain files, no framework.
+
 `CLAUDE.md` is the full architecture reference and the conventions that matter
 (extensionless URLs, image paths relative to `src/`, the CSP, etc.).
 `PLAN.md` is the living status tracker and roadmap.
@@ -93,11 +110,11 @@ The Zod schemas in `src/lib/schema.js` are authoritative. In brief:
 
 | field | required | notes |
 |---|---|---|
-| `id` | ✓ | lowercase-with-dashes; must equal the filename |
+| `id` | — | lowercase-with-dashes; if present, must equal the filename. Entries created in `/admin` omit it — the filename *is* the id |
 | `title` | ✓ | |
 | `date` | — | `YYYY-MM-DD`; empty = TBA (floats to top of Upcoming) |
 | `time` | — | `HH:MM` 24-hour |
-| `location` | — | empty = "Venue TBA"; never translated (it's an address) |
+| `location` | — | empty = the line is left off the card; never translated (it's an address) |
 | `description` | ✓ | |
 | `image` | ✓ | path relative to `src/`, e.g. `images/events/25_26/x.webp` |
 | `rsvpUrl` | — | full URL to the uniclubs event page |
@@ -107,6 +124,9 @@ The Zod schemas in `src/lib/schema.js` are authoritative. In brief:
 (blank = "to be announced"), `bio`, `photo`, `order` (1 = the large lead card).
 Members carry **no `i18n` block and are never translated** — a person's name,
 role and bio show the same on every language's page.
+
+**Partner** (`content/partners/<name>.json`): `name` and `order` (required),
+`url` and `logo` (optional). Also never translated.
 
 Images live under `src/images/` (not `public/`) so they go through Astro's sharp
 pipeline — drop in any size/format and it's resized to WebP with a 1×/2× srcset.
@@ -129,32 +149,41 @@ Full i18n conventions are in `CLAUDE.md`.
 ### Deploy
 
 Cloudflare builds the repo with `npm run build` and serves `dist/` as Workers
-static assets (`wrangler.jsonc` sets `assets.directory: "./dist"`). Publishing is
-just merging to `main`:
+static assets (`wrangler.jsonc` sets `assets.directory: "./dist"`). The admin
+Worker is part of the **same** Worker (`main: worker/index.js`, with
+`run_worker_first` routing only `/admin/api/*` to it), so it deploys with the
+site — there is no second deploy step. Publishing is just merging to `main`:
 
 ```bash
 git push        # to main → Cloudflare rebuilds and redeploys in ~1 minute
 ```
 
-Two things live **outside** the repo and are worth knowing:
+Three things live **outside** the repo and are worth knowing:
 
 - **The build command** (`npm run build`) is configured in the Cloudflare Workers
   Builds dashboard, not in any file here. If the Cloudflare project is ever
   recreated, set it there.
+- **`GITHUB_TOKEN`** is an encrypted Worker secret, set with
+  `npx wrangler secret put GITHUB_TOKEN`. It is what lets `/admin` commit. See
+  [`worker/README.md`](worker/README.md).
 - **`DEEPL_API_KEY`** is a GitHub Actions secret, used only by the auto-translate
   workflow (`.github/workflows/translate-content.yml`) — never by the site build.
+
+Who may reach `/admin` is managed in the **Cloudflare Zero Trust dashboard**
+(Access → Applications → the `yunited.ch/admin` app → Policies), by adding or
+removing email addresses. No code change, no deploy, no GitHub account.
 
 `public/_headers` carries the Content-Security-Policy and cache rules and is
 copied verbatim into `dist/`. The public site's CSP is strict — `script-src`
 and `style-src` are `'self'` with **no `'unsafe-inline'`**, and fonts are
 self-hosted — so don't add `style="…"` attributes or `<script is:inline>` to a
-page; put the rules in `global.css` and let Astro bundle the script. `/admin`
-has its own looser policy scoped to that path.
+page; put the rules in `global.css` and let Astro bundle the script. `/admin` has
+its own policy scoped to that path, equally strict.
 
 ### Repository map
 
 ```
-content/          one JSON file per event / board member (the edit surface)
+content/          one JSON file per event / board member / partner (the edit surface)
 src/
   pages/          one .astro per page; [...locale] emits /events and /de/events
   layouts/        BaseLayout.astro — <head>, header, footer, once
@@ -163,11 +192,14 @@ src/
   i18n/           locale registry + {en,de,bcs,sr}.json dictionaries
   styles/         global.css — design tokens at the top
   images/         source images (optimized at build)
-public/           copied verbatim into dist/ — /admin (CMS), _headers, assets/
-scripts/          vendor-cms + the offline DeepL translation helpers
-.github/          CI (build+check on PRs) + the auto-translate workflow
+worker/           the /admin API — the only server-side code; holds the GitHub token
+public/           copied verbatim into dist/ — admin/ (the panel), _headers, assets/
+scripts/          mirror-media + the offline DeepL translation helpers
+.github/          CI (test+build+check on PRs) + the auto-translate workflow
 astro.config.mjs, wrangler.jsonc   build & deploy config
 ```
 
 More detail: **[CLAUDE.md](CLAUDE.md)** (architecture & conventions),
-**[PLAN.md](PLAN.md)** (status & roadmap), **[docs/CMS.md](docs/CMS.md)** (the CMS).
+**[PLAN.md](PLAN.md)** (status & roadmap), **[docs/ADMIN.md](docs/ADMIN.md)**
+(using the admin panel), **[worker/README.md](worker/README.md)** (maintaining
+it).

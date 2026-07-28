@@ -9,8 +9,9 @@ when a step ships, tick it here in the same PR.
   club at the University of St. Gallen (HSG), served at **yunited.ch**.
 - **Stack:** [Astro](https://astro.build) (build-time rendering) → static files →
   **Cloudflare Workers** static assets. No database, no server, no runtime JS data.
-- **Deeper docs:** architecture & conventions → [`CLAUDE.md`](CLAUDE.md); CMS setup
-  & usage → [`docs/CMS.md`](docs/CMS.md). This file is the *tracker/index*; those
+- **Deeper docs:** architecture & conventions → [`CLAUDE.md`](CLAUDE.md); using the
+  admin panel → [`docs/ADMIN.md`](docs/ADMIN.md); maintaining it →
+  [`worker/README.md`](worker/README.md). This file is the *tracker/index*; those
   are the *reference*.
 
 _Last updated: 2026-07-28 (#36–#40 in one session. **All five locales are live** —
@@ -51,15 +52,15 @@ src/
     events/{25_26,26_27}/, members/
   styles/global.css        one stylesheet; all design tokens in :root at the top
 public/                    copied verbatim into dist/
-  admin/                   Sveltia CMS: index.html, config.yml (base_url -> auth worker)
-                           (sveltia-cms.js is vendored at build, gitignored)
+  admin/                   the admin panel: index.html, admin.css, admin.js
+                           (first-party, no framework; form generated from the API)
   _headers                 CSP + cache rules; scoped /admin CSP; /_astro immutable
   assets/                  logos, favicons, icons, motif, fonts/ (self-hosted woff2)
   robots.txt, site.webmanifest
-scripts/check-dist.mjs     npm `check:dist`: post-build CSP, brand, CMS font + media checks
-scripts/vendor-cms.mjs     npm `prebuild`: copies Sveltia bundle into public/admin/
-scripts/mirror-media.mjs   npm `prebuild`: mirrors src/images -> public/images so the
-                           CMS can preview originals (gitignored; no page links there)
+scripts/check-dist.mjs     npm `check:dist`: post-build CSP, brand, /admin first-party
+                           + media checks
+scripts/mirror-media.mjs   npm `prebuild`: mirrors src/images -> public/images so /admin
+                           can show the originals (gitignored; no page links there)
 scripts/translate.mjs      npm `translate`: offline DeepL fill of i18n dictionaries (not in build)
 scripts/translate-content.mjs  npm `translate:content`: fills the i18n block in content/**.json
 scripts/lib/deepl.mjs      shared DeepL plumbing for both scripts (one PROTECT list)
@@ -102,6 +103,7 @@ extensionless; events are never marked "past" by hand; shared chrome lives once 
 | #41 | PLAN.md sync — logged #34–#40; the agent may not weaken the guardrails to go green |
 | #42 | **CMS toolbar icons fixed again** — `@sveltia/cms` 0.174 moved its fonts from Google Fonts to Fontsource on `cdn.jsdelivr.net`; `check:dist` now reads the font URLs out of the vendored bundle so this can't regress silently a third time |
 | #43 | **CMS image previews fixed** — Sveltia fetches a photo by its public URL, but source images live in `src/` for the sharp pipeline and were never served; `mirror-media.mjs` publishes them at `/images/…` (noindex, no page links there) and `check:dist` asserts every content image resolves |
+| — | **Sveltia CMS removed; `/admin` rebuilt first-party** — a plain HTML/CSS/JS form plus a Cloudflare Worker (`worker/`) that commits through the GitHub Git Data API in **one atomic commit** per save. Access is now a Cloudflare Zero Trust email allow-list instead of a GitHub account + OAuth app + a second worker; one encrypted `GITHUB_TOKEN` replaced per-person tokens. The form is **generated from the same registry the Worker validates with** (`worker/collections.js` → `src/lib/schema.js`), so the config.yml↔schema drift class is gone — along with the `/admin` CSP's `unsafe-inline`, `wasm-unsafe-eval`, GitHub-API and font-CDN allowances. Also **repaired four events** whose `image` Sveltia had saved as `/images/…`, which had been failing the build (and so the deploy) unnoticed |
 
 Earlier foundation (pre-#12): Astro migration + build-time image optimization.
 
@@ -117,7 +119,8 @@ Manual/account steps (code is in place).
       secret is deliberately NOT in the Cloudflare build settings, so a deploy
       can never depend on DeepL being reachable.* To rotate: update `.env`
       locally, then `gh secret set DEEPL_API_KEY`.
-- [x] Deploy `sveltia-cms-auth` worker + GitHub OAuth app + secrets — login works.
+- [x] ~~Deploy `sveltia-cms-auth` worker + GitHub OAuth app + secrets~~ — obsolete;
+      Sveltia and its auth worker were removed. Access + one Worker secret replaced them.
 - [x] **Google Search Console**: sitemap switched to `https://yunited.ch/sitemap-index.xml`.
 
 - [ ] **Add the 26/27 events when the dates are set** — 🧑 board. As of 2026-07-28
@@ -128,8 +131,16 @@ Manual/account steps (code is in place).
       build now **warns** whenever no upcoming event has a date, so this state
       cannot go unnoticed for eleven weeks again as it did between May and July.
 
-_On demand (not a pending task): to give a new board member CMS access, add them
-as a repo collaborator — steps in [`docs/CMS.md`](docs/CMS.md) §5._
+- [ ] **`GITHUB_TOKEN` expires — reissue before then** — 🧑 human. The admin panel
+      stops saving when it does; `/admin` says so explicitly (502, naming the
+      permission), and GitHub emails the token owner in advance. Reissue as a
+      fine-grained PAT on `alekswithk/yunited` with `Contents: Read and write`,
+      then `npx wrangler secret put GITHUB_TOKEN`. **Expiry date: _fill in when
+      the token is created_.** Full steps in [`worker/README.md`](worker/README.md).
+
+_On demand (not a pending task): to give a new board member admin access, add their
+email in Cloudflare Zero Trust → Access → Applications → the `/admin` app → Policies.
+No GitHub account and no code change — steps in [`docs/ADMIN.md`](docs/ADMIN.md)._
 
 ---
 
@@ -160,7 +171,7 @@ they carry design decisions that need a person. The agent skips them.
       formatting, TBA placeholders) is localized too, and the board's **event
       content** — `content/events/` titles and descriptions — carries its own `i18n`
       block, filled by `npm run translate:content` and kept current automatically by
-      `.github/workflows/translate-content.yml` on every CMS save. **Board members
+      `.github/workflows/translate-content.yml` on every `/admin` save. **Board members
       are deliberately excluded**: a name, role and bio read the same in every
       language.
   - [x] **Serbian is Latin, and stays Latin.** `sr.json` used to be mixed — 34 Latin
@@ -262,7 +273,7 @@ which Google treats as equivalent; no separate sitemap `hreflang` needed.
 ## 5. Known cleanup / tech debt 🧹
 
 - [x] **`README.md` rewritten, `DEPLOY.md` deleted** (2026-07-24). README is now a
-      front door for both audiences — board → `/admin` + `docs/CMS.md`; developers →
+      front door for both audiences — board → `/admin` + `docs/ADMIN.md`; developers →
       commands, current content shape, i18n, deploy, repo map — linking out to
       CLAUDE.md / PLAN.md instead of duplicating them. `DEPLOY.md` was obsolete and
       partly wrong ("no build step"; `python3 -m http.server` preview) and nothing
@@ -292,11 +303,12 @@ which Google treats as equivalent; no separate sitemap `hreflang` needed.
 ```bash
 npm install        # once
 npm run dev        # local preview at http://localhost:4321
-npm test           # unit tests for src/lib (node:test, no framework)
-npm run build      # writes dist/ (runs prebuild: vendors the CMS bundle)
+npm test           # unit tests for src/lib + worker/ (node:test, no framework)
+npm run build      # writes dist/ (runs prebuild: mirrors src/images)
 npm run check      # astro check — must be 0 errors AND 0 hints
 npm run check:dist # post-build: CSP-inline-free + brand spelling
 npm run preview    # serve built dist/
+npm run admin:dev  # wrangler dev — /admin + its Worker on :8787
 ```
 "Verified" = all four of `test`, `build`, `check`, `check:dist` pass — which is
 exactly what CI runs — and for content/render changes the expected text appears
@@ -319,14 +331,15 @@ passes and nothing is contentious**. If §4 and §5 are both clear it switches t
 proposing new ideas into §4 (and does *not* merge that PR).
 
 **It will never auto-merge a change touching** `public/_headers`,
-`public/admin/**`, `.github/workflows/**`, `wrangler.jsonc`, `astro.config.mjs`,
-`src/lib/schema.js`, dependency files, or any deletion/rename under `content/` —
+`public/admin/**`, `worker/**`, `.github/workflows/**`, `wrangler.jsonc`,
+`astro.config.mjs`, `src/lib/schema.js`, dependency files, or any deletion/rename
+under `content/` —
 those it leaves open for a human. It never pushes to `main`, never weakens CI or
 the schema to go green, and does one item per run.
 
 **Nor may it weaken the guardrails to go green.** `scripts/check-dist.mjs`,
-`src/lib/events.test.js` and the CI steps that run them exist because the failures
-they catch are otherwise invisible. Deleting a test, narrowing an assertion or
+`src/lib/events.test.js`, `worker/*.test.js` and the CI steps that run them exist
+because the failures they catch are otherwise invisible. Deleting a test, narrowing an assertion or
 skipping a step is never the fix for a red build — the fix is the code that made
 it red.
 

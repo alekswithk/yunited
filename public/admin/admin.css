@@ -1,0 +1,748 @@
+/* ==========================================================================
+   YUnited — admin panel.
+
+   Standalone on purpose. src/styles/global.css is bundled by Astro into a
+   hashed /_astro/*.css whose filename changes every build, so this page — a
+   plain file in public/, served as-is — cannot link to it. The tokens below are
+   therefore a deliberate copy of global.css's :root block, trimmed to what this
+   page uses. If the brand colours change there, change them here too; there is
+   no build step that can do it for us.
+
+   Same authoring rules as the rest of the site: no style="…" anywhere in the
+   markup, because the /admin CSP has no 'unsafe-inline'.
+   ========================================================================== */
+
+/* The three site faces, from the same self-hosted files the public pages use.
+   Only the subsets this page actually needs — latin and latin-ext, which is
+   what carries č/š/ž/đ. */
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/assets/fonts/fraunces-400-900-normal-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/assets/fonts/fraunces-400-900-normal-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Newsreader';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/assets/fonts/newsreader-400-600-normal-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Newsreader';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/assets/fonts/newsreader-400-600-normal-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/assets/fonts/space-mono-400-normal-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/assets/fonts/space-mono-400-normal-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/assets/fonts/space-mono-700-normal-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ---------- Tokens (mirrored from src/styles/global.css) ---------- */
+:root {
+  --color-red: #b3202c;
+  --color-red-dark: #8f1a23;
+  --color-azure: #1d4e9e;
+  --color-gold: #e9b44c;
+  --color-ink: #1a1611;
+  --color-paper: #f4ecdd;
+  --color-paper-soft: #ebe0cb;
+  --color-muted: #6a5f4e;
+
+  --font-display: "Fraunces", "Georgia", "Times New Roman", serif;
+  --font-body: "Newsreader", "Georgia", "Times New Roman", serif;
+  --font-mono: "Space Mono", "Courier New", monospace;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2.5rem;
+  --space-6: 4rem;
+
+  --border: 2px solid var(--color-ink);
+  --shadow-hard: 6px 6px 0 var(--color-ink);
+  --shadow-hard-sm: 3px 3px 0 var(--color-ink);
+
+  /* Success and failure. Green is the one colour the brand palette has no
+     answer for, so it is a muted, warm one that sits with the cream rather
+     than a default UI green. */
+  --color-ok: #2f6b46;
+  --color-ok-soft: #dfeade;
+  --color-bad: var(--color-red);
+  --color-bad-soft: #f6dede;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  /* The floating help button sits over the bottom-right corner; keep the last
+     row of content clear of it on small screens. */
+  padding-bottom: var(--space-6);
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  padding: var(--space-2) var(--space-3);
+  z-index: 20;
+}
+.skip-link:focus {
+  left: 0;
+}
+
+/* Focus is never removed, only restyled — this page is a form, and keyboard
+   users need to see where they are. */
+:focus-visible {
+  outline: 3px solid var(--color-azure);
+  outline-offset: 2px;
+}
+
+/* ---------- Masthead ---------- */
+
+.masthead {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  border-bottom: var(--border);
+}
+
+.masthead-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.masthead-brand img {
+  display: block;
+  height: 34px;
+  width: auto;
+  /* The wordmark is dark ink on a light ground; on the dark masthead it is
+     inverted rather than swapped for a second file. */
+  filter: invert(1);
+}
+
+.masthead-title {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin: 0;
+  padding-left: var(--space-3);
+  border-left: 1px solid rgba(244, 236, 221, 0.35);
+}
+
+.masthead-user {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: rgba(244, 236, 221, 0.65);
+  margin: 0 0 0 auto;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Shell ---------- */
+
+.shell {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-3) 0;
+}
+
+.banner {
+  border: var(--border);
+  box-shadow: var(--shadow-hard-sm);
+  padding: var(--space-3);
+  margin: 0 0 var(--space-4);
+  font-weight: 600;
+}
+.banner-ok {
+  background: var(--color-ok-soft);
+  border-color: var(--color-ok);
+  box-shadow: 3px 3px 0 var(--color-ok);
+  color: var(--color-ok);
+}
+.banner-bad {
+  background: var(--color-bad-soft);
+  border-color: var(--color-bad);
+  box-shadow: 3px 3px 0 var(--color-bad);
+  color: var(--color-red-dark);
+}
+.banner a {
+  color: inherit;
+}
+
+/* ---------- Tabs ---------- */
+
+.tabs {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  border-bottom: var(--border);
+  margin-bottom: var(--space-4);
+}
+
+.tab {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 2px solid transparent;
+  border-bottom: none;
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: -2px;
+  cursor: pointer;
+  color: var(--color-muted);
+}
+.tab:hover {
+  color: var(--color-ink);
+}
+.tab[aria-current="true"] {
+  background: var(--color-paper-soft);
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+  font-weight: 700;
+}
+
+/* ---------- List ---------- */
+
+.list-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.list-title {
+  font-size: 2rem;
+}
+
+.loading,
+.empty {
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.entries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.entry {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  background: var(--color-paper-soft);
+  border: var(--border);
+  box-shadow: var(--shadow-hard-sm);
+  padding: var(--space-2);
+}
+
+.entry-thumb {
+  flex: 0 0 auto;
+  width: 84px;
+  height: 60px;
+  object-fit: cover;
+  border: 1px solid var(--color-ink);
+  background: var(--color-paper);
+}
+
+.entry-thumb-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--color-muted);
+}
+
+.entry-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.entry-name {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.entry-meta {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+  margin: var(--space-1) 0 0;
+}
+
+.entry-actions {
+  flex: 0 0 auto;
+}
+
+.pill {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border: 1px solid currentColor;
+  margin-left: var(--space-2);
+}
+.pill-past {
+  color: var(--color-muted);
+}
+.pill-tba {
+  color: var(--color-azure);
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  border: var(--border);
+  box-shadow: var(--shadow-hard-sm);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--color-ink);
+}
+.btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+.btn[disabled] {
+  opacity: 0.55;
+  cursor: progress;
+  transform: none;
+  box-shadow: var(--shadow-hard-sm);
+}
+
+.btn-primary {
+  background: var(--color-gold);
+  font-weight: 700;
+}
+.btn-danger {
+  background: var(--color-red);
+  color: var(--color-paper);
+  border-color: var(--color-red-dark);
+  box-shadow: 3px 3px 0 var(--color-red-dark);
+}
+.btn-danger:hover {
+  box-shadow: 4px 4px 0 var(--color-red-dark);
+}
+
+.back {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-bottom: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+.back:hover {
+  color: var(--color-ink);
+}
+
+/* ---------- Form ---------- */
+
+.form-title {
+  font-size: 2rem;
+  margin-bottom: var(--space-4);
+}
+
+.entry-form {
+  background: var(--color-paper-soft);
+  border: var(--border);
+  box-shadow: var(--shadow-hard);
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.field {
+  margin-bottom: var(--space-4);
+}
+
+.label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: var(--space-1);
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--color-muted);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.help {
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  margin: 0 0 var(--space-2);
+}
+
+.input,
+.textarea {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border: var(--border);
+  padding: var(--space-2);
+}
+.textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+.input[type="number"] {
+  max-width: 8rem;
+}
+.input[type="date"],
+.input[type="time"] {
+  max-width: 14rem;
+}
+
+/* The one field the schema will reject, highlighted after a failed save. */
+.input-bad,
+.textarea.input-bad {
+  border-color: var(--color-red);
+  background: var(--color-bad-soft);
+}
+
+.file {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  max-width: 100%;
+}
+
+.photo {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.photo-preview {
+  width: 160px;
+  height: 110px;
+  object-fit: cover;
+  border: var(--border);
+  background: var(--color-paper);
+}
+
+.photo-controls {
+  flex: 1 1 14rem;
+}
+
+.photo-note {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-muted);
+  margin: var(--space-2) 0 0;
+  overflow-wrap: anywhere;
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(26, 22, 17, 0.2);
+}
+/* Delete is a destructive action and belongs away from Save, not beside it. */
+#delete-btn {
+  margin-left: auto;
+}
+
+.form-error {
+  border: 2px solid var(--color-bad);
+  background: var(--color-bad-soft);
+  color: var(--color-red-dark);
+  padding: var(--space-3);
+  margin: var(--space-4) 0 0;
+  font-weight: 600;
+}
+
+.form-note {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  margin: var(--space-3) 0 0;
+}
+
+/* ---------- Help: the sticky note ---------- */
+
+.help-toggle {
+  position: fixed;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  z-index: 12;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: var(--border);
+  background: var(--color-gold);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: var(--shadow-hard-sm);
+  cursor: pointer;
+}
+.help-toggle:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--color-ink);
+}
+
+.notepad {
+  position: fixed;
+  right: var(--space-3);
+  bottom: calc(var(--space-3) + 62px);
+  z-index: 11;
+  width: min(30rem, calc(100vw - 2 * var(--space-3)));
+  max-height: min(75vh, 44rem);
+  overflow-y: auto;
+  /* The sticky-note look: pale gold paper, a faint ruled line, and a slight
+     tilt so it reads as something pinned on rather than part of the UI. */
+  background: #fdf3d4;
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 27px,
+    rgba(26, 22, 17, 0.07) 27px,
+    rgba(26, 22, 17, 0.07) 28px
+  );
+  border: var(--border);
+  box-shadow: var(--shadow-hard);
+  transform: rotate(-0.6deg);
+}
+
+.notepad-inner {
+  padding: var(--space-4);
+}
+
+.notepad h2 {
+  font-size: 1.5rem;
+  margin-bottom: var(--space-3);
+  padding-right: var(--space-4);
+}
+.notepad h3 {
+  font-size: 1.05rem;
+  margin: var(--space-4) 0 var(--space-2);
+  padding-bottom: 2px;
+  border-bottom: 2px solid var(--color-gold);
+  display: inline-block;
+}
+.notepad p,
+.notepad li {
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+.notepad ol,
+.notepad ul {
+  padding-left: 1.25rem;
+  margin: var(--space-2) 0;
+}
+.notepad li {
+  margin-bottom: var(--space-2);
+}
+.notepad ul ul {
+  margin-top: var(--space-2);
+}
+.notepad code,
+.notepad kbd {
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  background: rgba(26, 22, 17, 0.08);
+  padding: 1px 4px;
+}
+.notepad-lead {
+  font-style: italic;
+  color: var(--color-muted);
+}
+.notepad-callout {
+  border-left: 4px solid var(--color-red);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(179, 32, 44, 0.07);
+  margin: var(--space-3) 0;
+}
+
+.notepad-close {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+.notepad-close:hover {
+  color: var(--color-red);
+}
+
+/* ---------- Confirm dialog ---------- */
+
+.confirm {
+  border: var(--border);
+  box-shadow: var(--shadow-hard);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  padding: var(--space-4);
+  max-width: 26rem;
+  width: calc(100vw - 2 * var(--space-3));
+}
+.confirm::backdrop {
+  background: rgba(26, 22, 17, 0.55);
+}
+.confirm h2 {
+  font-size: 1.35rem;
+  margin-bottom: var(--space-2);
+}
+.confirm-warning {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-red-dark);
+}
+.confirm-actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  margin-top: var(--space-4);
+}
+
+/* ---------- Small screens ---------- */
+
+@media (max-width: 33rem) {
+  .masthead-user {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+  .entry {
+    flex-wrap: wrap;
+  }
+  .entry-actions {
+    flex-basis: 100%;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .entry-form {
+    padding: var(--space-3);
+  }
+  .notepad {
+    transform: none;
+  }
+}
+
+/* Respect a reduced-motion preference: the hover nudges are decoration. */
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .help-toggle {
+    transition: none;
+  }
+  .btn:hover,
+  .btn:active,
+  .help-toggle:hover {
+    transform: none;
+  }
+}
