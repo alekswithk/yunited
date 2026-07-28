@@ -21,12 +21,15 @@ export const defaultLocale = "en";
 export const locales = [
   { code: "en", dict: "en", label: "English", htmlLang: "en", dateLocale: "en-GB", ogLocale: "en_GB", complete: true },
   { code: "de", dict: "de", label: "Deutsch", htmlLang: "de", dateLocale: "de-CH", ogLocale: "de_CH", complete: true },
-  // bs/hr/sr hold raw DeepL output that nobody has read yet — it still contains
-  // mistranslations (wrong university names) and sr mixes Latin and Cyrillic
-  // against its sr-Latn tag. Keep them gated until a speaker reviews them.
-  { code: "bs", dict: "bcs", label: "Bosanski", htmlLang: "bs", dateLocale: "bs-Latn-BA", ogLocale: "bs_BA", complete: false },
-  { code: "hr", dict: "bcs", label: "Hrvatski", htmlLang: "hr", dateLocale: "hr-HR", ogLocale: "hr_HR", complete: false },
-  { code: "sr", dict: "sr", label: "Srpski", htmlLang: "sr-Latn", dateLocale: "sr-Latn-RS", ogLocale: "sr_RS", complete: false },
+  // bs/hr/sr started as raw DeepL output. The board reviews them continuously
+  // rather than in one pass, and decided to publish now and correct in place —
+  // an imperfect page in someone's own language beats no page at all. The known
+  // damage is fixed (HSG had been placed in Edinburgh and New York, the board
+  // inbox called a "forum", "Meet & Greet" rendered as "I meet and I greet"),
+  // and Serbian is now consistently Latin, matching its sr-Latn tag.
+  { code: "bs", dict: "bcs", label: "Bosanski", htmlLang: "bs", dateLocale: "bs-Latn-BA", ogLocale: "bs_BA", complete: true },
+  { code: "hr", dict: "bcs", label: "Hrvatski", htmlLang: "hr", dateLocale: "hr-HR", ogLocale: "hr_HR", complete: true },
+  { code: "sr", dict: "sr", label: "Srpski", htmlLang: "sr-Latn", dateLocale: "sr-Latn-RS", ogLocale: "sr_RS", complete: true },
 ];
 
 export const localeCodes = locales.map((l) => l.code);

@@ -13,10 +13,11 @@ when a step ships, tick it here in the same PR.
   & usage → [`docs/CMS.md`](docs/CMS.md). This file is the *tracker/index*; those
   are the *reference*.
 
-_Last updated: 2026-07-27 (added a `/partners` sponsor pitch page — see §4;
-CSP hardened — no `'unsafe-inline'` left on the public site; board members no
-longer machine-translated; 404 now actually served. Serbian is Latin; German
-published, BCS/Serbian still gated pending speaker review)._
+_Last updated: 2026-07-28 (**all five locales are live** — `bs`/`hr`/`sr` flipped
+to `complete: true`, reviewed continuously rather than gated; Serbian is now
+consistently **Latin**, enforced in the translation pipeline itself; `/partners`
+pitch page merged (#36). Earlier: CSP hardened — no `'unsafe-inline'` left on the
+public site; board members no longer machine-translated; 404 now actually served)._
 
 ---
 
@@ -121,30 +122,38 @@ they carry design decisions that need a person. The agent skips them.
       bundled scripts, so every one is a hashed file under `/_astro` (already cached
       immutable). The inline JSON-LD stays: a script element with a non-JavaScript type
       is a data block that is never executed, so `script-src` does not apply to it.
-- [~] **i18n: English + BCS — 🧑 human-led** *(large).* In progress on `i18n-foundation`. Done:
-      locale routing (`src/pages/[...locale]/`), the dictionary + English-fallback
+- [x] **i18n: all five locales published — 🧑 human-led** *(large).* Done: locale
+      routing (`src/pages/[...locale]/`), the dictionary + English-fallback
       system (`src/i18n/`), the language switcher, gated publishing (`complete:false`
-      → noindex + out of sitemap/switcher), `hreflang` in each page's `<head>` (gated
-      to finished locales — the equivalent of the sitemap approach), and **all page
-      body copy authored in `en.json` and rendered via `t()`**. An offline DeepL
-      helper (`npm run translate`, `DEEPL_API_KEY`) tops up `de`/`bcs`/`sr`; all four
-      dictionaries now carry all 135 keys. **German is reviewed and published**
-      (`complete: true`). The card chrome (CTAs, alt text, date formatting,
-      TBA placeholders) is localized too, and the board's **event content** —
-      `content/events/` titles and descriptions — now carries its own `i18n`
-      block, filled by `npm run translate:content` and kept current
-      automatically by `.github/workflows/translate-content.yml` on every CMS
-      save. **Board members are deliberately excluded**: a name, role and bio
-      read the same in every language. Remaining, per locale:
-  - [ ] **Serbian: pick one script.** `sr.json` is currently mixed — the hand-done
-        nav/footer/meta and the `partners` block (52 keys) are Latin, the DeepL
-        body copy (123 keys) is Cyrillic, and `htmlLang` claims `sr-Latn`.
-        Convert one way or the other (and fix `htmlLang` if Cyrillic wins)
-        before publishing.
-  - [ ] **BCS + Serbian: speaker review.** Raw DeepL output. The worst damage is
-        fixed (it had placed HSG in *Edinburgh* and *New York*, and called the board
-        inbox a "forum"), but nobody fluent has read either dictionary end to end.
-        Flip `complete: true` in `src/i18n/config.js` only after that review.
+      → noindex + out of sitemap/switcher), `hreflang` in each page's `<head>`, and
+      **all page body copy authored in `en.json` and rendered via `t()`**. An offline
+      DeepL helper (`npm run translate`, `DEEPL_API_KEY`) tops up `de`/`bcs`/`sr`; all
+      four dictionaries carry all **177 keys**, including the brand string `YUnited`
+      in the same 34 keys in every one. The card chrome (CTAs, alt text, date
+      formatting, TBA placeholders) is localized too, and the board's **event
+      content** — `content/events/` titles and descriptions — carries its own `i18n`
+      block, filled by `npm run translate:content` and kept current automatically by
+      `.github/workflows/translate-content.yml` on every CMS save. **Board members
+      are deliberately excluded**: a name, role and bio read the same in every
+      language.
+  - [x] **Serbian is Latin, and stays Latin.** `sr.json` used to be mixed — 34 Latin
+        keys against 126 Cyrillic ones, under an `htmlLang` of `sr-Latn`. DeepL only
+        emits Serbian in Cyrillic, so the fix is in the pipeline, not just the files:
+        `toSerbianLatin()` in `scripts/lib/deepl.mjs` runs from `postProcess()` for
+        the `sr` dictionary, so every future run converts on the way in. The same
+        function was applied once to `sr.json` and to the `i18n.sr` block of all nine
+        events. The only Cyrillic left on a Serbian page is the decorative
+        `Događaji · Догађаји · Events` hero flourish, which is deliberate and appears
+        in every locale.
+  - [x] **All five locales published** (2026-07-28). `bs`/`hr`/`sr` flipped to
+        `complete: true`: 40 sitemap entries (5 × 8 pages), full `hreflang`, all five
+        in the switcher. The board reviews the translations **continuously and
+        corrects in place** rather than gating on one end-to-end pass — an imperfect
+        page in someone's own language beats no page at all. Known damage is fixed
+        (HSG had been placed in *Edinburgh* and *New York*, the board inbox called a
+        "forum", and "Meet & Greet" rendered as *"Srećem i pozdravljam"* — "I meet and
+        I greet"). Hand corrections to an event's `i18n` block survive: the workflow
+        re-translates only when `sourceHash` changes.
 - [~] **Partners / recruiting funnel** *(content + feature).* Sponsor/partner page
       and a recruiting flow. Scope with the board. Done: a `/partners` pitch page
       (`src/pages/[...locale]/partners.astro`) explaining why a company would
@@ -183,14 +192,16 @@ which Google treats as equivalent; no separate sitemap `hreflang` needed.
       dashboard-only build command, the `DEEPL_API_KEY` secret) moved into README.
 - [ ] Current `sharp` build lacks **AVIF/HEVC decode** (AV1 works). AVIF *uploads*
       would fail; not worth acting on unless it comes up. HEIC handled via clear error.
-- [ ] **Brand capitalization is provisional — the board is deciding.** Copy, chrome
-      and metadata now all say **YUnited**. The logo artwork deliberately still reads
-      "Yunited" and **stays as is** for now (the SVGs are drawn vector paths, so the
-      letterforms can't be search-and-replaced anyway — only their `<title>`/
-      `aria-label` were updated). If the team lands on a different spelling, the copy
-      is a one-line `perl -pi -e 's/\bYUnited\b/…/g'` over the same file list as the
-      rename commit. Filenames, `yunited.ch`, `yunited@shsg.ch` and `@yunited.unisg`
-      are lowercase and unaffected either way.
+- [x] **Brand capitalization is consistent everywhere** (audited 2026-07-28). Copy,
+      chrome and metadata all say **YUnited**, in all four dictionaries — the same 34
+      keys in each, verified, with no all-caps or lowercase drift and none lost in
+      translation. SVG `<title>`/`aria-label`, `site.webmanifest` and the CMS branding
+      match. The logo artwork deliberately still *reads* "Yunited" and **stays as is**
+      (the SVGs are drawn vector paths, so the letterforms can't be search-and-replaced
+      anyway). Filenames, `yunited.ch`, `yunited@shsg.ch` and `@yunited.unisg` are
+      lowercase and correct that way. The board has still not ruled on the final
+      spelling; if it changes, the copy is a one-line `perl -pi -e 's/\bYUnited\b/…/g'`
+      over the same file list as the rename commit.
 
 ---
 
@@ -204,7 +215,7 @@ npm run check     # astro check — must be 0 errors
 npm run preview   # serve built dist/
 ```
 "Verified" = `build` succeeds, `check` is clean, and for content/render changes the
-expected text appears in the built HTML (e.g. `grep "Casino Night" dist/events.html`).
+expected text appears in the built HTML (e.g. `grep "Karaoke Night" dist/events.html`).
 
 ---
 
