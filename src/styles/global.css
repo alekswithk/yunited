@@ -147,13 +147,11 @@
   --dur-base: 0.28s;   /* state changes you should notice */
   --dur-slow: 0.6s;    /* entrances */
 
-  /* The flag rule (see "Flag rule" below). One tile is three equal stripes.
-     --flag-travel is how far the band slides across a full page scroll, and it
-     must stay a whole multiple of the tile so the stripes stay in register at
-     both ends. It is also the pseudo-element's overhang, so the band cannot
-     run out of stripe at the end of the travel. */
-  --flag-tile: 180px;
-  --flag-travel: calc(var(--flag-tile) * 6);
+  /* The folk-motif divider. The tile is pinned rather than derived from the
+     SVG's aspect ratio, so --motif-travel can be a whole number of tiles and
+     the diamonds land back in register at the end of the slide. */
+  --motif-tile: 64px;
+  --motif-travel: calc(var(--motif-tile) * 6);
 }
 
 /* ---------- Base ---------- */
@@ -258,14 +256,37 @@ main { position: relative; }
    under it stays red, as it was when this was an inline style. */
 .eyebrow-azure { color: var(--color-azure); }
 
-/* ---------- Folk-motif divider (SVG pattern, used sparingly) ---------- */
+/* ---------- Folk-motif divider (SVG pattern, used sparingly) ----------
+   The kilim diamond strip that separates sections. It slides as it crosses the
+   viewport — see "Signature motion" below for the animation itself.
+
+   The strip lives on a pseudo-element rather than on .motif-divider directly,
+   because the thing that moves has to be wider than what you see and clipped
+   by it. That is also what lets the motion be a transform: sliding the
+   background-position instead would repaint the full width of the strip on
+   every scroll frame, on every divider, on every page. */
 .motif-divider {
   height: 16px;
-  background-image: url("/assets/motif.svg");
-  background-repeat: repeat-x;
-  background-size: auto 16px;
   border-top: 2px solid var(--color-ink);
   border-bottom: 2px solid var(--color-ink);
+  overflow: hidden;
+  position: relative;
+}
+
+.motif-divider::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Wider than the divider by exactly the travel, so it never runs out of
+     pattern at the end of the slide. */
+  width: calc(100% + var(--motif-travel));
+  background-image: url("/assets/motif.svg");
+  background-repeat: repeat-x;
+  /* Pinned, not `auto 16px`. The tile is 56x14, so `auto` would derive a
+     64px width from the aspect ratio — correct today, but it would silently
+     change if the SVG were ever redrawn, and --motif-travel has to stay a
+     whole number of tiles for the diamonds to land back in register. */
+  background-size: var(--motif-tile) 16px;
 }
 
 /* ---------- Header / navigation ---------- */
@@ -276,97 +297,6 @@ main { position: relative; }
   background: var(--color-paper);        /* solid — no blur */
   border-bottom: 2px solid var(--color-ink);
 }
-/* ---------- Flag rule ----------
-   The red / azure / gold band that closes the header and opens the footer, so
-   the page is bracketed top and bottom by the same mark.
-
-   IT IS DRIVEN BY THE SCROLL POSITION, NOT BY A TIMER. The band tracks how far
-   down the page you are: at the top it sits at one end of its travel, at the
-   bottom the other, and it follows your scroll continuously in between —
-   forwards when you scroll down, backwards when you scroll up. Nothing moves
-   while you are reading, which is the point. An earlier version looped on a
-   timer and was wrong: perpetual motion in a sticky header is a distraction,
-   and it animated whether anyone was there or not.
-
-   It doubles as a quiet progress indicator, which is why the footer band runs
-   the OTHER way — the two close towards each other as you reach the end.
-
-   IT MOVES BY transform, NOT background-position. Both would look the same, but
-   only transform is handed to the compositor; a background-position animation
-   repaints a full-width strip on every scroll frame. The clipping container is
-   what makes that possible: the header itself can't be overflow:hidden, or it
-   would cut off the language dropdown.
-
-   The stripes stay in register because --flag-travel is a whole number of
-   tiles, so the gradient lands on an identical stripe at the end of the travel
-   as at the start. */
-.flag-rule {
-  height: 4px;
-  overflow: hidden;
-  position: relative;
-  /* Its own stacking context, so the band cannot paint over the sticky
-     header's shadow or the nav dropdown above it. */
-  isolation: isolate;
-}
-
-.flag-rule::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  /* Wider than its container by exactly the travel distance, so there is
-     always stripe to spare at whichever end the band has slid towards. */
-  width: calc(100% + var(--flag-travel));
-  background-image: repeating-linear-gradient(
-    90deg,
-    var(--color-red) 0 calc(var(--flag-tile) / 3),
-    var(--color-azure) calc(var(--flag-tile) / 3) calc(var(--flag-tile) / 3 * 2),
-    var(--color-gold) calc(var(--flag-tile) / 3 * 2) var(--flag-tile)
-  );
-}
-
-/* Static unless the browser can tie an animation to the scroller AND the
-   visitor hasn't asked for less motion. Everywhere else the band is exactly
-   the hard-stop flag rule it has always been — nothing is lost, it simply
-   doesn't move. Same progressive-enhancement shape as the motif divider and
-   the heading rules below. */
-@supports (animation-timeline: scroll()) {
-  @media (prefers-reduced-motion: no-preference) {
-    @keyframes flag-drift {
-      from { transform: translateX(0); }
-      to   { transform: translateX(calc(var(--flag-travel) * -1)); }
-    }
-
-    /* LONGHANDS, NOT THE `animation` SHORTHAND — do not "tidy" this.
-       `animation-timeline` is one of the shorthand's constituent properties, so
-       writing `animation: flag-drift linear both scroll(root)` is legal and the
-       minifier will happily fold these four lines into exactly that. The catch:
-       a browser that supports the timeline LONGHAND but not a timeline inside
-       the shorthand throws away the whole declaration — and since the @supports
-       test above asks about the longhand, the guard would pass and the band
-       would then have no animation at all, not even the static fallback.
-       Kept as longhands so what ships is what the guard actually tested. */
-    .flag-rule::after {
-      animation-name: flag-drift;
-      animation-timing-function: linear;
-      /* Holds the end states, so the band is parked correctly before any
-         scrolling has happened and stays put at the bottom of the page. */
-      animation-fill-mode: both;
-      /* The document's own scrollport: 0% at the top of the page, 100% at the
-         bottom. No duration — on a scroll timeline the range IS the duration. */
-      animation-timeline: scroll(root block);
-    }
-
-    .flag-rule.is-reverse::after {
-      animation-direction: reverse;
-    }
-  }
-}
-
-/* Thicker at the foot of the page, where it is closing rather than dividing. */
-.site-footer > .flag-rule {
-  height: 6px;
-}
-
 .site-header .container {
   display: flex;
   align-items: center;
@@ -924,14 +854,9 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
 .site-footer {
   background: var(--color-ink);
   color: rgba(244, 236, 221, 0.82);
-  /* The flag rule is the first child and supplies the top edge, so the padding
-     starts below it rather than the border-top this used to carry. */
-  padding: 0 0 var(--space-5);
+  padding: var(--space-6) 0 var(--space-5);
   font-size: 0.98rem;
-}
-
-.site-footer > .container {
-  padding-top: var(--space-6);
+  border-top: 4px solid var(--color-gold);
 }
 
 .footer-grid {
@@ -1034,16 +959,30 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
   .hero .hero-actions { animation-delay: 0.24s; }
 }
 
-/* 2. The motif divider drifts as it crosses the viewport — a slow parallax on
-      background-position, tied to scroll rather than to a timer. */
+/* 2. The motif divider slides as it crosses the viewport — a parallax tied to
+      your scroll position rather than to a timer, so it moves while you are
+      moving and is still while you are reading. Six tiles of travel across a
+      full crossing: enough to read as motion at a glance, and a whole number
+      of tiles, so the diamonds land back in register at the end.
+
+      NOTE THE LONGHANDS — this used to be `animation: motif-drift linear both`
+      plus a separate `animation-timeline`, and the minifier folded the two into
+      `animation: linear both motif-drift view()`. `animation-timeline` is a
+      constituent of the shorthand, so that is legal — but a browser supporting
+      the timeline longhand and not a timeline inside the shorthand throws the
+      whole declaration away. The @supports test asks about the longhand, so the
+      guard passed and the divider then had no animation at all. It had been
+      silently dead in those browsers since the effect was added. */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     @keyframes motif-drift {
-      from { background-position-x: 0; }
-      to   { background-position-x: 96px; }
+      from { transform: translateX(0); }
+      to   { transform: translateX(calc(var(--motif-travel) * -1)); }
     }
-    .motif-divider {
-      animation: motif-drift linear both;
+    .motif-divider::after {
+      animation-name: motif-drift;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
       animation-timeline: view();
     }
   }
@@ -1361,8 +1300,14 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
       }
     }
 
+    /* Longhands, not the `animation` shorthand — see the note on motif-drift.
+       The minifier folds a shorthand plus a separate animation-timeline into
+       one declaration that some browsers discard entirely, taking the effect
+       with it and leaving no fallback. */
     .magazine-grid > .card {
-      animation: puzzle-in linear both;
+      animation-name: puzzle-in;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
       animation-timeline: view();
       /* Assemble across the card's entry into the viewport, settled by the
          time it's fully visible — so it's readable well before centre. */

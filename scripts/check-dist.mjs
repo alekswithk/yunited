@@ -297,9 +297,59 @@ function checkLinkSpacing() {
   return glued.length;
 }
 
+// ---------------------------------------------------------------------------
+// No scroll timeline inside an `animation` shorthand.
+//
+// `animation-timeline` is one of the shorthand's constituent properties, so
+// `animation: motif-drift linear both view()` is legal CSS — and the minifier
+// will FOLD a shorthand plus a separate `animation-timeline` line into exactly
+// that, even when the source kept them apart. The catch, from the spec: a
+// user-agent that supports `animation-timeline` as a longhand but not a
+// timeline value inside the shorthand must discard the entire declaration.
+//
+// Every scroll-driven effect here is guarded by `@supports (animation-timeline:
+// view())`, which asks about the LONGHAND. So in such a browser the guard
+// passes, the folded declaration is thrown away, and the effect is simply gone
+// — no animation and no static fallback either, because the fallback lives
+// outside the @supports block.
+//
+// This is not hypothetical: the motif divider and the magazine-grid cards had
+// both been folded this way since the effects were added, so on those browsers
+// neither had ever moved. Nothing failed — the CSS parsed, the build passed,
+// the page looked fine, it just sat still.
+//
+// Writing the longhands individually avoids the fold. This asserts it stayed
+// that way, on the BUILT css, which is the only place the fold is visible.
+function checkAnimationShorthands() {
+  const cssFiles = readdirSync(join(DIST, "_astro")).filter((f) => f.endsWith(".css"));
+  const folded = [];
+
+  for (const file of cssFiles) {
+    const css = readFileSync(join(DIST, "_astro", file), "utf8");
+    // An `animation:` shorthand whose value mentions a timeline function.
+    for (const [decl] of css.matchAll(/animation:[^;}]*\b(?:view|scroll)\([^)]*\)[^;}]*/g)) {
+      folded.push(`_astro/${file}: ${decl.trim()}`);
+    }
+  }
+
+  if (folded.length === 0) return 0;
+
+  console.error("✗ dist/_astro — a scroll timeline was folded into an `animation` shorthand");
+  for (const hit of [...new Set(folded)].slice(0, 5)) console.error(`    ${hit}`);
+  console.error(
+    "    Browsers that support the animation-timeline LONGHAND but not a timeline\n" +
+      "    inside the shorthand discard the whole declaration — and the @supports\n" +
+      "    guard tests the longhand, so it passes and the effect vanishes with no\n" +
+      "    fallback. Write animation-name / -timing-function / -fill-mode as\n" +
+      "    separate longhands so the minifier cannot fold them.",
+  );
+  return folded.length;
+}
+
 failures += checkAdminIsFirstParty();
 failures += checkAdminWiring();
 failures += checkLinkSpacing();
+failures += checkAnimationShorthands();
 failures += checkMediaMirror();
 
 if (failures > 0) {

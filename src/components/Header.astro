@@ -69,9 +69,11 @@ const showSwitcher = switchable.length > 1;
       )}
     </nav>
   </div>
-  {/* The flag band that closes the header. A real element rather than a
-      ::after, because the drifting stripe needs something to be clipped by and
-      the header itself cannot be overflow:hidden — that would cut off the
-      language dropdown. Decorative, so it is hidden from assistive tech. */}
-  <div class="flag-rule" aria-hidden="true"></div>
+  {/* NO FLAG BAND HERE, deliberately. The header used to carry a red/azure/gold
+      stripe across its foot. Three solid vertical bands in those colours read
+      as the Romanian flag rather than as this club's palette — which is exactly
+      the wrong association for a Balkan/ex-Yu club. The palette still does its
+      work everywhere it appears as blocks, accents and the folk motif; it just
+      should not be arranged as a tricolour. The header's ink border is enough
+      to close it. */}
 </header>
