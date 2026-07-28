@@ -6,7 +6,7 @@
 // content/members/*.json) — the layout the CMS edits. A validation failure
 // throws with a message naming the offending file and field, readable enough
 // for a board member to fix without reading a stack trace.
-import { eventSchema, memberSchema } from "./schema.js";
+import { eventSchema, memberSchema, partnerSchema } from "./schema.js";
 import { splitEvents, hasDate } from "./events.js";
 
 /**
@@ -34,6 +34,9 @@ export function localizeEntry(entry, dict) {
 // like "/content/events/casino-night-2026.json".
 const eventModules = import.meta.glob("/content/events/*.json", { eager: true });
 const memberModules = import.meta.glob("/content/members/*.json", { eager: true });
+// Empty today. A glob over a directory with no files is simply an empty object,
+// so this costs nothing until the board adds its first partner.
+const partnerModules = import.meta.glob("/content/partners/*.json", { eager: true });
 
 // Validate each file against `schema`, collecting every problem across the
 // whole collection before throwing, so one build shows all the fixes needed.
@@ -113,8 +116,9 @@ export const events = loadCollection(eventModules, eventSchema, (entries) => {
   }
 }
 
-/** @type {import("./schema.js").Member[]} */
-export const members = loadCollection(memberModules, memberSchema, (entries) => {
+// Both members and partners are ordered by a unique `order`, so the check is
+// shared rather than written twice.
+const uniqueOrder = (entries) => {
   const errors = [];
   const seen = new Map();
   for (const { file, data } of entries) {
@@ -125,4 +129,18 @@ export const members = loadCollection(memberModules, memberSchema, (entries) => 
     }
   }
   return errors;
-}).sort((a, b) => a.order - b.order); // lowest order first; [0] is the lead
+};
+
+/** @type {import("./schema.js").Member[]} */
+export const members = loadCollection(memberModules, memberSchema, uniqueOrder)
+  .sort((a, b) => a.order - b.order); // lowest order first; [0] is the lead
+
+/**
+ * Partner organisations, lowest `order` first. Empty until the board adds one —
+ * `/partners` renders its pitch either way and simply omits the logo strip, so
+ * an empty collection is a normal state, not a missing-content error.
+ *
+ * @type {import("./schema.js").Partner[]}
+ */
+export const partners = loadCollection(partnerModules, partnerSchema, uniqueOrder)
+  .sort((a, b) => a.order - b.order);

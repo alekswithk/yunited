@@ -27,6 +27,8 @@ public site; board members no longer machine-translated; 404 now actually served
 content/                 CONTENT LAYER — one JSON file per entry (board's edit surface)
   events/<id>.json         9 events; filename = the event id
   members/<role>.json      6 board members; each has an `order` (1 = lead card)
+  partners/<name>.json     0 partners — empty on purpose; the logo strip on
+                           /partners appears as soon as there is one
 src/
   pages/[...locale]/*.astro 8 localized routes (index, about, events, members, exchange,
                            partners, join, contact); rest param emits both /events and /de/events
@@ -169,9 +171,15 @@ they carry design decisions that need a person. The agent skips them.
       ex-Yugoslav-background employers) and pointing at the contact form's
       existing "Partnerships" topic — linked from the main nav and footer. No
       partner logos/names are listed (there are none yet; nothing was invented),
-      and there is no content collection for partners — add one once the board
-      has real partners to show, the same way `content/events`/`content/members`
-      exist. Remaining, and still needs the board: the **recruiting funnel**
+      and **`content/partners/` now exists as an empty collection** (2026-07-28):
+      `partnerSchema` + a CMS collection + a logo strip on `/partners` that
+      renders **only when there is at least one entry**, so adding the first real
+      partner is a CMS save rather than a code change. Nothing is invented —
+      the directory is empty and the page shows just the pitch until it isn't.
+      Fields are `name`, `order`, optional `url`, optional `logo` (the name
+      renders as text without one); no prose field and no `i18n` block, for the
+      same reason as members. Remaining, and still needs the board: the
+      **recruiting funnel**
       half (attracting new student members — likely a distinct feature with its
       own scope, possibly needing a form/backend this static site doesn't have
       yet) and the `/partners` copy and nav placement itself (first pass, not

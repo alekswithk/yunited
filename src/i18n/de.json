@@ -180,7 +180,9 @@
     "ctaEyebrow": "Zusammenarbeiten",
     "ctaHeading": "Haben Sie Interesse an einer Partnerschaft?",
     "ctaBody": "Ob es sich nun um das Sponsoring einer Veranstaltung oder eine längerfristige Partnerschaft handelt – wir würden uns sehr freuen, von Ihnen zu hören. Nehmen Sie Kontakt mit uns auf und teilen Sie uns Ihre Ideen mit.",
-    "ctaButton": "Kontaktieren Sie uns bezüglich einer Partnerschaft"
+    "ctaButton": "Kontaktieren Sie uns bezüglich einer Partnerschaft",
+    "currentEyebrow": "Mit wem wir zusammenarbeiten",
+    "currentHeading": "Unsere Partner"
   },
   "join": {
     "heroTitle": "Werde Mitglied bei YUnited",

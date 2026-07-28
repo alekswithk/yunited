@@ -1108,6 +1108,49 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
 .info-panel.panel-red { border-top-color: var(--color-red); }
 .info-panel.panel-gold { border-top-color: var(--color-gold); }
 .info-panel h3 { margin-bottom: var(--space-3); }
+
+/* Partner logo strip on /partners. auto-fit rather than a fixed column count so
+   it reads correctly at one partner as well as at nine — the board will start
+   with one, and a lone logo stranded in a 4-column grid looks like a mistake. */
+.partner-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 220px));
+  gap: var(--space-4);
+  justify-content: center;
+  list-style: none;
+  padding: 0;
+  margin-top: var(--space-4);
+}
+.partner-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
+  padding: var(--space-3);
+  background: #fffdf8;
+  border: var(--border);
+  border-radius: var(--radius);
+}
+.partner-item a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+/* Logos arrive at whatever aspect ratio the partner supplies; contain keeps a
+   wide wordmark and a square badge both intact inside the same box. */
+.partner-item img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+/* Fallback when a partner has no logo file yet. */
+.partner-name {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  text-align: center;
+}
 /* A call-to-action closing a section. A class rather than an inline style —
    PLAN.md §4 is trying to drop style-src 'unsafe-inline', not add to it. */
 .section-cta { margin-top: var(--space-4); }
