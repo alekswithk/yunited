@@ -3,6 +3,17 @@
 // real date before today; everything else — future-dated or date-TBA — is
 // upcoming, with TBA events floated to the top.
 
+// The annotations below are structural on purpose — `{ date, time }` and not an
+// import of the Event type. This module stays framework-free AND schema-free
+// (see CLAUDE.md); typing it against the Zod schema would couple the sort logic
+// to the board's edit surface. splitEvents is generic instead, so it hands back
+// whatever it was given: pages calling splitEvents(events) get a typed Event[]
+// on both sides of the split without this file knowing what an Event is.
+
+/**
+ * @param {{ date?: string | null }} event
+ * @returns {boolean}
+ */
 export function hasDate(event) {
   return typeof event.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(event.date);
 }
@@ -14,6 +25,11 @@ export function hasDate(event) {
 // Returns null for a TBA (null/invalid) date rather than an English string: this
 // module stays framework- and dictionary-free, so the caller renders whatever
 // its dictionary says for "date to be announced".
+/**
+ * @param {string | null | undefined} isoDate
+ * @param {string} [localeTag]
+ * @returns {string | null}
+ */
 export function formatEventDate(isoDate, localeTag = "en-GB") {
   if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return null;
   const date = new Date(isoDate + "T00:00:00");
@@ -26,6 +42,10 @@ export function formatEventDate(isoDate, localeTag = "en-GB") {
 
 // "20:30" -> "20:30" for a real time, null otherwise. Used only as a tiebreaker
 // between events that share a date; a missing time always sorts last.
+/**
+ * @param {{ time?: string | null }} event
+ * @returns {string | null}
+ */
 function timeKey(event) {
   return typeof event.time === "string" && /^\d{2}:\d{2}$/.test(event.time)
     ? event.time
@@ -35,6 +55,12 @@ function timeKey(event) {
 // Break a same-date tie by time of day. `dir` is +1 to put earlier times first
 // (upcoming: soonest first) or -1 to put later times first (past: newest first).
 // Events without a time sort after those with one, either way.
+/**
+ * @param {{ time?: string | null }} a
+ * @param {{ time?: string | null }} b
+ * @param {1 | -1} dir
+ * @returns {number}
+ */
 function byTime(a, b, dir) {
   const ta = timeKey(a);
   const tb = timeKey(b);
@@ -44,6 +70,12 @@ function byTime(a, b, dir) {
   return dir * ta.localeCompare(tb);
 }
 
+/**
+ * @template {{ date?: string | null, time?: string | null }} T
+ * @param {readonly T[]} allEvents
+ * @param {Date} [now]
+ * @returns {{ upcoming: T[], past: T[] }}
+ */
 export function splitEvents(allEvents, now = new Date()) {
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);

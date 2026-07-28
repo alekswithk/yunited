@@ -115,3 +115,12 @@ export const memberSchema = z
     order: z.number().int().positive("must be a positive whole number"),
   })
   .strict();
+
+// The schemas above already describe the shape exactly, so the types are derived
+// from them rather than written out a second time — a field added to a schema
+// cannot then drift from its type. Exported for the JSDoc annotations in
+// content.js, which is what gives every .astro page a typed `event` / `member`
+// instead of an implicit `any` in each .map() callback.
+
+/** @typedef {import("zod").infer<typeof eventSchema>} Event */
+/** @typedef {import("zod").infer<typeof memberSchema>} Member */

@@ -10,6 +10,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
+    "test": "node --test \"src/lib/**/*.test.js\"",
+    "check:dist": "node scripts/check-dist.mjs",
     "translate": "node --env-file-if-exists=.env scripts/translate.mjs",
     "translate:content": "node --env-file-if-exists=.env scripts/translate-content.mjs"
   },

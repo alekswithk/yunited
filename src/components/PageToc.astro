@@ -12,6 +12,14 @@
 import { defaultLocale } from "../i18n/config.js";
 import { useTranslations } from "../i18n/utils.js";
 
+interface Props {
+  /** `id` must match a `<section id>` on the page; `key` is a dictionary key. */
+  sections?: { id: string; key: string }[];
+  locale?: string;
+  /** Dictionary key for the nav's accessible name, not the label itself. */
+  label?: string;
+}
+
 const { sections = [], locale = defaultLocale, label } = Astro.props;
 const t = useTranslations(locale);
 ---

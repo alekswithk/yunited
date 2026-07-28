@@ -101,6 +101,14 @@ Manual/account steps (code is in place).
 - [x] Deploy `sveltia-cms-auth` worker + GitHub OAuth app + secrets — login works.
 - [x] **Google Search Console**: sitemap switched to `https://yunited.ch/sitemap-index.xml`.
 
+- [ ] **Add the 26/27 events when the dates are set** — 🧑 board. As of 2026-07-28
+      every dated event is in the past (the newest is 2026-05-13) and "Upcoming"
+      shows only the TBA *Meet & Greet* card, so the site reads as dormant going
+      into the new academic year. Nothing is broken — this is just an empty
+      calendar, and the board adds events in `/admin` when the term is planned. The
+      build now **warns** whenever no upcoming event has a date, so this state
+      cannot go unnoticed for eleven weeks again as it did between May and July.
+
 _On demand (not a pending task): to give a new board member CMS access, add them
 as a repo collaborator — steps in [`docs/CMS.md`](docs/CMS.md) §5._
 
@@ -175,6 +183,31 @@ they carry design decisions that need a person. The agent skips them.
       existing Latin nav rather than the Cyrillic body copy (see the script
       item above).
 
+- [x] **Guardrails: tests + a CI check for the invariants nothing else catches**
+      (2026-07-28). Three failure modes here are *silent* — every command stays
+      green while the site is wrong — so each now has an assertion:
+  - `npm test` — `src/lib/events.test.js`, 14 cases over `splitEvents()` /
+    `formatEventDate()` via `node:test` (built in; no framework, no new
+    dependency). Covers the past/upcoming boundary (an event **today** is still
+    upcoming), TBA floating, the same-date time tiebreak, missing/malformed
+    times, non-mutation of the input, and day-first formatting in every published
+    `dateLocale`. `now` is injected so the assertions never rot. Mutation-checked:
+    making today count as past fails 2 cases, sinking TBA fails 1.
+  - `npm run check:dist` — asserts on the **built** output that no `style="…"`
+    attribute and no inline `<script>` survived (`application/ld+json` data blocks
+    excepted, correctly), plus that rendered copy spells the brand `YUnited`. This
+    is what stops a future edit, or an Astro upgrade changing an inlining default,
+    from silently undoing the CSP work.
+  - **A stale calendar now announces itself.** `content.js` warns at build time
+    when no upcoming event has a date. Deliberately a *warning*: an empty calendar
+    between semesters is legitimate and must never block a deploy. It is firing
+    right now, which is correct — see §4's first open item.
+  - `astro check` is at **0 errors, 0 warnings, 0 hints**. The 5 implicit-`any`
+    hints were fixed at the source rather than at the call sites: `Event`/`Member`
+    are derived from the Zod schemas with `z.infer` (so a schema change cannot
+    drift from its type), `content.js` annotates its two exports, and
+    `splitEvents()` is generic so it hands back whatever it was given.
+
 Deferred/among-these per the original roadmap: sitemap `hreflang` — shipped instead
 as `<link rel="alternate" hreflang>` in the page `<head>` (gated to finished locales),
 which Google treats as equivalent; no separate sitemap `hreflang` needed.
@@ -208,14 +241,17 @@ which Google treats as equivalent; no separate sitemap `hreflang` needed.
 ## 6. Everyday commands
 
 ```bash
-npm install       # once
-npm run dev       # local preview at http://localhost:4321
-npm run build     # writes dist/ (runs prebuild: vendors the CMS bundle)
-npm run check     # astro check — must be 0 errors
-npm run preview   # serve built dist/
+npm install        # once
+npm run dev        # local preview at http://localhost:4321
+npm test           # unit tests for src/lib (node:test, no framework)
+npm run build      # writes dist/ (runs prebuild: vendors the CMS bundle)
+npm run check      # astro check — must be 0 errors AND 0 hints
+npm run check:dist # post-build: CSP-inline-free + brand spelling
+npm run preview    # serve built dist/
 ```
-"Verified" = `build` succeeds, `check` is clean, and for content/render changes the
-expected text appears in the built HTML (e.g. `grep "Karaoke Night" dist/events.html`).
+"Verified" = all four of `test`, `build`, `check`, `check:dist` pass — which is
+exactly what CI runs — and for content/render changes the expected text appears
+in the built HTML (e.g. `grep "Karaoke Night" dist/events.html`).
 
 ---
 
