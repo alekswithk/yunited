@@ -5,6 +5,7 @@
     "events": "Događaji",
     "members": "Odbor",
     "exchange": "Razmjena",
+    "partners": "Partneri",
     "contact": "Kontakt",
     "join": "Učlani se",
     "aria": "Glavna navigacija",
@@ -51,6 +52,10 @@
     "exchange": {
       "title": "Studenti na razmjeni — YUnited",
       "description": "Šta YUnited nudi studentima koji dolaze na razmjenu na HSG — i kako studenti HSG-a ostaju povezani dok su u inostranstvu."
+    },
+    "partners": {
+      "title": "Partneri — YUnited",
+      "description": "Udružite se s YUnited kako biste putem naših događanja i zajednice dosegli studente HSG-a podrijetlom iz bivše Jugoslavije."
     },
     "join": {
       "title": "Učlani se — YUnited",
@@ -160,6 +165,22 @@
     "outgoingItem3Link": "pružiti ruku",
     "outgoingItem3Post": ".",
     "outgoingCta": "Ostanite u kontaktu"
+  },
+  "partners": {
+    "heroTitle": "Postanite partner YUnited-a",
+    "heroLede": "Povezujemo studente HSG-a podrijetlom iz bivše Jugoslavije — i sve koji su znatiželjni o kulturi — društveno i profesionalno. Evo kako partnerstvo funkcionira.",
+    "whyEyebrow": "Zašto surađivati s nama",
+    "whyHeading": "Što partnerstvo nudi",
+    "reachTitle": "Zajednica",
+    "reachBody": "YUnited od 2013. organizira društvena i profesionalna događanja za studente HSG-a, povezujući zajednicu koja obuhvaća sve smjerove i semestre.",
+    "visibilityTitle": "Vidljivost",
+    "visibilityBody": "Partneri su istaknuti na našim događanjima i diljem naše web stranice i društvenih mreža, pred angažiranom i usko povezanom publikom.",
+    "networkTitle": "Talent i mreža",
+    "networkBody": "Djelujemo kao most prema tvrtkama i organizacijama s podrijetlom iz bivše Jugoslavije, povezujući studente s prilikama tijekom i nakon studija.",
+    "ctaEyebrow": "Uključite se",
+    "ctaHeading": "Zainteresirani za partnerstvo?",
+    "ctaBody": "Bilo da se radi o sponzorstvu događaja ili dugoročnom partnerstvu, rado ćemo vas saslušati. Javite nam se i recite nam što imate na umu.",
+    "ctaButton": "Kontaktirajte nas o partnerstvu"
   },
   "join": {
     "heroTitle": "Pridružite se YUnited",
