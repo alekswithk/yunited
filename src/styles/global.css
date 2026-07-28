@@ -146,6 +146,13 @@
   --dur-fast: 0.12s;   /* hovers, presses — must feel instant */
   --dur-base: 0.28s;   /* state changes you should notice */
   --dur-slow: 0.6s;    /* entrances */
+
+  /* The flag rule (see "Flag rule" below). One tile is three equal stripes;
+     the stripe travels exactly one tile per cycle, which is what makes the
+     loop seamless. Change the tile and the loop stays seamless; change one
+     without the other and you get a visible jump every cycle. */
+  --flag-tile: 180px;
+  --flag-cycle: 14s;
 }
 
 /* ---------- Base ---------- */
@@ -268,17 +275,69 @@ main { position: relative; }
   background: var(--color-paper);        /* solid — no blur */
   border-bottom: 2px solid var(--color-ink);
 }
-/* Hard-stop flag rule under the header (stripes, not a soft gradient) */
-.site-header::after {
-  content: "";
-  display: block;
+/* ---------- Flag rule ----------
+   The red / azure / gold band that closes the header and opens the footer, so
+   the page is bracketed top and bottom by the same mark. It drifts sideways —
+   slowly, and forever.
+
+   HOW THE LOOP IS SEAMLESS. The stripe is a repeating gradient one --flag-tile
+   wide, on a pseudo-element a whole tile wider than its container. Travelling
+   exactly one tile puts an identical stripe where the last one started, so the
+   restart is invisible. That is the entire trick, and it is why the keyframe
+   and the background both key off --flag-tile: change one alone and a jump
+   appears once every cycle.
+
+   IT MOVES BY transform, NOT background-position. Both would look the same, but
+   only transform is handed to the compositor — a background-position animation
+   repaints a full-width strip every frame, forever, on every page. The clipping
+   container is what makes that possible: the header itself can't be
+   overflow:hidden, or it would cut off the language dropdown. */
+.flag-rule {
   height: 4px;
-  background: linear-gradient(
+  overflow: hidden;
+  position: relative;
+  /* Its own stacking context, so the moving stripe cannot paint over the
+     sticky header's shadow or the nav dropdown above it. */
+  isolation: isolate;
+}
+
+.flag-rule::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* One tile wider than the container: the extra tile is what covers the gap
+     the stripe leaves behind as it travels. */
+  width: calc(100% + var(--flag-tile));
+  background-image: repeating-linear-gradient(
     90deg,
-    var(--color-red) 0 33.33%,
-    var(--color-azure) 33.33% 66.66%,
-    var(--color-gold) 66.66% 100%
+    var(--color-red) 0 calc(var(--flag-tile) / 3),
+    var(--color-azure) calc(var(--flag-tile) / 3) calc(var(--flag-tile) / 3 * 2),
+    var(--color-gold) calc(var(--flag-tile) / 3 * 2) var(--flag-tile)
   );
+}
+
+/* Static by default; the motion is added only where it is welcome. With
+   reduced motion the band is exactly the hard-stop rule it has always been. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes flag-drift {
+    from { transform: translateX(0); }
+    to   { transform: translateX(calc(var(--flag-tile) * -1)); }
+  }
+
+  .flag-rule::after {
+    animation: flag-drift var(--flag-cycle) linear infinite;
+  }
+
+  /* The footer's band runs the other way, so the two read as one motif the
+     page is held between rather than two copies of the same loop. */
+  .flag-rule.is-reverse::after {
+    animation-direction: reverse;
+  }
+}
+
+/* Thicker at the foot of the page, where it is closing rather than dividing. */
+.site-footer > .flag-rule {
+  height: 6px;
 }
 
 .site-header .container {
@@ -838,9 +897,14 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
 .site-footer {
   background: var(--color-ink);
   color: rgba(244, 236, 221, 0.82);
-  padding: var(--space-6) 0 var(--space-5);
+  /* The flag rule is the first child and supplies the top edge, so the padding
+     starts below it rather than the border-top this used to carry. */
+  padding: 0 0 var(--space-5);
   font-size: 0.98rem;
-  border-top: 4px solid var(--color-gold);
+}
+
+.site-footer > .container {
+  padding-top: var(--space-6);
 }
 
 .footer-grid {
@@ -902,6 +966,18 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
   .reveal > .split-grid,
   .reveal > .magazine-grid,
   .reveal > .section-cta { transition-delay: 0.18s; }
+
+  /* Event cards reveal individually, so a grid assembles left-to-right instead
+     of appearing as one slab. Done with nth-child rather than a per-card
+     --index, because setting that would need a style="…" attribute and the CSP
+     forbids inline styles (see check-dist.mjs).
+
+     Only the first row is staggered. Beyond that the cards are far enough apart
+     that each is observed on its own as you scroll, and a delay that kept
+     growing would just feel like lag. */
+  .magazine-grid > .card:nth-child(2) { transition-delay: 0.08s; }
+  .magazine-grid > .card:nth-child(3) { transition-delay: 0.16s; }
+  .magazine-grid > .card:nth-child(4) { transition-delay: 0.24s; }
 }
 
 /* ---------- Signature motion ----------
