@@ -248,8 +248,58 @@ function checkMediaMirror() {
 // "what the build accepts" are one rule rather than two that can drift.
 // worker/collections.test.js asserts the form and the schema still agree.
 
+// ---------------------------------------------------------------------------
+// No word run into the link that follows it.
+//
+// Sentences containing a link are assembled from three dictionary keys —
+// `…Pre`, `…Link`, `…Post` — so the href can stay locale-aware. That means the
+// space before the link lives at the end of the Pre string, or in the template
+// between the two, and BOTH are easy to lose:
+//
+//   * in the template, writing the anchor on the next line looks like
+//     whitespace but collapses to nothing. The footer rendered "Membership is
+//     managed onuniclubs.ch" in all five locales this way.
+//   * in a dictionary, a trailing space is invisible in review, and a
+//     translation that restructures the sentence drops it. DeepL turned the
+//     German exchange line into a complete sentence ending in a full stop,
+//     leaving "den Kontakt her.Kontakt aufnehmen."
+//
+// Nothing catches either one: the build succeeds, the type-check is clean, the
+// text is all present. It is only wrong to a reader, in one language, on one
+// page. So check the rendered output for a link glued to the character before
+// it.
+function checkLinkSpacing() {
+  const glued = [];
+
+  for (const file of htmlFiles(DIST)) {
+    const rel = relative(DIST, file);
+    if (rel.startsWith("admin/")) continue; // no composed sentences there
+
+    const html = readFileSync(file, "utf8").replace(HTML_COMMENT, "");
+
+    // A word character or sentence punctuation immediately before an anchor.
+    // `>` is excluded because that is a tag boundary, not text, and block-level
+    // links legitimately sit flush against the element that opens them.
+    for (const match of html.matchAll(/([\p{L}\p{N},.;:!?])<a\s[^>]*>([^<]{1,40})</gu)) {
+      glued.push(`${rel}: "…${match[1]}${match[2]}…"`);
+    }
+  }
+
+  if (glued.length === 0) return 0;
+
+  console.error("✗ dist/ — a link is run into the word before it");
+  for (const hit of [...new Set(glued)].slice(0, 6)) console.error(`    ${hit}`);
+  console.error(
+    "    Add the space where it belongs: at the end of the `…Pre` dictionary\n" +
+      "    string, or as an explicit {\" \"} in the template — never as a bare\n" +
+      "    newline, which collapses to nothing.",
+  );
+  return glued.length;
+}
+
 failures += checkAdminIsFirstParty();
 failures += checkAdminWiring();
+failures += checkLinkSpacing();
 failures += checkMediaMirror();
 
 if (failures > 0) {

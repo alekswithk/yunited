@@ -42,7 +42,15 @@ const year = new Date().getFullYear();
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© {year} YUnited — {t("footer.rights")}
+      {/*
+        The {" "} is load-bearing. Every locale's `footer.rights` ends on the
+        preposition before the link ("… managed on", "… verwaltet über", "…
+        se vodi preko"), so the space belongs between the sentence and the
+        anchor — not inside the dictionary, where a trailing space is invisible
+        to review and would be stripped by the translation pipeline. Written as
+        a newline it rendered "managed onuniclubs.ch" in all four languages.
+      */}
+      <p>© {year} YUnited — {t("footer.rights")}{" "}
       <a href="https://uniclubs.ch/hsg/clubs/yunited" target="_blank" rel="noopener">uniclubs.ch</a>.</p>
     </div>
   </div>
