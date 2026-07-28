@@ -68,22 +68,34 @@ function loadCollection(modules, schema, extraChecks = () => []) {
   return entries.map((e) => e.data);
 }
 
-/** @type {import("./schema.js").Event[]} */
+/**
+ * The filename IS the id. That was always the rule; now it is also the source.
+ *
+ * The board no longer types a slug — the CMS derives the filename from the title
+ * and does not write an `id` field at all, so entries created or re-saved through
+ * `/admin` simply do not have one. Reading it off the filename makes those files
+ * valid without a migration, and makes a mismatch structurally impossible for
+ * anything the CMS produces.
+ *
+ * An entry that still carries an explicit `id` (every hand-authored file does)
+ * must agree with its filename, because a rename that updated only one of the
+ * two is a genuine mistake worth failing on.
+ *
+ * @type {import("./schema.js").Event[]}
+ */
 export const events = loadCollection(eventModules, eventSchema, (entries) => {
   const errors = [];
-  const seen = new Map();
-  for (const { file, data } of entries) {
-    // The filename is the id, so a mismatch means the file was renamed without
-    // updating its `id` (or vice versa) — both would confuse the CMS.
-    const expected = `content/events/${data.id}.json`;
-    if (file !== expected) {
-      errors.push(`  • ${file} → id "${data.id}" does not match its filename (expected ${expected})`);
+  for (const entry of entries) {
+    const fromFilename = entry.file.replace(/^content\/events\//, "").replace(/\.json$/, "");
+    if (entry.data.id && entry.data.id !== fromFilename) {
+      errors.push(
+        `  • ${entry.file} → id "${entry.data.id}" does not match its filename ` +
+          `(expected content/events/${entry.data.id}.json, or drop the id and let the filename decide)`,
+      );
     }
-    if (seen.has(data.id)) {
-      errors.push(`  • ${file} → duplicate id "${data.id}" (also in ${seen.get(data.id)})`);
-    } else {
-      seen.set(data.id, file);
-    }
+    // Filenames are unique by construction, so deriving the id from the filename
+    // removes the possibility of a duplicate rather than checking for one.
+    entry.data.id = entry.data.id ?? fromFilename;
   }
   return errors;
 });

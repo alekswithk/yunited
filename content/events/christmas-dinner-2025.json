@@ -5,8 +5,8 @@
   "time": "19:30",
   "location": "Zürcherstrasse 162, St. Gallen",
   "description": "A festive dinner to close out the year together.",
-  "image": "/images/events/25_26/christmas_dinner_2025.webp",
-  "rsvpUrl": "",
+  "image": "images/events/25_26/christmas_dinner_2025.webp",
+  "rsvpUrl": null,
   "i18n": {
     "sourceLang": "en",
     "sourceHash": "d2368d1f6ab0d9f6",

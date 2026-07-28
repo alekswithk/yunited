@@ -72,15 +72,26 @@ const translations = (fields) =>
 // silently ignored — the whole point of validating hand-edited JSON.
 export const eventSchema = z
   .object({
-    id: z.string().min(1, "is required"),
+    // ONLY title, description and image are required. Everything else can be
+    // left blank in the CMS and simply does not render — see EventCard. The one
+    // exception is `date`, which falls back to the localized "date to be
+    // announced" because an event card with no date at all reads as a mistake.
+    //
+    // `id` is optional because the board no longer types one: the CMS derives
+    // the filename from the title, and content.js reads the id back off the
+    // filename when the file does not carry one. Files that DO carry an id
+    // still must match their filename (checked in content.js). Nothing user-
+    // facing depends on it — there is no per-event page — so it is an internal
+    // key, not part of the board's edit surface.
+    id: optional(z.string().min(1)),
     title: z.string().min(1, "is required"),
     // null / blank / omitted date means "TBA" and renders as an upcoming card.
     date: optional(isoDate),
     time: optional(time24),
-    // Blank/omitted means "venue TBA", exactly as for `date` above. Previously
-    // required, which pushed the board into typing "To be announced" — English
-    // text sitting in a field that is deliberately never translated, so it
-    // showed up untranslated on every localized page.
+    // Blank/omitted means the line is simply omitted from the card. It was
+    // previously required, which pushed the board into typing "To be announced"
+    // — English text sitting in a field that is deliberately never translated,
+    // so it showed up untranslated on every localized page.
     location: optional(z.string().min(1)),
     description: z.string().min(1, "is required"),
     image: imagePath,

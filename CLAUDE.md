@@ -14,11 +14,12 @@ npm run dev        # local preview at http://localhost:4321
 npm run build      # writes the finished static site to dist/
 npm run preview    # serve the built dist/ locally
 npm run check      # astro check (type/diagnostics); must be 0 errors AND 0 hints
-npm test           # node:test unit tests for src/lib (no framework, no network)
+npm test           # node:test unit tests for src/lib and worker/ (no framework, no network)
 npm run check:dist # post-build assertions on dist/ (CSP-inline-free, brand spelling)
+npm run admin:dev  # wrangler dev — the admin panel + its Worker on :8787
 ```
 
-**Tests cover `src/lib` only, and that is deliberate.** Pages and components are verified by building them; `src/lib/events.js` is the one module whose bugs are *invisible* — get the past/upcoming boundary or the sort wrong and every command still passes while the events page shows the wrong thing. `src/lib/events.test.js` uses `node:test` (built in, no framework, no new dependency) and injects `now` so the assertions do not rot. Add tests there when you add logic to `src/lib`; don't add a test runner for the rest.
+**Tests cover `src/lib` and `worker/` only, and that is deliberate.** Pages and components are verified by building them. What gets tested is the code whose bugs are *invisible*: get the past/upcoming boundary in `src/lib/events.js` wrong, or the blank-value coercion in `worker/lib.js`, and every command still passes while the site shows the wrong thing or the panel commits something the next build rejects. Both use `node:test` (built in, no framework, no new dependency) and inject `now` so the assertions do not rot. Add tests there when you add logic to either; don't add a test runner for the rest.
 
 "Verifying a change" means `npm test`, `npm run build`, `npm run check` and `npm run check:dist` all pass — that is exactly what CI runs — and, for content or rendering changes, the relevant text appears in the built HTML (e.g. `grep "Meet & Greet" dist/events.html`).
 
@@ -26,11 +27,13 @@ npm run check:dist # post-build assertions on dist/ (CSP-inline-free, brand spel
 
 Cloudflare builds the repo with `npm run build` and serves `dist/` (`wrangler.jsonc` sets `assets.directory: "./dist"`). The build command must be configured in the Cloudflare Workers Builds settings — it is not in the repo. `public/_headers` carries the CSP and cache rules and is copied verbatim into `dist/`.
 
+The admin Worker (`worker/`) is part of the **same** Worker: `wrangler.jsonc` sets `main: "worker/index.js"` and `assets.run_worker_first: ["/admin/api/*"]`, so only those paths invoke code and everything else is served statically exactly as before. It deploys with the site — there is no second deploy. Its `GITHUB_TOKEN` is an encrypted Worker secret set out-of-band; see [`worker/README.md`](worker/README.md).
+
 ## Architecture
 
-The load-bearing idea: **content is authored as JSON and rendered to static HTML at build time** — there is no client-side data fetching, no database, no CMS.
+The load-bearing idea: **content is authored as JSON and rendered to static HTML at build time** — there is no client-side data fetching and no database. The one piece of server-side code is the admin API (`worker/`), which writes those JSON files; it runs when the board saves, never when a visitor loads a page.
 
-- `content/events/*.json` and `content/members/*.json` are the entire content layer — **one JSON file per entry** (an event's filename is its `id`; a member's is a slug of its role). The board edits these through the CMS (see below) or by hand; **this is the primary edit surface and each entry's field shape must stay stable.** Do not rename fields without cause.
+- `content/events/*.json` and `content/members/*.json` are the entire content layer — **one JSON file per entry** (an event's filename is its `id`; a member's is a slug of its role). The board edits these through `/admin` (see below) or by hand; **this is the primary edit surface and each entry's field shape must stay stable.** Do not rename fields without cause.
 - `src/lib/events.js` / `src/lib/members.js` hold the pure logic (date parsing, upcoming-vs-past split, TBA handling, placeholder detection) that runs at **build time**. This logic was previously client-side JS; keep it framework-free. Same-date events are ordered by `time` as a deterministic tiebreaker; members render in `order` order (lowest = the large lead card).
 - `src/pages/*.astro` import the content through `src/lib/content.js` (never the raw JSON) and map it through components in `src/components/` (`EventCard`, `MemberLead`, `MemberRow`, `Portrait`). Astro auto-escapes interpolated values.
 - `src/lib/content.js` globs every entry file, validates each against the Zod schemas in `src/lib/schema.js` at **build time**, and additionally checks event `id`↔filename match, id uniqueness and member `order` uniqueness. A missing/misspelled field, a non-date, a bad RSVP URL etc. fails `npm run build` with a message naming the file and field. `schema.js` is the authoritative description of the board's edit surface — keep it in lockstep with the JSON, and update it (not just the JSON) when the shape must change.
@@ -43,16 +46,20 @@ The load-bearing idea: **content is authored as JSON and rendered to static HTML
 - **URLs are extensionless.** Internal links use `/about`, not `/about.html`; `astro.config.mjs` sets `build.format: 'file'` so Cloudflare serves them, and the canonicals match. Keep new links extensionless.
 - **Image paths in JSON are relative to `src/`.** A photo at `src/images/events/x.webp` is referenced in the JSON as `"images/events/x.webp"`. `src/lib/images.js` (`resolveImage`) maps that string to the imported asset via `import.meta.glob`, and Astro's `<Image>` optimizes it at build time — resized, 1×/2× srcset, hashed under `/_astro/`. A path with **no matching file fails the build** (this is intentional). Images live in `src/`, not `public/`, precisely so they go through the sharp pipeline.
 
-  `scripts/mirror-media.mjs` (part of `prebuild`/`predev`) additionally copies `src/images/**` to `public/images/**`, gitignored, so the originals are *also* served at `/images/…`. **This is only for the CMS**, which previews an image by fetching its public URL — without it every thumbnail in the admin panel is a broken image. No page ever links there; pages use the hashed `/_astro/` copies, so no visitor downloads the originals. Because the content JSON stores paths relative to `src/` (`images/events/x.webp`), mirroring the tree as-is makes that same string work verbatim as a URL — don't flatten it. `npm run check:dist` asserts every content image resolves.
+  `scripts/mirror-media.mjs` (part of `prebuild`/`predev`) additionally copies `src/images/**` to `public/images/**`, gitignored, so the originals are *also* served at `/images/…`. **This is only for `/admin`**, which shows each entry's current photo by fetching its public URL — without it every thumbnail in the admin panel is a broken image. No page ever links there; pages use the hashed `/_astro/` copies, so no visitor downloads the originals. Because the content JSON stores paths relative to `src/` (`images/events/x.webp`), mirroring the tree as-is makes that same string work verbatim as a URL — don't flatten it. `npm run check:dist` asserts every content image resolves.
 - **The CSP in `public/_headers` carries no `'unsafe-inline'`, and two build settings are what hold that up.** `astro.config.mjs` sets `inlineStylesheets: 'never'` (no `<style>` in the page) and `vite.build.assetsInlineLimit: 0` (every `<script>` is emitted as a hashed file under `/_astro` instead of being inlined). Don't flip either. The same rule applies to what you author: **no `style="…"` attributes and no `<script is:inline>`** — put the declarations in `global.css` and let Astro bundle the script. Inline `<script type="application/ld+json">` is fine: a non-JS script type is a data block, never executed, so `script-src` never applies to it. Neither `astro build` nor `astro check` fails if you break this — the page just silently stops working in a browser that enforces the header — so **`npm run check:dist` asserts it on the built output** and CI runs it on every PR. Run it after touching markup, or after changing anything in `astro.config.mjs`.
 
-### CMS
+### The admin panel
 
-The board edits content through **Sveltia CMS** at `/admin` — a Git-based CMS: every save is a commit to this repo, no database. Setup and usage live in [`docs/CMS.md`](docs/CMS.md).
+The board edits content at `/admin`: a first-party form plus a Cloudflare Worker that commits to this repo. Every save is a commit; no database. Board-facing usage is [`docs/ADMIN.md`](docs/ADMIN.md) and the in-page help panel; the maintainer reference is **[`worker/README.md`](worker/README.md)** — read that before changing anything under `worker/`.
 
-- `public/admin/config.yml` describes the two collections and must stay in sync with `src/lib/schema.js` (widgets ↔ Zod). `public/admin/index.html` loads the CMS bundle.
-- The Sveltia bundle is **vendored at build time** by `scripts/vendor-cms.mjs` (the npm `prebuild` step) from the pinned `@sveltia/cms` devDependency into `public/admin/sveltia-cms.js` (gitignored, never committed) — so it's served first-party under `script-src 'self'`, not from a CDN.
-- `/admin` has its **own CSP** in `public/_headers` (it needs the GitHub API); the `! Content-Security-Policy` line drops the global policy for that path so the two aren't intersected. The public site's strict CSP is unchanged.
+It replaced **Sveltia CMS** in the same change. The history is worth knowing, because two of the reasons are architectural:
+
+- **`worker/collections.js` is the single description of the form.** The page fetches it from `GET /admin/api/state` and renders whatever it is given, and the Worker validates submissions with the actual Zod schemas from `src/lib/schema.js`. Sveltia's `config.yml` was a *second* description that had to be hand-synced with the schema, and drift was invisible until a save failed or a build broke — which is exactly what happened: Sveltia wrote `image: "/images/…"` (its `public_folder` prepended) where the schema requires no leading slash, and four events silently failed the build. **Never reintroduce a second copy of the field list.** To add a field: change `schema.js`, add the entry to `collections.js`, run `npm test`.
+- **Access is Cloudflare's job, not this codebase's.** A Cloudflare Access application fronts `yunited.ch/admin` (and therefore `/admin/api/*`, which is why the API lives under that prefix). Board membership is an email allow-list in the Zero Trust dashboard — no GitHub account, no repo collaborator, no code change. **There is no login code here and there should not be one.** `worker/access.js` only reads the forwarded identity, plus an optional signature check.
+- The GitHub token is an encrypted Worker secret and **never reaches the browser**; the panel talks only to `/admin/api/*` on its own origin.
+- `/admin` has its **own CSP** in `public/_headers`, as strict as the public site's (the `! Content-Security-Policy` line drops the global policy for that path so the two aren't intersected — Cloudflare would otherwise combine them). It differs only in allowing `blob:` images, for the local photo preview. `npm run check:dist` polices `/admin`'s markup like every other page, and additionally fails if anything under `public/admin/` references an off-site origin.
+- **An entry's `i18n` block must survive every save** — see `carry` in `collections.js`. A Git-based editor writes back only the fields it knows about, so omitting it silently strips every translation.
 
 ### i18n
 
@@ -69,18 +76,20 @@ Pages live under `src/pages/[...locale]/` — a **rest parameter that matches ze
   (`npm run translate:content`) detects what language the board wrote in, fills the
   rest, and re-translates an entry when its hash changes;
   `.github/workflows/translate-content.yml` runs it automatically on every push to
-  `content/**` (i.e. every CMS save). **Only an event's `title`/`description` are
-  translated** — its `location` is a venue name or street address and translating it
-  would corrupt directions. The `i18n` block *must* stay declared in
-  `public/admin/config.yml`: a Git-based CMS writes back only the fields it knows, so
-  omitting it makes every board save silently strip the translations.
+  `content/**` (i.e. every save from `/admin`). **Only an event's `title`/`description`
+  are translated** — its `location` is a venue name or street address and translating it
+  would corrupt directions. The `i18n` block *must* stay listed in the events
+  collection's `carry` array in `worker/collections.js`: an editor that commits back
+  only the fields it knows about would otherwise strip the translations on every board
+  save. `worker/collections.test.js` asserts it is there.
 - **`content/members/` is never translated, and has no `i18n` block at all.** A board
   member's name, role and bio render identically on every language's page. Roles are
   used in English at HSG, and a bio is a person describing themselves in their own
   words — machine translation mangles that (it once turned the bio "krastavac" into
   "Küstenfischer" on the German page). `memberSchema` is `.strict()` and declares no
-  `i18n`, so reintroducing one fails the build; keep it out of `config.yml` and out
-  of `TRANSLATABLE` in `scripts/translate-content.mjs` too.
+  `i18n`, so reintroducing one fails the build; keep it out of the members collection's
+  `carry` array in `worker/collections.js` and out of `TRANSLATABLE` in
+  `scripts/translate-content.mjs` too. The same goes for partners.
 - **Translations are filled offline, never at build time.** `scripts/translate.mjs` (`npm run translate`, gated on `DEEPL_API_KEY` — put it in a gitignored `.env`, copied from `.env.example`; `npm run translate` loads it automatically) reads `en.json` and tops up the missing keys in `de`/`bcs`/`sr` via DeepL — `de.json`←`DE`, `sr.json`←`SR` (Ekavian), `bcs.json`←`HR` (Ijekavian, shared by bs+hr). It preserves existing (hand-checked) translations unless run with `--force`, protects brand terms, and keeps tags intact. The build itself stays hermetic; you run this by hand, review the output, and commit the JSON.
 - Serbian/Croatian/Bosnian share the one `bcs` dictionary but keep separate locale codes and URL prefixes, so no community is folded into another's label. They can diverge later by giving one its own dictionary.
 - **`complete: false` gates a locale**: its pages are generated (reviewable at real URLs) but marked `noindex`, excluded from the sitemap (`isIndexable` in `astro.config.mjs`) and from `hreflang`, and hidden from the language switcher. Flip to `true` only when that locale's copy is genuinely finished — that one flag publishes it everywhere.
@@ -89,4 +98,4 @@ Pages live under `src/pages/[...locale]/` — a **rest parameter that matches ze
 
 **[`PLAN.md`](PLAN.md) is the living status tracker** — the repo map, what's done (with PR numbers), pending human actions, and the ordered roadmap. Read it first for orientation, and tick items there in the same PR that ships them.
 
-A phased improvement plan exists at `~/.claude/plans/compare-this-static-website-cryptic-key.md`. The Astro migration was Phase 1. Known deferred work: generated sitemap with hreflang, English + BCS i18n, a partners/recruiting funnel, and CSP/CI hardening. (Done: Phase 1 Astro migration, image optimization, generated sitemap, Zod content schemas, and the Sveltia Git-based CMS.) Check that plan before large structural changes so work aligns with the intended direction.
+A phased improvement plan exists at `~/.claude/plans/compare-this-static-website-cryptic-key.md`. The Astro migration was Phase 1. Known deferred work: generated sitemap with hreflang, English + BCS i18n, a partners/recruiting funnel, and CSP/CI hardening. (Done: Phase 1 Astro migration, image optimization, generated sitemap, Zod content schemas, and the `/admin` panel — first Sveltia, now the first-party form + Worker that replaced it.) Check that plan before large structural changes so work aligns with the intended direction.

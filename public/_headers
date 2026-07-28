@@ -41,15 +41,15 @@
   Cache-Control: public, max-age=2592000, immutable
 
 # The unoptimized originals, mirrored from src/images by scripts/mirror-media.mjs
-# purely so the CMS can preview them (see the comment at the top of that script).
-# NO PAGE LINKS HERE — pages use the hashed /_astro/ copies — so these are only
-# ever fetched by the admin panel.
+# purely so /admin can show a thumbnail of each entry's current photo (see the
+# comment at the top of that script). NO PAGE LINKS HERE — pages use the hashed
+# /_astro/ copies — so these are only ever fetched by the admin panel.
 #
 # Deliberately NOT immutable, unlike /_astro/: these filenames carry no content
 # hash, so a board member re-uploading a photo under the same name reuses the
-# URL. A long cache would show them their old picture in the CMS and leave them
-# wondering whether the upload worked. Five minutes is enough to keep the asset
-# browser snappy without lying about what was just uploaded.
+# URL. A long cache would show them their old picture in the admin panel and
+# leave them wondering whether the upload worked. Five minutes is enough to keep
+# the list snappy without lying about what was just uploaded.
 #
 # noindex because they duplicate images already served, better, from /_astro/ —
 # there is nothing to gain from search engines indexing both copies.
@@ -57,31 +57,29 @@
   Cache-Control: public, max-age=300
   X-Robots-Tag: noindex
 
-# The CMS admin app (Sveltia SPA) needs a looser policy than the public site: it
-# talks to the GitHub API, runs a bundled single-page app, and pulls its icon font
-# (Material Symbols) plus two UI fonts as .woff2 files from a CDN. Without the
-# font origin allowed, the icon ligatures never resolve and the toolbar renders
-# raw text like "cloud_upload".
+# The admin panel (public/admin/*) is our own first-party HTML/CSS/JS, so its
+# policy is as strict as the public site's — no 'unsafe-inline' anywhere, all
+# scripts and styles from 'self'. It differs from the global /* policy in
+# exactly two ways, both deliberate:
 #
-# THE FONT ORIGIN IS NOT A CONSTANT — it belongs to Sveltia, not to us, and it
-# has moved once already. Up to @sveltia/cms 0.172 the fonts came from Google
-# Fonts (fonts.googleapis.com for the CSS, fonts.gstatic.com for the files); as
-# of 0.174 they are Fontsource .woff2 files served from cdn.jsdelivr.net, with no
-# stylesheet involved, so style-src no longer needs a font origin at all. Both
-# Google origins are now dead and have been removed rather than left to rot.
+#   img-src … blob:  — the photo picker shows a local preview of the file you
+#                      just chose, before it is uploaded, via createObjectURL().
+#   no analytics     — the beacon and the contact-form origins have no business
+#                      on an authenticated page, so they are simply left out.
 #
-# So do not hand-maintain this: `npm run check:dist` reads the font URLs out of
-# the vendored bundle and fails the build if this line does not allow them. If it
-# ever complains after a @sveltia/cms bump, the font host moved again — put the
-# new origin in font-src and delete the old one.
+# Everything the panel talks to is same-origin: the API lives at /admin/api/*
+# on this very Worker, so connect-src 'self' covers it. It never contacts the
+# GitHub API from the browser — the Worker holds the token and does that server
+# side (see worker/README.md), which is the whole reason this policy can be
+# tight where the old Sveltia one had to allow api.github.com.
 #
-# Scoped to /admin only; the public site keeps its strict, fully self-hosted-font
-# CSP. Cloudflare COMBINES a repeated header across matching rules (intersecting
-# the two CSPs, which would block the CMS), so "! Content-Security-Policy" first
-# drops the global /* policy, then we set this admin-only one.
-# If something still fails with a CSP violation in the browser console, add the
-# named origin here (see docs/CMS.md).
+# Cloudflare COMBINES a repeated header across matching rules (it would
+# INTERSECT the two policies), so "! Content-Security-Policy" first drops the
+# global /* policy, then we set this admin-only one.
 /admin/*
   ! Content-Security-Policy
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.githubusercontent.com https://avatars.githubusercontent.com; font-src 'self' data: https://cdn.jsdelivr.net; connect-src 'self' https://api.github.com https://*.githubusercontent.com https://*.workers.dev; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self' https://github.com
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'
   X-Robots-Tag: noindex
+  # The panel reflects live repo state and posts writes; never let anything
+  # between here and the browser hold on to a response.
+  Cache-Control: no-store

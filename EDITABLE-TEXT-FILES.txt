@@ -80,5 +80,6 @@ NOT EDITED BY HAND
 
 EASIER OPTION FOR THE BOARD
 ---------------------------
-  https://yunited.ch/admin  — same events + members, as a form. Every save is a
-  commit. See docs/CMS.md.
+  https://yunited.ch/admin  — same events + members + partners, as a form. Sign
+  in with your email; every save is a commit. The page has a "?" button with the
+  full walkthrough. See docs/ADMIN.md.

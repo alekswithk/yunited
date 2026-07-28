@@ -4,11 +4,215 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex" />
-    <title>YUnited CMS</title>
+    <title>YUnited — Admin</title>
+    <link rel="icon" href="/assets/yunited-favicon.svg" type="image/svg+xml" />
+
+    <!--
+      The admin panel. Plain HTML, one stylesheet, one script — no framework, no
+      build step, no dependency to keep current. It is copied verbatim from
+      public/ into dist/ by Astro, exactly like _headers and the fonts.
+
+      NOTHING IS INLINE. No style="…" attribute, no <script> without a src. The
+      /admin Content-Security-Policy has no 'unsafe-inline' in either script-src
+      or style-src (see public/_headers), so an inline block would silently stop
+      working in the browser while every build stayed green — which is the whole
+      reason `npm run check:dist` asserts it on the built output.
+
+      The form itself is NOT written out below. It is generated at runtime from
+      what GET /admin/api/state returns, so the fields the board sees are the
+      fields the Worker validates, and the two cannot drift. See
+      worker/collections.js.
+    -->
+    <link rel="stylesheet" href="/admin/admin.css" />
   </head>
+
   <body>
-    <!-- Sveltia CMS. The bundle is vendored to this folder at build time by
-         scripts/vendor-cms.mjs, so it loads from our own origin (no CDN). -->
-    <script src="/admin/sveltia-cms.js"></script>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="masthead">
+      <div class="masthead-inner">
+        <a class="masthead-brand" href="/" title="Back to yunited.ch">
+          <img src="/assets/yunited-logo.svg" alt="YUnited" width="120" height="45" />
+        </a>
+        <p class="masthead-title">Admin</p>
+        <p class="masthead-user" id="signed-in-as" hidden></p>
+      </div>
+    </header>
+
+    <main class="shell" id="main">
+      <!-- Success / failure after every action. Announced to screen readers. -->
+      <p class="banner" id="banner" role="status" aria-live="polite" hidden></p>
+
+      <!-- ============ LIST VIEW ============ -->
+      <section class="view" id="view-list">
+        <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+
+        <div class="list-head">
+          <h1 class="list-title" id="list-title">Events</h1>
+          <button class="btn btn-primary" id="add-btn" type="button">Add event</button>
+        </div>
+
+        <p class="loading" id="loading">Loading the current content from GitHub…</p>
+        <ul class="entries" id="entries"></ul>
+        <p class="empty" id="empty" hidden>Nothing here yet. Use the button above to add the first one.</p>
+      </section>
+
+      <!-- ============ EDIT VIEW ============ -->
+      <section class="view" id="view-edit" hidden>
+        <button class="back" id="back-btn" type="button">← Back to the list</button>
+        <h1 class="form-title" id="form-title">Add event</h1>
+
+        <form class="entry-form" id="entry-form" novalidate>
+          <!-- Fields are inserted here from the API's field definitions. -->
+          <div id="fields"></div>
+
+          <div class="field">
+            <label class="label" for="image-input" id="image-label">Photo</label>
+            <p class="help" id="image-help"></p>
+
+            <div class="photo">
+              <img class="photo-preview" id="photo-preview" alt="" hidden />
+              <div class="photo-controls">
+                <input class="file" type="file" id="image-input" name="image" />
+                <p class="photo-note" id="photo-note"></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-primary" id="save-btn" type="submit">Save</button>
+            <button class="btn" id="cancel-btn" type="button">Cancel</button>
+            <button class="btn btn-danger" id="delete-btn" type="button" hidden>Delete…</button>
+          </div>
+
+          <p class="form-error" id="form-error" role="alert" hidden></p>
+          <p class="form-note">
+            Saving commits the change to GitHub and the site rebuilds itself.
+            Give it a minute or two before checking yunited.ch.
+          </p>
+        </form>
+      </section>
+    </main>
+
+    <!-- ============ HELP ============ -->
+    <button class="help-toggle" id="help-toggle" type="button" aria-expanded="false" aria-controls="help-panel">
+      <span aria-hidden="true">?</span>
+      <span class="visually-hidden">How to use this page</span>
+    </button>
+
+    <aside class="notepad" id="help-panel" hidden aria-labelledby="help-heading">
+      <div class="notepad-inner">
+        <button class="notepad-close" id="help-close" type="button">
+          <span aria-hidden="true">×</span><span class="visually-hidden">Close</span>
+        </button>
+
+        <h2 id="help-heading">How to use this page</h2>
+
+        <p class="notepad-lead">
+          Everything you change here is saved straight to the website. There is
+          nothing to install and nothing to log into beyond the Cloudflare screen
+          you already passed.
+        </p>
+
+        <h3>Adding an event</h3>
+        <ol>
+          <li>Make sure the <strong>Events</strong> tab is selected, then press <strong>Add event</strong>.</li>
+          <li>Fill in the fields — only three are required:
+            <ul>
+              <li><strong>Title</strong> <em>(required)</em> — the name on the card. Example: <em>Casino Night</em>.</li>
+              <li><strong>Description</strong> <em>(required)</em> — a sentence or three: what it is, who it's for, anything to bring. Example: <em>“Roulette, blackjack and a dress code. Chips on arrival, prizes at midnight.”</em></li>
+              <li><strong>Photo</strong> <em>(required)</em> — a landscape (wide) picture; see <em>Photos</em> below.</li>
+              <li><strong>Date</strong> <em>(optional)</em> — leave it empty if it isn't fixed. The event then appears at the top of Upcoming as “date to be announced”.</li>
+              <li><strong>Start time</strong> <em>(optional)</em> — e.g. <em>20:30</em>. Leave empty if there's no fixed start.</li>
+              <li><strong>Location</strong> <em>(optional)</em> — venue or address, e.g. <em>Déjà Vu Bar, St. Gallen</em>. If you leave it empty the card simply doesn't show a location line.</li>
+              <li><strong>RSVP / ticket link</strong> <em>(optional)</em> — paste the whole address including the <code>https://</code>. Leave empty and the card shows no button.</li>
+            </ul>
+          </li>
+          <li>Press <strong>Save</strong>. You'll get a green confirmation, or a message telling you exactly what's missing.</li>
+        </ol>
+
+        <p class="notepad-callout">
+          <strong>You never mark an event as “past”.</strong> The website compares
+          the date to today and files it under Upcoming or Past by itself. An
+          event with no date is always treated as upcoming.
+        </p>
+
+        <h3>Editing or removing an event</h3>
+        <ul>
+          <li><strong>Edit:</strong> press <strong>Edit</strong> on the event in the list, change what you need, press <strong>Save</strong>. Leaving the photo control alone keeps the current photo.</li>
+          <li><strong>Remove:</strong> open it with <strong>Edit</strong> and press <strong>Delete…</strong> at the bottom. You'll be asked to confirm. This removes the event and its photo from the site for good — past events are worth keeping, so only delete something added by mistake.</li>
+        </ul>
+
+        <h3>Board members</h3>
+        <p>
+          Same idea, under the <strong>Board members</strong> tab.
+        </p>
+        <ul>
+          <li><strong>Role</strong> <em>(required)</em> — e.g. <em>Head of Events</em>. Roles are used in English at HSG, so write it in English.</li>
+          <li><strong>Order</strong> <em>(required)</em> — <em>1</em> is the President and gets the big card, then 2, 3, … Every member needs a different number; if you swap two people around, change both.</li>
+          <li><strong>Name</strong> <em>(optional)</em> — leave it empty if the seat is filled but not announced yet; the card then says “To be announced”.</li>
+          <li><strong>Short bio</strong> <em>(optional)</em> — a line or two in their own words.</li>
+          <li><strong>Portrait</strong> <em>(optional)</em> — without one the card shows their initial.</li>
+        </ul>
+        <p>
+          A board member's name, role and bio appear <strong>exactly as you type
+          them on every language's page</strong>. They are never machine-translated
+          — that is deliberate, so nobody's own words get mangled.
+        </p>
+
+        <h3>Partners</h3>
+        <p>
+          For companies that support the club. Name and order are required; the
+          website link and the logo are optional. The logo strip on the Partners
+          page only appears once there is at least one partner here.
+        </p>
+
+        <h3>Photos</h3>
+        <ul>
+          <li><strong>Format:</strong> JPG, PNG or WebP. <strong>iPhone photos are often HEIC and won't work</strong> — share or export the photo first and it saves as JPEG.</li>
+          <li><strong>Size:</strong> under 1 MB is ideal; 5 MB is the hard limit. Bigger files just make saving slow — the website shrinks them for you anyway.</li>
+          <li><strong>Shape:</strong> events want a landscape (wide) picture, board portraits want something square-ish.</li>
+          <li><strong>Where they go:</strong> straight into the website's own image folder, renamed to match the entry. You don't need to name the file anything in particular. The site then makes its own resized, sharpened copies — you always upload the original.</li>
+          <li>Uploading a new photo for an entry replaces the old one.</li>
+        </ul>
+
+        <h3>After you save</h3>
+        <p>
+          Saving writes the change to the club's GitHub repository, which starts a
+          rebuild of the website automatically. Reckon on:
+        </p>
+        <ul>
+          <li><strong>1–2 minutes</strong> for the change to be live on yunited.ch in English.</li>
+          <li><strong>Up to about 5 minutes</strong> for the German, Bosnian, Croatian and Serbian versions of an event's title and description — those are translated automatically after you save, which triggers a second rebuild. You don't have to do anything.</li>
+        </ul>
+        <p>
+          If the page still looks old after that, refresh it properly
+          (<kbd>Shift</kbd> + reload).
+        </p>
+
+        <h3>If something goes wrong</h3>
+        <ul>
+          <li>Nothing is ever half-saved: a change either goes through completely or not at all.</li>
+          <li>If you get a red message, it says what to fix — usually an empty required field or a photo in the wrong format.</li>
+          <li>If two of you save at the same moment, the second person is asked to reload and redo their edit. Nobody's work is overwritten.</li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Confirmation before a delete. A <dialog> so it's focus-trapped and
+         escapable, rather than a browser confirm() that can't be styled. -->
+    <dialog class="confirm" id="confirm-dialog" aria-labelledby="confirm-title">
+      <form method="dialog">
+        <h2 id="confirm-title">Delete this entry?</h2>
+        <p id="confirm-body"></p>
+        <p class="confirm-warning">This cannot be undone from here.</p>
+        <div class="confirm-actions">
+          <button class="btn" value="cancel" type="submit">Keep it</button>
+          <button class="btn btn-danger" value="delete" type="submit">Delete</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="/admin/admin.js"></script>
   </body>
 </html>
