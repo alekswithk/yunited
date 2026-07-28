@@ -13,11 +13,14 @@ when a step ships, tick it here in the same PR.
   & usage → [`docs/CMS.md`](docs/CMS.md). This file is the *tracker/index*; those
   are the *reference*.
 
-_Last updated: 2026-07-28 (**all five locales are live** — `bs`/`hr`/`sr` flipped
-to `complete: true`, reviewed continuously rather than gated; Serbian is now
-consistently **Latin**, enforced in the translation pipeline itself; `/partners`
-pitch page merged (#36). Earlier: CSP hardened — no `'unsafe-inline'` left on the
-public site; board members no longer machine-translated; 404 now actually served)._
+_Last updated: 2026-07-28 (#36–#40 in one session. **All five locales are live** —
+`bs`/`hr`/`sr` published, reviewed continuously rather than gated; Serbian is now
+consistently **Latin**, enforced in the translation pipeline itself. `/partners`
+shipped with an empty `content/partners/` collection behind it. **Guardrails**:
+unit tests for the event logic, a built-output CSP assertion, a stale-calendar
+warning, `astro check` at 0/0/0. **Dependencies current** — Astro 7, Zod 4,
+0 vulnerabilities (this fixed 4 CVEs). The one open item is the board's: the 26/27
+calendar, see §3.)_
 
 ---
 
@@ -41,6 +44,7 @@ src/
     content.js               loads + validates every content file (the choke point)
     schema.js                Zod schemas = authoritative shape of the edit surface
     events.js                upcoming/past split, date/time formatting & tiebreak
+    events.test.js           `npm test` — the only tested module; see CLAUDE.md for why
     members.js               display-name / placeholder / initial helpers
     images.js                resolveImage(): path -> optimized asset (any raster fmt/case)
   images/                  source images (go through sharp -> WebP at build)
@@ -52,12 +56,13 @@ public/                    copied verbatim into dist/
   _headers                 CSP + cache rules; scoped /admin CSP; /_astro immutable
   assets/                  logos, favicons, icons, motif, fonts/ (self-hosted woff2)
   robots.txt, site.webmanifest
+scripts/check-dist.mjs     npm `check:dist`: post-build CSP + brand assertions on dist/
 scripts/vendor-cms.mjs     npm `prebuild`: copies Sveltia bundle into public/admin/
 scripts/translate.mjs      npm `translate`: offline DeepL fill of i18n dictionaries (not in build)
 scripts/translate-content.mjs  npm `translate:content`: fills the i18n block in content/**.json
 scripts/lib/deepl.mjs      shared DeepL plumbing for both scripts (one PROTECT list)
-.github/workflows/         ci.yml (build+check on PRs); translate-content.yml (auto-translate
-                           content on push to main — needs the DEEPL_API_KEY secret)
+.github/workflows/         ci.yml (test+build+check+check:dist on PRs); translate-content.yml
+                           (auto-translate content on push to main — needs DEEPL_API_KEY)
 astro.config.mjs           site, trailingSlash, build.format:'file', sitemap integration,
                            and the two settings that keep the CSP inline-free
                            (inlineStylesheets:'never', vite assetsInlineLimit:0)
@@ -85,6 +90,13 @@ extensionless; events are never marked "past" by hand; shared chrome lives once 
 | #19 | **CI on every PR** — `npm ci` + `build` + `check` (Node 22); catches bad content before merge |
 | #30 | Table-of-contents rail: legible over dark sections, bound to the content rather than the viewport |
 | #33 | Board members no longer machine-translated (`memberSchema` forbids `i18n`); **404 actually served** (`not_found_handling`) with no dead `/de/404` hreflang; visible focus ring, real form-error announcement, no sideways scroll on narrow phones |
+| #34 | **CSP hardening** — `'unsafe-inline'` dropped from `script-src` and `style-src` |
+| #35 | German copy fixes ("an der HSG"); karaoke rather than casino in the shared copy |
+| #36 | **`/partners` pitch page**, localized like every other route, linked from nav + footer |
+| #37 | **Serbian written in Latin**, enforced in the DeepL pipeline itself (`toSerbianLatin`); **`bs`/`hr`/`sr` published** (`complete: true`) — sitemap 14 → 40 locs; brand capitalization audited across all four dictionaries |
+| #38 | **Guardrails**: `npm test` (14 cases over `splitEvents`/`formatEventDate`), `npm run check:dist` (asserts the CSP invariants on built output), a build-time warning when the calendar is empty, and `astro check` down to **0/0/0** |
+| #39 | **`content/partners/` collection** — schema, CMS collection, and a logo strip that renders only once there is a partner |
+| #40 | **Astro 5 → 7, Zod 3 → 4, TypeScript 5 → 6** — fixes 4 CVEs (high-severity libvips in `sharp <0.35.0`); AVIF uploads now work |
 
 Earlier foundation (pre-#12): Astro migration + build-time image optimization.
 
@@ -296,7 +308,8 @@ A **weekly cloud agent** ("YUnited weekly roadmap agent") runs every **Monday
 Each run it takes the **first unchecked item that is not tagged 🧑 human-led** in §4
 (or §5 if §4 is clear),
 implements it on a branch, ticks it here, opens a PR, verifies with
-`npm ci` + `build` + `check`, reviews its own diff, and **auto-merges only if CI
+`npm ci` + `test` + `build` + `check` + `check:dist` (all four, as CI does),
+reviews its own diff, and **auto-merges only if CI
 passes and nothing is contentious**. If §4 and §5 are both clear it switches to
 proposing new ideas into §4 (and does *not* merge that PR).
 
@@ -305,6 +318,12 @@ proposing new ideas into §4 (and does *not* merge that PR).
 `src/lib/schema.js`, dependency files, or any deletion/rename under `content/` —
 those it leaves open for a human. It never pushes to `main`, never weakens CI or
 the schema to go green, and does one item per run.
+
+**Nor may it weaken the guardrails to go green.** `scripts/check-dist.mjs`,
+`src/lib/events.test.js` and the CI steps that run them exist because the failures
+they catch are otherwise invisible. Deleting a test, narrowing an assertion or
+skipping a step is never the fix for a red build — the fix is the code that made
+it red.
 
 > **Keep this file accurate.** The agent decides what to do from §4/§5, so a
 > stale checkbox means it redoes finished work or skips real work.
