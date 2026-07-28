@@ -84,7 +84,7 @@ export const eventSchema = z
     location: optional(z.string().min(1)),
     description: z.string().min(1, "is required"),
     image: imagePath,
-    rsvpUrl: optional(z.string().url("must be a full URL")),
+    rsvpUrl: optional(z.url("must be a full URL")),
     // Title and description only. `location` is deliberately never translated:
     // every value is a venue name or street address ("Déja Vu Bar, St. Gallen",
     // "Zürcherstrasse 162"), and translating those corrupts directions to a
@@ -130,7 +130,7 @@ export const partnerSchema = z
   .object({
     name: z.string().min(1, "is required"),
     // Optional so a partner can be listed before its link is confirmed.
-    url: optional(z.string().url("must be a full URL, starting with https://")),
+    url: optional(z.url("must be a full URL, starting with https://")),
     // Optional so a partner can be listed before its logo arrives; the card
     // falls back to the name set in type (see partners.astro).
     logo: optional(imagePath),

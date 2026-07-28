@@ -216,6 +216,26 @@ they carry design decisions that need a person. The agent skips them.
     drift from its type), `content.js` annotates its two exports, and
     `splitEvents()` is generic so it hands back whatever it was given.
 
+- [x] **Dependencies current, 0 vulnerabilities** (2026-07-28). Astro **5 → 7**,
+      Zod **3 → 4**, TypeScript **5 → 6**, plus `@astrojs/check` and `@sveltia/cms`.
+      This turned out to be a **security** item, not housekeeping: `npm audit`
+      reported 4 vulnerabilities including high-severity libvips CVEs in `sharp`
+      (`<0.35.0`), reachable through the CMS image-upload path. `npm audit --omit=dev`
+      had been reporting clean, which is misleading here — Astro and sharp are
+      devDependencies but sharp still processes board uploads at build time. Now
+      sharp 0.35.3 / libvips 8.18.3 and **0 vulnerabilities** in the full tree.
+  - **TypeScript is pinned at 6.x on purpose, not out of caution.** TS 7's native
+    compiler does not expose the programmatic API `astro check` needs, so `npm run
+    check` fails outright on TS 7 — not a warning, a hard error. Upstream tracking:
+    <https://github.com/withastro/roadmap/discussions/1321>. Revisit when that lands.
+  - Zod 4 needed one change: `z.string().url()` is deprecated in favour of `z.url()`.
+    All the board-facing validation messages were checked against a deliberately
+    broken entry and come through unchanged.
+  - The CSP invariants survived the major upgrade **and were verified rather than
+    assumed** — `npm run check:dist` passes, the stylesheet is still an external
+    `/_astro` file, and the page's one script is still `src`'d. This is exactly the
+    regression that guard exists for.
+
 Deferred/among-these per the original roadmap: sitemap `hreflang` — shipped instead
 as `<link rel="alternate" hreflang>` in the page `<head>` (gated to finished locales),
 which Google treats as equivalent; no separate sitemap `hreflang` needed.
@@ -231,8 +251,12 @@ which Google treats as equivalent; no separate sitemap `hreflang` needed.
       partly wrong ("no build step"; `python3 -m http.server` preview) and nothing
       linked to it; its still-true deploy facts (push to `main` → Cloudflare, the
       dashboard-only build command, the `DEEPL_API_KEY` secret) moved into README.
-- [ ] Current `sharp` build lacks **AVIF/HEVC decode** (AV1 works). AVIF *uploads*
-      would fail; not worth acting on unless it comes up. HEIC handled via clear error.
+- [x] **AVIF uploads now work** (2026-07-28, via the Astro 7 upgrade — sharp 0.35.3 /
+      libvips 8.18.3). Verified end to end, not just from the format table: a real
+      `.avif` file dropped into `src/images/` is decoded and optimized into the build
+      like any other upload. **HEIC/HEVC is still unsupported** — libvips reports
+      `heifsave: Unsupported compression` — so the clear board-facing error in
+      `images.js` is still needed and still correct.
 - [x] **Brand capitalization is consistent everywhere** (audited 2026-07-28). Copy,
       chrome and metadata all say **YUnited**, in all four dictionaries — the same 34
       keys in each, verified, with no all-caps or lowercase drift and none lost in

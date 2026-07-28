@@ -16,13 +16,13 @@
     "translate:content": "node --env-file-if-exists=.env scripts/translate-content.mjs"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.4",
-    "@sveltia/cms": "^0.172.1",
-    "astro": "^5.13.0",
-    "typescript": "^5.9.0"
+    "@astrojs/check": "^0.9.10",
+    "@sveltia/cms": "^0.174.0",
+    "astro": "^7.1.4",
+    "typescript": "^6.0.3"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
-    "zod": "^3.25.76"
+    "zod": "^4.4.3"
   }
 }
