@@ -35,7 +35,7 @@ Note the deployed URL, e.g. `https://sveltia-cms-auth.<your-subdomain>.workers.d
 
 Go to **https://github.com/settings/applications/new** and set:
 
-- **Application name**: `Yunited CMS`
+- **Application name**: `YUnited CMS`
 - **Homepage URL**: `https://yunited.ch`
 - **Authorization callback URL**: `<WORKER_URL>/callback`
   (e.g. `https://sveltia-cms-auth.<your-subdomain>.workers.dev/callback`)
