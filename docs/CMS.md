@@ -102,10 +102,18 @@ Notes for editors:
 - **Update the CMS**: bump `@sveltia/cms` in `package.json` (`npm i -D @sveltia/cms@latest`)
   and commit. The bundle is re-vendored into `/admin` at build time by
   `scripts/vendor-cms.mjs` (the built file is gitignored, never committed).
+  **After a bump, run `npm run build && npm run check:dist`** — see the font note below.
 - **CSP**: `/admin` has its own Content-Security-Policy in [`public/_headers`](../public/_headers).
   If something fails and the browser console shows a CSP violation naming an origin,
   add that origin to the `/admin/*` policy. In particular, if you host the worker
-  on a **custom domain** (not `*.workers.dev`), add it to `connect-src`. Sveltia's
-  toolbar icons and fonts come from Google Fonts, so `fonts.googleapis.com`
-  (style-src) and `fonts.gstatic.com` (font-src) are allowed there — without them
-  the icons show as raw text like `cloud_upload`.
+  on a **custom domain** (not `*.workers.dev`), add it to `connect-src`.
+- **If the toolbar icons render as words** (`cloud_upload`, `delete`, `save`) the
+  icon font is being blocked. Sveltia loads Material Symbols as a `.woff2` from a
+  CDN, and **which CDN is Sveltia's choice, not ours** — it has moved once already
+  (Google Fonts up to 0.172, then Fontsource on `cdn.jsdelivr.net` from 0.174, at
+  which point the icons broke again with no change to any file in this repo).
+
+  You should not have to notice this by eye: `npm run check:dist` reads the font
+  URLs out of the vendored bundle and fails the build if the `/admin` `font-src`
+  does not allow them, naming the origin to add. If it complains after a CMS bump,
+  put the origin it names into `font-src` and delete the one it no longer lists.
