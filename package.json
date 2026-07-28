@@ -4,9 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node scripts/vendor-cms.mjs && node scripts/mirror-media.mjs",
     "dev": "astro dev",
     "vendor:cms": "node scripts/vendor-cms.mjs",
-    "prebuild": "node scripts/vendor-cms.mjs",
+    "mirror:media": "node scripts/mirror-media.mjs",
+    "prebuild": "node scripts/vendor-cms.mjs && node scripts/mirror-media.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
