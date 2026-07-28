@@ -89,13 +89,71 @@ for (const file of htmlFiles(DIST)) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// The CMS font origin, which is Sveltia's to change and not ours.
+//
+// Sveltia loads its Material Symbols icon font as .woff2 from a CDN. If the
+// /admin font-src does not allow that origin, the font is blocked, the icon
+// ligatures never resolve, and the whole toolbar renders as literal words —
+// "cloud_upload", "delete", "save". The board sees a broken editor; the build,
+// the type-check and every other assertion here stay perfectly green.
+//
+// This already happened twice. #16 allowed Google Fonts. Then @sveltia/cms 0.174
+// moved the fonts to Fontsource on cdn.jsdelivr.net and the icons broke again —
+// a *dependency bump*, with no change to any file we wrote, silently invalidated
+// a hand-maintained line in public/_headers.
+//
+// So rather than pinning a URL that is not ours, read the font URLs out of the
+// vendored bundle and require the policy to cover them. When Sveltia moves hosts
+// again this fails loudly at build time, naming the origin to add.
+function checkCmsFontOrigins() {
+  const bundle = new URL("../public/admin/sveltia-cms.js", import.meta.url).pathname;
+  const headers = new URL("../public/_headers", import.meta.url).pathname;
+
+  let js;
+  try {
+    js = readFileSync(bundle, "utf8");
+  } catch {
+    // Vendored by the `prebuild` step and gitignored, so it is legitimately
+    // absent if someone runs this script without building first.
+    console.warn("⚠  public/admin/sveltia-cms.js not vendored — skipping the CMS font check.");
+    console.warn("   Run `npm run vendor:cms` (or a full `npm run build`) to include it.");
+    return 0;
+  }
+
+  const fontUrls = [...js.matchAll(/https:\/\/[^"'`)\s]+\.(?:woff2?|ttf|otf)/g)].map((m) => m[0]);
+  const origins = [...new Set(fontUrls.map((u) => new URL(u).origin))];
+  if (origins.length === 0) return 0; // self-hosted or inlined: nothing to allow
+
+  // The /admin policy is the last Content-Security-Policy line in the file; the
+  // global one for /* comes first and is dropped for this path by "!".
+  const policies = readFileSync(headers, "utf8").match(/^\s*Content-Security-Policy:.*$/gm) ?? [];
+  const adminPolicy = policies.at(-1) ?? "";
+  const fontSrc = adminPolicy.match(/font-src([^;]*)/)?.[1] ?? "";
+
+  const missing = origins.filter((origin) => !fontSrc.includes(origin));
+  if (missing.length === 0) return 0;
+
+  console.error("✗ public/_headers — the /admin font-src does not allow the CMS icon font");
+  for (const origin of missing) console.error(`    missing: ${origin}`);
+  console.error(`    font-src is currently:${fontSrc}`);
+  console.error(
+    "    Sveltia moved its font host. Add the origin above to font-src in the\n" +
+      "    /admin/* block and remove any origin no longer listed here. Left as is,\n" +
+      "    the CMS toolbar renders as raw text like \"cloud_upload\".",
+  );
+  return missing.length;
+}
+
+failures += checkCmsFontOrigins();
+
 if (failures > 0) {
   console.error(
-    `\n${failures} violation(s). See the comment at the top of scripts/check-dist.mjs:\n` +
+    `\n${failures} violation(s). See the comments in scripts/check-dist.mjs:\n` +
       "these break the site only in browsers that enforce the CSP, so they cannot\n" +
       "be caught by `astro build` or `astro check`.",
   );
   process.exit(1);
 }
 
-console.log("✓ dist/ is CSP-clean and on-brand");
+console.log("✓ dist/ is CSP-clean, on-brand, and the CMS font origin is allowed");

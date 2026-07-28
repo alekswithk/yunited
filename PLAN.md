@@ -84,7 +84,7 @@ extensionless; events are never marked "past" by hand; shared chrome lives once 
 | #13 | **Zod content schemas** (`lib/schema.js` + `lib/content.js`) — bad content fails the build with a clear message |
 | #14 | **Sveltia CMS at `/admin`** + content restructured to one-file-per-entry; members gained `order`; scoped `/admin` CSP; self-hosted bundle |
 | #15 | CMS **logo branding** (theme-adaptive `yunited-logo-cms.svg`) |
-| #16 | Fixed CMS toolbar icons rendering as text (allow Google Fonts in `/admin` CSP) |
+| #16 | Fixed CMS toolbar icons rendering as text (allow Google Fonts in `/admin` CSP) — *regressed in #40 when Sveltia moved font hosts; refixed and made self-checking in #42* |
 | #17 | Image loader accepts **any raster format, any case**; HEIC gives a clear board-facing error |
 | #18 | This tracker (`PLAN.md`) + `CLAUDE.md` pointer to it |
 | #19 | **CI on every PR** — `npm ci` + `build` + `check` (Node 22); catches bad content before merge |
@@ -97,6 +97,8 @@ extensionless; events are never marked "past" by hand; shared chrome lives once 
 | #38 | **Guardrails**: `npm test` (14 cases over `splitEvents`/`formatEventDate`), `npm run check:dist` (asserts the CSP invariants on built output), a build-time warning when the calendar is empty, and `astro check` down to **0/0/0** |
 | #39 | **`content/partners/` collection** — schema, CMS collection, and a logo strip that renders only once there is a partner |
 | #40 | **Astro 5 → 7, Zod 3 → 4, TypeScript 5 → 6** — fixes 4 CVEs (high-severity libvips in `sharp <0.35.0`); AVIF uploads now work |
+| #41 | PLAN.md sync — logged #34–#40; the agent may not weaken the guardrails to go green |
+| #42 | **CMS toolbar icons fixed again** — `@sveltia/cms` 0.174 moved its fonts from Google Fonts to Fontsource on `cdn.jsdelivr.net`; `check:dist` now reads the font URLs out of the vendored bundle so this can't regress silently a third time |
 
 Earlier foundation (pre-#12): Astro migration + build-time image optimization.
 
