@@ -40,6 +40,23 @@
 /assets/fonts/*
   Cache-Control: public, max-age=2592000, immutable
 
+# The unoptimized originals, mirrored from src/images by scripts/mirror-media.mjs
+# purely so the CMS can preview them (see the comment at the top of that script).
+# NO PAGE LINKS HERE — pages use the hashed /_astro/ copies — so these are only
+# ever fetched by the admin panel.
+#
+# Deliberately NOT immutable, unlike /_astro/: these filenames carry no content
+# hash, so a board member re-uploading a photo under the same name reuses the
+# URL. A long cache would show them their old picture in the CMS and leave them
+# wondering whether the upload worked. Five minutes is enough to keep the asset
+# browser snappy without lying about what was just uploaded.
+#
+# noindex because they duplicate images already served, better, from /_astro/ —
+# there is nothing to gain from search engines indexing both copies.
+/images/*
+  Cache-Control: public, max-age=300
+  X-Robots-Tag: noindex
+
 # The CMS admin app (Sveltia SPA) needs a looser policy than the public site: it
 # talks to the GitHub API, runs a bundled single-page app, and pulls its icon font
 # (Material Symbols) plus two UI fonts as .woff2 files from a CDN. Without the

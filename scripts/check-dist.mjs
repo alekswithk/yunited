@@ -18,7 +18,7 @@
 // It runs on the BUILT output rather than the source, so it catches the problem
 // however it arrives — a hand-written attribute, a config regression, or an
 // Astro upgrade that changes inlining defaults.
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const DIST = new URL("../dist/", import.meta.url).pathname;
@@ -145,15 +145,67 @@ function checkCmsFontOrigins() {
   return missing.length;
 }
 
+// ---------------------------------------------------------------------------
+// Every content image must also be reachable at its own path.
+//
+// Pages render the optimized /_astro/ copies, so the build and every page render
+// perfectly whether or not the originals are served. But Sveltia previews an
+// image by fetching its PUBLIC URL — the literal string in the content JSON —
+// and if that 404s the admin panel shows broken thumbnails while everything else
+// stays green. That is what happened here.
+//
+// scripts/mirror-media.mjs publishes src/images -> /images to make those strings
+// resolve. Drop the mirror step from `prebuild` and nothing fails; the board just
+// silently loses their previews again. So assert it.
+function checkMediaMirror() {
+  const contentDirs = ["content/events", "content/members", "content/partners"];
+  const missing = [];
+
+  for (const dir of contentDirs) {
+    const full = new URL(`../${dir}`, import.meta.url).pathname;
+    let files;
+    try {
+      files = readdirSync(full).filter((f) => f.endsWith(".json"));
+    } catch {
+      continue; // a collection that does not exist yet
+    }
+
+    for (const file of files) {
+      const entry = JSON.parse(readFileSync(join(full, file), "utf8"));
+      // `image` on an event, `photo` on a member, `logo` on a partner.
+      for (const value of [entry.image, entry.photo, entry.logo]) {
+        if (typeof value !== "string" || value === "") continue;
+        const urlPath = "/" + value.replace(/^\/+/, "");
+        if (!existsSync(join(DIST, urlPath))) {
+          missing.push(`${dir}/${file} → ${urlPath}`);
+        }
+      }
+    }
+  }
+
+  if (missing.length === 0) return 0;
+
+  console.error("✗ dist/ — content images are not served at the path the CMS asks for");
+  for (const m of missing.slice(0, 5)) console.error(`    ${m}`);
+  if (missing.length > 5) console.error(`    …and ${missing.length - 5} more`);
+  console.error(
+    "    Pages are fine (they use the optimized /_astro/ copies), but the CMS\n" +
+      "    previews these by public URL, so the admin panel will show broken\n" +
+      "    thumbnails. Check that `prebuild` still runs scripts/mirror-media.mjs.",
+  );
+  return missing.length;
+}
+
 failures += checkCmsFontOrigins();
+failures += checkMediaMirror();
 
 if (failures > 0) {
   console.error(
-    `\n${failures} violation(s). See the comments in scripts/check-dist.mjs:\n` +
-      "these break the site only in browsers that enforce the CSP, so they cannot\n" +
-      "be caught by `astro build` or `astro check`.",
+    `\n${failures} violation(s). See the comments in scripts/check-dist.mjs.\n` +
+      "Everything asserted here is invisible to `astro build` and `astro check`:\n" +
+      "it breaks the live site only under the CSP, or breaks only the CMS.",
   );
   process.exit(1);
 }
 
-console.log("✓ dist/ is CSP-clean, on-brand, and the CMS font origin is allowed");
+console.log("✓ dist/ — CSP-clean, on-brand, CMS font origin allowed, media previewable");

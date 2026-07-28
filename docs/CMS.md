@@ -107,6 +107,13 @@ Notes for editors:
   If something fails and the browser console shows a CSP violation naming an origin,
   add that origin to the `/admin/*` policy. In particular, if you host the worker
   on a **custom domain** (not `*.workers.dev`), add it to `connect-src`.
+- **If event/member thumbnails render as broken images**, the originals are not
+  being served. Sveltia previews an image by fetching its public URL, but this
+  site keeps source images in `src/images/` so Astro's sharp pipeline can optimize
+  them — nothing serves them by default. `scripts/mirror-media.mjs` (run from
+  `prebuild`) copies them to `public/images/` to close that gap. `npm run check:dist`
+  fails the build if a content image is not reachable at its own path, so this
+  should surface in CI rather than in the editor.
 - **If the toolbar icons render as words** (`cloud_upload`, `delete`, `save`) the
   icon font is being blocked. Sveltia loads Material Symbols as a `.woff2` from a
   CDN, and **which CDN is Sveltia's choice, not ours** — it has moved once already

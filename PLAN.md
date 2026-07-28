@@ -56,8 +56,10 @@ public/                    copied verbatim into dist/
   _headers                 CSP + cache rules; scoped /admin CSP; /_astro immutable
   assets/                  logos, favicons, icons, motif, fonts/ (self-hosted woff2)
   robots.txt, site.webmanifest
-scripts/check-dist.mjs     npm `check:dist`: post-build CSP + brand assertions on dist/
+scripts/check-dist.mjs     npm `check:dist`: post-build CSP, brand, CMS font + media checks
 scripts/vendor-cms.mjs     npm `prebuild`: copies Sveltia bundle into public/admin/
+scripts/mirror-media.mjs   npm `prebuild`: mirrors src/images -> public/images so the
+                           CMS can preview originals (gitignored; no page links there)
 scripts/translate.mjs      npm `translate`: offline DeepL fill of i18n dictionaries (not in build)
 scripts/translate-content.mjs  npm `translate:content`: fills the i18n block in content/**.json
 scripts/lib/deepl.mjs      shared DeepL plumbing for both scripts (one PROTECT list)
@@ -99,6 +101,7 @@ extensionless; events are never marked "past" by hand; shared chrome lives once 
 | #40 | **Astro 5 → 7, Zod 3 → 4, TypeScript 5 → 6** — fixes 4 CVEs (high-severity libvips in `sharp <0.35.0`); AVIF uploads now work |
 | #41 | PLAN.md sync — logged #34–#40; the agent may not weaken the guardrails to go green |
 | #42 | **CMS toolbar icons fixed again** — `@sveltia/cms` 0.174 moved its fonts from Google Fonts to Fontsource on `cdn.jsdelivr.net`; `check:dist` now reads the font URLs out of the vendored bundle so this can't regress silently a third time |
+| #43 | **CMS image previews fixed** — Sveltia fetches a photo by its public URL, but source images live in `src/` for the sharp pipeline and were never served; `mirror-media.mjs` publishes them at `/images/…` (noindex, no page links there) and `check:dist` asserts every content image resolves |
 
 Earlier foundation (pre-#12): Astro migration + build-time image optimization.
 
