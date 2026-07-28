@@ -69,4 +69,9 @@ const showSwitcher = switchable.length > 1;
       )}
     </nav>
   </div>
+  {/* The flag band that closes the header. A real element rather than a
+      ::after, because the drifting stripe needs something to be clipped by and
+      the header itself cannot be overflow:hidden — that would cut off the
+      language dropdown. Decorative, so it is hidden from assistive tech. */}
+  <div class="flag-rule" aria-hidden="true"></div>
 </header>
