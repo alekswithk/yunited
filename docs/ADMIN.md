@@ -14,6 +14,9 @@ reach the public site.
 - **Partners** → one file per partner under `content/partners/`.
 - **Photos** you upload land in `src/images/…` and are optimized automatically at
   build time (resized, WebP, 1×/2× srcset).
+- **Access** → not content at all, and not in this repo: it is the list of emails
+  Cloudflare checks before letting anyone open the panel. Changes there take
+  effect within seconds instead of after a rebuild.
 
 Maintaining the code behind it: [`worker/README.md`](../worker/README.md).
 
@@ -25,17 +28,22 @@ Go to **https://yunited.ch/admin**. Cloudflare asks for your email, sends you a
 one-time code, and lets you in. That is the whole login — there is no second
 account and nothing to install.
 
-If you get "access denied", your email is not on the allow-list yet. Ask whoever
-looks after the Cloudflare account to add it (see [Giving someone
-access](#giving-someone-access)).
+If you get "access denied", your email is not on the allow-list yet. Ask anyone
+who is already on it to add you from the panel's **Access** tab — it takes about
+ten seconds (see [Giving someone access](#giving-someone-access)).
 
 ---
 
 ## Using it day to day
 
-1. Pick a tab: **Events**, **Board members** or **Partners**.
+1. Pick a tab: **Events**, **Board members**, **Partners** or **Access**.
 2. Press **Add …**, or **Edit** on something that is already there.
 3. Fill in the fields and press **Save**.
+
+The first three tabs are the website's content. **Access** is different: it is
+the list of people who can open this page, it changes within seconds rather than
+after a rebuild, and it is covered in [Giving someone
+access](#giving-someone-access).
 
 The page has a **`?` button in the bottom-right corner** with the full
 walkthrough — every field, whether it is required, and a worked example. That
@@ -76,15 +84,34 @@ describing themselves in their own words, and machine translation mangles it.
 
 ## Giving someone access
 
-Access is managed entirely in the Cloudflare dashboard. **No GitHub account, no
-code change, no deploy.**
+**In the panel, under the `Access` tab.** Type their email address, press
+**Add**, and they can sign in straight away — they go to yunited.ch/admin, type
+that same address and Cloudflare emails them a one-time code. No GitHub account,
+no code change, no deploy, nothing to install.
 
-> **Zero Trust → Access → Applications → the `yunited.ch/admin` application →
-> Policies**
+Use the address they will actually type. The code goes to that mailbox, so an old
+or misspelled address doesn't fail loudly — the email simply never arrives.
 
-Add their email address to the allow-list. They can sign in immediately. When
-someone leaves the board, remove their email — that is the whole off-boarding
-step, and they never held a credential of their own.
+When someone leaves the board, press **Remove** next to their address. Their
+access ends immediately, and that is the whole off-boarding step: they never held
+a credential of their own.
+
+Two things the page will not let you do, both so the board cannot lock itself
+out:
+
+- **You cannot remove your own address.** To hand over your seat, add the new
+  person first and ask them to remove you.
+- **You cannot remove the last one.** Add the replacement before removing the
+  old address.
+
+Anyone on the list can change the list, and every change is recorded with the
+email of whoever made it.
+
+**If nobody can get in at all** — the list was emptied by accident, or the last
+address is a mailbox no one can reach — it can still be repaired by whoever looks
+after the Cloudflare account:
+
+> **Zero Trust → Access → Groups → the `yunited-board` group**
 
 ---
 

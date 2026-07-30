@@ -21,6 +21,12 @@
 // re-checks the signed Access token when CF_ACCESS_TEAM_DOMAIN / CF_ACCESS_AUD
 // are configured.
 //
+// THE ONE ROUTE THAT IS NOT ABOUT CONTENT is /admin/api/access, which reads and
+// rewrites the email allow-list Access checks against — so the board can add a
+// new member themselves instead of needing the Cloudflare dashboard. It still
+// authenticates nobody; see worker/board-access.js for the distinction and why it
+// does not contradict the paragraph above.
+//
 // EVERY REQUEST IS VALIDATED SERVER-SIDE. The form does its own checking, but
 // nothing here trusts it: each save is parsed, coerced and then run through the
 // very Zod schema the site build uses (src/lib/schema.js). If it passes here it
@@ -34,6 +40,14 @@ import {
 } from "./collections.js";
 import { github } from "./github.js";
 import { identity, verifyAccessJwt } from "./access.js";
+import {
+  accessGroup,
+  conflict,
+  describeChange,
+  guardChange,
+  normalizeEmails,
+  validateEmail,
+} from "./board-access.js";
 import {
   IMAGE_EXTENSIONS,
   buildEntry,
@@ -62,38 +76,66 @@ export default {
     try {
       return await handle(request, env, url);
     } catch (error) {
-      // Anything uncaught is a bug or GitHub being unavailable. Log the detail
-      // for `wrangler tail`, and tell the board something they can act on.
+      // Anything uncaught is a bug or an upstream being unavailable. Log the
+      // detail for `wrangler tail`, and tell the board something they can act on.
       console.error("[admin]", error);
 
-      // A token that is wrong, expired, or missing the Contents permission is
-      // the single most likely thing to be misconfigured here, and GitHub says
-      // so plainly ("Bad credentials"). Buried inside a generic 500 that reads
-      // as "try again", it would send someone hunting for an outage instead of
-      // rotating a secret. So name it.
+      // Which upstream failed decides which instruction is useful, and the two
+      // have different secrets to rotate. board-access.js labels its own errors;
+      // everything else here talks to GitHub.
+      const cloudflare = error?.service === "cloudflare";
+
+      // A token that is wrong, expired, or missing a permission is the single
+      // most likely thing to be misconfigured here, and both APIs say so plainly
+      // ("Bad credentials"). Buried inside a generic 500 that reads as "try
+      // again", it would send someone hunting for an outage instead of rotating a
+      // secret. So name it — and name the right one.
       if (error?.status === 401 || error?.status === 403) {
         return json(
           {
             ok: false,
-            error:
-              "The admin panel's GitHub token was rejected, so nothing was changed. " +
-              "It is probably expired, or missing 'Contents: Read and write' on this " +
-              "repository. A maintainer needs to issue a new one and run: " +
-              "wrangler secret put GITHUB_TOKEN",
+            error: cloudflare
+              ? "The admin panel's Cloudflare token was rejected, so nothing was changed. " +
+                "It is probably expired, or missing 'Access: Organizations, Identity " +
+                "Providers, and Groups: Edit'. A maintainer needs to issue a new one and " +
+                "run: wrangler secret put CF_API_TOKEN"
+              : "The admin panel's GitHub token was rejected, so nothing was changed. " +
+                "It is probably expired, or missing 'Contents: Read and write' on this " +
+                "repository. A maintainer needs to issue a new one and run: " +
+                "wrangler secret put GITHUB_TOKEN",
           },
           502,
         );
       }
 
+      // Cloudflare's API allows 1,200 calls per five minutes across the whole
+      // account. Nothing this panel does approaches that, so a 429 means
+      // something else on the account is busy — worth saying, because "try
+      // again" is genuinely the right advice here and a 500 does not sound like
+      // it.
+      if (error?.status === 429) {
+        return json(
+          {
+            ok: false,
+            error:
+              "Cloudflare is rate-limiting us at the moment, so nothing was changed. " +
+              "Wait a minute and try again.",
+          },
+          503,
+        );
+      }
+
       // "Nothing was changed" is a promise this code can actually keep: a save
       // is one commit built at the very end (see github.js), so any failure
-      // before the ref update leaves the repo exactly as it was.
+      // before the ref update leaves the repo exactly as it was. A failed
+      // Cloudflare write is likewise a single PUT that either applied or did not.
       return json(
         {
           ok: false,
           error:
-            "Something went wrong talking to GitHub, and nothing was changed. " +
-            "Please try again, and if it keeps happening send this to a maintainer: " +
+            `Something went wrong talking to ${cloudflare ? "Cloudflare" : "GitHub"}, and ` +
+            "nothing was changed. Please try again, and if it keeps happening send this " +
+            "to a maintainer: " +
             String(error?.message ?? error),
         },
         500,
@@ -127,32 +169,67 @@ async function handle(request, env, url) {
   }
 
   const route = url.pathname.slice("/admin/api/".length);
-  const handler = {
-    "GET state": getState,
-    "POST save": postSave,
-    "POST delete": postDelete,
+  // Each route declares which upstream it needs, because they have different
+  // secrets and a missing one has to name itself. Before the access list existed
+  // this was a single unconditional GITHUB_TOKEN check, which would have answered
+  // "there is no GitHub token" to a request that never wanted GitHub.
+  const match = {
+    "GET state": { handler: getState, needs: "github" },
+    "POST save": { handler: postSave, needs: "github" },
+    "POST delete": { handler: postDelete, needs: "github" },
+    "GET access": { handler: getAccess, needs: "cloudflare" },
+    "POST access": { handler: postAccess, needs: "cloudflare" },
   }[`${request.method} ${route}`];
 
   // Route first, THEN check the configuration. The other order answers "no such
   // endpoint" with "there is no token", which sends whoever is debugging after
   // the wrong thing entirely.
-  if (!handler) {
+  if (!match) {
     return json({ ok: false, error: `No such endpoint: ${request.method} ${url.pathname}` }, 404);
   }
 
-  if (!env.GITHUB_TOKEN) {
-    return json(
-      {
-        ok: false,
-        error:
-          "The admin panel has no GitHub token configured, so it cannot read or " +
-          "save anything. A maintainer needs to run: wrangler secret put GITHUB_TOKEN",
-      },
-      503,
+  const missing = missingConfig(match.needs, env);
+  if (missing) return json({ ok: false, error: missing }, 503);
+
+  return match.handler(request, env);
+}
+
+/**
+ * The sentence to answer with when this route's upstream is not configured, or
+ * null when it is.
+ *
+ * Each one names the exact command that fixes it. A 503 that says only "not
+ * configured" is the same as no message at all to whoever inherits this.
+ */
+function missingConfig(needs, env) {
+  if (needs === "github" && !env.GITHUB_TOKEN) {
+    return (
+      "The admin panel has no GitHub token configured, so it cannot read or " +
+      "save anything. A maintainer needs to run: wrangler secret put GITHUB_TOKEN"
     );
   }
 
-  return handler(request, env);
+  if (needs === "cloudflare" && !accessConfigured(env)) {
+    return (
+      "The access list is not set up in this deployment, so it cannot be read or " +
+      "changed here — add or remove board members in the Cloudflare Zero Trust " +
+      "dashboard instead. A maintainer needs to set CF_ACCOUNT_ID and " +
+      "CF_ACCESS_GROUP_ID in wrangler.jsonc and run: wrangler secret put CF_API_TOKEN"
+    );
+  }
+
+  return null;
+}
+
+/**
+ * Is the access list editable in this deployment?
+ *
+ * Checked in two places on purpose: getState reports it so the panel can leave
+ * the tab out entirely, and the endpoints check it again so the answer does not
+ * depend on the browser having been told the truth.
+ */
+function accessConfigured(env) {
+  return Boolean(env.CF_API_TOKEN && env.CF_ACCOUNT_ID && env.CF_ACCESS_GROUP_ID);
 }
 
 // --- GET /admin/api/state ----------------------------------------------------
@@ -179,6 +256,87 @@ async function getState(request, env) {
     repo: { name: gh.repo, branch: gh.branch },
     collections: publicShape(),
     entries,
+    // Sections that are not content collections. Deliberately just a flag: this
+    // does NOT call the Cloudflare API, because loading the panel must not depend
+    // on a second service. If the access list is unreachable, that is the access
+    // tab's problem to report, not a reason for the Events tab to be empty.
+    sections: { access: { enabled: accessConfigured(env) } },
+  });
+}
+
+// --- GET /admin/api/access ---------------------------------------------------
+// The email allow-list that decides who can open this panel at all. Read live
+// from the Cloudflare Access rule group, never cached here — a stale answer on
+// this list is somebody being told they still have access when they don't.
+
+async function getAccess(request, env) {
+  const { emails } = await accessGroup(env).read();
+
+  // `you` is what the panel uses to mark and disable your own Remove button. It
+  // is a convenience, not the guard — guardChange is (see below).
+  return json({ ok: true, emails, you: identity(request).email });
+}
+
+// --- POST /admin/api/access --------------------------------------------------
+// Replace the allow-list. The whole list, not a diff: Cloudflare's API has no
+// append and no compare-and-swap, so the panel sends the state it wants and the
+// state it believed it was starting from.
+
+async function postAccess(request, env) {
+  const body = await request.json().catch(() => null);
+  if (!body || !Array.isArray(body.emails)) {
+    return json({ ok: false, error: "The list of addresses was missing from that request." }, 400);
+  }
+
+  const next = normalizeEmails(body.emails);
+  if (next.length !== body.emails.length) {
+    // Normalising dropped something: a blank, a duplicate, or a non-string. The
+    // panel never sends any of those, so this is a bug or a hand-made request
+    // rather than something to word gently.
+    return json({ ok: false, error: "That list contained a blank or duplicate address." }, 400);
+  }
+
+  for (const email of next) {
+    const problem = validateEmail(email);
+    if (problem) return json({ ok: false, error: problem, field: "access-input" }, 400);
+  }
+
+  const group = accessGroup(env);
+  const { group: raw, emails: current } = await group.read();
+
+  // Somebody else changed the list while this page was open. Refusing is the
+  // whole point: the alternative is quietly reinstating an address that was just
+  // removed, or dropping one that was just added.
+  if (conflict(body.expected, current)) {
+    return json(
+      {
+        ok: false,
+        error:
+          "Someone else changed the access list a moment ago, so this change wasn't " +
+          "applied — nothing was lost on their side or yours. Please reload the page and " +
+          "make your change again.",
+      },
+      409,
+    );
+  }
+
+  const actor = identity(request).email;
+  const refusal = guardChange({ current, next, actor });
+  if (refusal) return json({ ok: false, error: refusal }, 400);
+
+  const emails = await group.write(raw, next);
+
+  // The only record of WHO did this. Cloudflare's own audit log attributes the
+  // change to the API token, which is the same token for every board member, so
+  // without this line there is no way to tell who added an address. Visible with
+  // `npx wrangler tail`.
+  console.log(`[admin] access list: ${describeChange(current, emails)} — by ${actor ?? "unknown"}`);
+
+  return json({
+    ok: true,
+    emails,
+    you: actor,
+    message: `Access list updated: ${describeChange(current, emails)}.`,
   });
 }
 

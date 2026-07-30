@@ -59,7 +59,25 @@
     // every request 403. Put CF_ACCESS_AUD = "" in your .dev.vars to switch the
     // check off locally — .dev.vars overrides what is here.
     "CF_ACCESS_TEAM_DOMAIN": "silent-recipe-bb34.cloudflareaccess.com",
-    "CF_ACCESS_AUD": "284df6702d4bfb7ff822cca77803e9cb845fcea2071e5958f6e80bd1d6958b59"
+    "CF_ACCESS_AUD": "284df6702d4bfb7ff822cca77803e9cb845fcea2071e5958f6e80bd1d6958b59",
+
+    // The Access rule group holding the board's email allow-list, so the board
+    // can add and remove members from /admin instead of the Cloudflare dashboard.
+    // Both are identifiers, not credentials — the account ID appears in every
+    // dashboard URL and the group ID grants nothing on its own. The token that
+    // can actually change the group is the CF_API_TOKEN secret.
+    //
+    // The group is `yunited-board`, and the /admin application's policy includes
+    // it instead of a literal list of addresses — so the policy is written once
+    // and only the group ever changes. Point this at a DIFFERENT group and the
+    // panel edits that one instead, with no error to warn you.
+    //
+    // The tab appears only when these two AND the CF_API_TOKEN secret are all
+    // set; blank any of them and /admin goes back to exactly what it was, with
+    // the allow-list edited in the Zero Trust dashboard (see accessConfigured in
+    // worker/index.js). Full setup: worker/README.md → "Who can get in".
+    "CF_ACCOUNT_ID": "87eec737191644cadde8147c51b7ba3d",
+    "CF_ACCESS_GROUP_ID": "92f7cd66-2d4f-4730-ac95-d740d0dc0cd6"
   },
 
   // NO workers.dev HOSTNAME. This is a security setting, not a preference.

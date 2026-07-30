@@ -65,13 +65,16 @@ src/
   styles/global.css        one stylesheet; all design tokens in :root at the top
 worker/                  SERVER LAYER — the only code that runs at request time,
                          on /admin/api/* only (wrangler `run_worker_first`)
-  index.js                 the 3 routes: GET state, POST save, POST delete
+  index.js                 the 5 routes: GET state, POST save/delete, GET/POST access
   collections.js           THE description of the admin form (fields, slugs, carry)
   schema ← src/lib/schema.js  the same Zod schemas the site build validates with
   github.js                Git Data API: one atomic commit per save
   access.js                reads + verifies the Cloudflare Access JWT (no login code)
+  board-access.js          the email allow-list: who may open /admin (membership,
+                           NOT authentication — Access still does that)
   lib.js                   slugify, coerceField, buildEntry, image paths
-  {collections,lib}.test.js  `npm test` — form↔schema parity, carry, coercion
+  {collections,lib,board-access}.test.js  `npm test` — form↔schema parity, carry,
+                           coercion, lockout rails, non-destructive group writes
   README.md                maintainer reference — read before touching worker/
 public/                    copied verbatim into dist/
   admin/                   the admin panel: index.html, admin.css, admin.js
@@ -136,6 +139,8 @@ extensionless; events are never marked "past" by hand; shared chrome lives once 
 | #47–#48 | **The folk-motif divider slides as it crosses the viewport** — transform-driven and tied to scroll position, clipped with `overflow: clip` so the strip actually travels. The tricolour band that briefly sat under the header is gone: three solid vertical bands of red/azure/gold read as the Romanian flag, the wrong association for this club |
 | #49 | **Admin lists are sortable**, and the motif's travel softened to a third of its original distance |
 | — | **Translation pipeline rebuilt; Bosnian split from Croatian** — the board judged the bs/hr/sr copy inadequate, and an audit of all 178 dictionary keys plus all 9 event files found the defects were systematic. Verified samples: the buddy system was described as a **`sustav prijateljskog parenja`** — a *mating* system — on the About page; "Outgoing HSG students" read `Budući studenti` (prospective) in bcs and `Brucoši` (freshmen) in sr, directly above the line "YUnited runs no formal programme for students abroad"; both locales shipped `semestar uSt. Gallenu` with the preposition fused to the city; `contact.formSending`, a submit button's in-flight label, read `Pošalji…` — the imperative "Send"; and Déja Vu Bar became `bar Deža Vju` on a card whose `location` field still said `Déja Vu Bar`. **The cause was architectural, not a bad vendor:** DeepL received each string alone, with no context and no glossary, so a fragment could not agree with the preposition before it and "Sending…" was indistinguishable from a command. Now one request per language carries the whole dictionary, against a pinned glossary (`scripts/lib/glossary.mjs`), and **nothing is written until `scripts/lib/validate.mjs` passes** — key sets, placeholders, tag structure and hrefs, protected names, forbidden renderings, script, regional variant, glued tokens, split-sentence joins; unit-tested and mutation-checked in `npm test`. Also: `bcs.json` served **both** bs and hr while being overwhelmingly Croatian with stray Bosnian forms (the same university appeared under two names in one file), so it is now a real `hr.json` + `bs.json`; the address form is unified on informal `ti`, matching the German that was already informal; and `check:dist` asserts no Cyrillic on Serbian pages. `deepl.mjs` deleted. **All 178 UI keys x 3 languages and all 9 events were re-translated**, and all of it passes the gate at 0 errors / 0 warnings; 60 of the 178 keys now genuinely differ between `bs` and `hr`, so the split earns its keep rather than shipping two files that pretend to differ |
+
+| — | **The board manages its own `/admin` allow-list** — a fourth tab reads and rewrites the Cloudflare Access rule group that decides who can open the panel, so adding a board member no longer needs the Zero Trust dashboard and therefore no longer needs the one person who has it. `worker/board-access.js` is the client; **it authenticates nobody** — Access still does that, and an added address still has to pass Access's own login. Two lockout rails are enforced server-side (`guardChange`): you cannot remove yourself, and you cannot empty the list. The Cloudflare API has no PATCH, no ETag and a `PUT` that replaces the whole group, so every write round-trips `name`/`exclude`/`require` and any non-email include rule (a unit test guards exactly that), and the panel sends the list it was showing so a concurrent edit is refused with a 409 instead of silently overwritten. The Worker logs the actor's verified email on every change — Cloudflare's own logs only ever name the shared API token. **Inert until the human steps in §3 are done** |
 
 Earlier foundation (pre-#12): Astro migration + build-time image optimization.
 
@@ -212,9 +217,32 @@ Manual/account steps (code is in place).
       **When it is replaced, tick this box and note the date here** — a
       non-expiring token turns this from a recurring task into a one-off.
 
-_On demand (not a pending task): to give a new board member admin access, add their
-email in Cloudflare Zero Trust → Access → Applications → the `/admin` app → Policies.
-No GitHub account and no code change — steps in [`docs/ADMIN.md`](docs/ADMIN.md)._
+- [ ] **Verify the `/admin` Access tab in production — 🧑 human** *(small).* The
+      Cloudflare side is done: the `yunited-board` rule group exists, the `/admin`
+      policy includes it instead of a literal email list, `CF_API_TOKEN` is set as
+      a Worker secret, and `CF_ACCESS_GROUP_ID` is filled in. **The tab goes live
+      with the next deploy** — this item is the check that it actually works, in
+      this order:
+
+      1. Hard-refresh `/admin`; the **Access** tab is next to Partners.
+      2. **The list matches the Zero Trust group exactly.** A wrong-but-valid
+         group UUID shows somebody else's group, or an empty list, with no error —
+         this is the only check that catches it.
+      3. Add a throwaway address, confirm it in Zero Trust, sign in as it in a
+         private window, then remove it and confirm sign-in now fails.
+      4. `npx wrangler tail` during one change: the log line must name *your*
+         email. Cloudflare's own logs only ever name the shared token, so that
+         line is the whole per-person audit trail.
+
+      **Worth knowing about the token:** Cloudflare has no groups-only permission,
+      so it can also write the account's identity providers and Zero Trust
+      settings — wider than `GITHUB_TOKEN`. Accepted deliberately; the fallback is
+      to delete the secret, which returns `/admin` to exactly what it was.
+
+_On demand (not a pending task): board members add and remove each other in the
+`Access` tab at `/admin`; a change takes effect in seconds. The break-glass path,
+if nobody can get in at all, is Cloudflare Zero Trust → Access → Groups →
+`yunited-board` — steps in [`docs/ADMIN.md`](docs/ADMIN.md)._
 
 ---
 
