@@ -14,13 +14,17 @@
       "title": "Prvi Maj",
       "description": "Eine Feier zum 1. Mai mit einem Grillfest im Freien."
     },
-    "bcs": {
+    "hr": {
       "title": "Prvi Maj",
-      "description": "Proslava Prvog svibnja uz roštilj na otvorenom."
+      "description": "Proslava praznika Prvi maj s roštiljem u prirodi."
+    },
+    "bs": {
+      "title": "Prvi Maj",
+      "description": "Proslava praznika Prvi maj s roštiljem u prirodi."
     },
     "sr": {
       "title": "Prvi Maj",
-      "description": "Proslava Prvog maja uz roštilj na otvorenom."
+      "description": "Proslava praznika Prvi maj sa roštiljem u prirodi."
     }
   }
 }

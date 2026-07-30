@@ -14,13 +14,17 @@
       "title": "Semesterabschlussfeier",
       "description": "Ein gebührender Abschluss des Semesters, bevor die Prüfungsphase beginnt."
     },
-    "bcs": {
-      "title": "Završna zabava semestra",
-      "description": "Pravi kraj semestra prije početka faze učenja."
+    "hr": {
+      "title": "Zabava na kraju semestra",
+      "description": "Pravi završetak semestra prije početka ispitnog roka."
+    },
+    "bs": {
+      "title": "Zabava na kraju semestra",
+      "description": "Pravi završetak semestra prije početka ispitnog roka."
     },
     "sr": {
-      "title": "Žurka na kraju semestra",
-      "description": "Prikladan kraj semestra pre početka faze učenja."
+      "title": "Zabava na kraju semestra",
+      "description": "Pravi završetak semestra pre početka ispitnog roka."
     }
   }
 }

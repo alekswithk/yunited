@@ -14,14 +14,25 @@ when a step ships, tick it here in the same PR.
   [`worker/README.md`](worker/README.md). This file is the *tracker/index*; those
   are the *reference*.
 
-_Last updated: 2026-07-28 (#36–#40 in one session. **All five locales are live** —
-`bs`/`hr`/`sr` published, reviewed continuously rather than gated; Serbian is now
-consistently **Latin**, enforced in the translation pipeline itself. `/partners`
-shipped with an empty `content/partners/` collection behind it. **Guardrails**:
-unit tests for the event logic, a built-output CSP assertion, a stale-calendar
-warning, `astro check` at 0/0/0. **Dependencies current** — Astro 7, Zod 4,
-0 vulnerabilities (this fixed 4 CVEs). The one open item is the board's: the 26/27
-calendar, see §3.)_
+_Last updated: 2026-07-29 (status review — no code changed. **The engineering
+backlog is empty**: 0 open issues, 0 open PRs, 0 `TODO`/`FIXME` in source, clean
+tree, and all four verification commands green — `npm test` 35/35, `build`,
+`check` at 0/0/0, `check:dist` — with `npm audit` clean across the whole 438-package
+tree. #37–#49 all landed on 2026-07-28: all five locales live, Astro 7 / Zod 4 /
+TS 6, the guardrail suite, the empty partners collection, Sveltia replaced by the
+first-party `/admin` + Worker, and the motif/reveal motion fixes._
+
+_**The live items are not code.** (1) **`ANTHROPIC_API_KEY` is not set yet.**
+The bs/hr/sr copy has already been re-translated and is clean through the gate,
+so nothing is waiting on it today — but the key is what lets the pipeline run
+**unattended**, which is how a board member's `/admin` save gets localized
+without a person present. Until it exists, a new event saves and publishes in
+its authored language and its translations are simply not filled. (2) The 26/27
+calendar is empty — every dated event is in the past,
+so Upcoming shows one TBA card; the build warns about it and is warning right
+now. (3) The `GITHUB_TOKEN` expires **end of August 2026** and must be replaced
+before then, or `/admin` stops saving. All three in §3. New ideas are parked in
+§4.5.)_
 
 ---
 
@@ -40,32 +51,48 @@ src/
   components/*.astro       EventCard, MemberLead, MemberRow, Portrait, PageToc, Header, Footer
   layouts/BaseLayout.astro single source of <head> (canonical + hreflang) + chrome + script
   i18n/                    locale registry (config.js), t()/fallback (utils.js), {en,de,
-                           bcs,sr}.json dictionaries; en.json is the source of truth
+                           hr,bs,sr}.json dictionaries; en.json is the source of truth
+                           (bs and hr split out of a shared `bcs` file — see §2)
   lib/                     build-time logic (framework-free, no Astro imports)
     content.js               loads + validates every content file (the choke point)
     schema.js                Zod schemas = authoritative shape of the edit surface
     events.js                upcoming/past split, date/time formatting & tiebreak
-    events.test.js           `npm test` — the only tested module; see CLAUDE.md for why
+    events.test.js           `npm test` — see CLAUDE.md for what gets tested and why
     members.js               display-name / placeholder / initial helpers
     images.js                resolveImage(): path -> optimized asset (any raster fmt/case)
   images/                  source images (go through sharp -> WebP at build)
     events/{25_26,26_27}/, members/
   styles/global.css        one stylesheet; all design tokens in :root at the top
+worker/                  SERVER LAYER — the only code that runs at request time,
+                         on /admin/api/* only (wrangler `run_worker_first`)
+  index.js                 the 3 routes: GET state, POST save, POST delete
+  collections.js           THE description of the admin form (fields, slugs, carry)
+  schema ← src/lib/schema.js  the same Zod schemas the site build validates with
+  github.js                Git Data API: one atomic commit per save
+  access.js                reads + verifies the Cloudflare Access JWT (no login code)
+  lib.js                   slugify, coerceField, buildEntry, image paths
+  {collections,lib}.test.js  `npm test` — form↔schema parity, carry, coercion
+  README.md                maintainer reference — read before touching worker/
 public/                    copied verbatim into dist/
   admin/                   the admin panel: index.html, admin.css, admin.js
                            (first-party, no framework; form generated from the API)
   _headers                 CSP + cache rules; scoped /admin CSP; /_astro immutable
   assets/                  logos, favicons, icons, motif, fonts/ (self-hosted woff2)
   robots.txt, site.webmanifest
-scripts/check-dist.mjs     npm `check:dist`: post-build CSP, brand, /admin first-party
-                           + media checks
+scripts/check-dist.mjs     npm `check:dist`: post-build CSP, brand, Serbian-is-Latin,
+                           /admin first-party + media checks
 scripts/mirror-media.mjs   npm `prebuild`: mirrors src/images -> public/images so /admin
                            can show the originals (gitignored; no page links there)
-scripts/translate.mjs      npm `translate`: offline DeepL fill of i18n dictionaries (not in build)
+scripts/translate.mjs      npm `translate`: offline Claude fill of i18n dictionaries (not in build)
 scripts/translate-content.mjs  npm `translate:content`: fills the i18n block in content/**.json
-scripts/lib/deepl.mjs      shared DeepL plumbing for both scripts (one PROTECT list)
+scripts/lib/glossary.mjs   THE translation policy: protected names, one pinned term per
+                           concept per language, variant/morphology rules, address form
+scripts/lib/claude.mjs     one request per language, whole dictionary at once (the fix)
+scripts/lib/validate.mjs   the gate — nothing is written until it passes
+scripts/lib/validate.test.js  `npm test`; cases are strings that actually shipped
+scripts/lib/flat.mjs       flat <-> nested dictionary conversion, in one place
 .github/workflows/         ci.yml (test+build+check+check:dist on PRs); translate-content.yml
-                           (auto-translate content on push to main — needs DEEPL_API_KEY)
+                           (auto-translate content on push to main — needs ANTHROPIC_API_KEY)
 astro.config.mjs           site, trailingSlash, build.format:'file', sitemap integration,
                            and the two settings that keep the CSP inline-free
                            (inlineStylesheets:'never', vite assetsInlineLimit:0)
@@ -103,11 +130,12 @@ extensionless; events are never marked "past" by hand; shared chrome lives once 
 | #41 | PLAN.md sync — logged #34–#40; the agent may not weaken the guardrails to go green |
 | #42 | **CMS toolbar icons fixed again** — `@sveltia/cms` 0.174 moved its fonts from Google Fonts to Fontsource on `cdn.jsdelivr.net`; `check:dist` now reads the font URLs out of the vendored bundle so this can't regress silently a third time |
 | #43 | **CMS image previews fixed** — Sveltia fetches a photo by its public URL, but source images live in `src/` for the sharp pipeline and were never served; `mirror-media.mjs` publishes them at `/images/…` (noindex, no page links there) and `check:dist` asserts every content image resolves |
-| — | **Sveltia CMS removed; `/admin` rebuilt first-party** — a plain HTML/CSS/JS form plus a Cloudflare Worker (`worker/`) that commits through the GitHub Git Data API in **one atomic commit** per save. Access is now a Cloudflare Zero Trust email allow-list instead of a GitHub account + OAuth app + a second worker; one encrypted `GITHUB_TOKEN` replaced per-person tokens. The form is **generated from the same registry the Worker validates with** (`worker/collections.js` → `src/lib/schema.js`), so the config.yml↔schema drift class is gone — along with the `/admin` CSP's `unsafe-inline`, `wasm-unsafe-eval`, GitHub-API and font-CDN allowances. Also **repaired four events** whose `image` Sveltia had saved as `/images/…`, which had been failing the build (and so the deploy) unnoticed |
-
-| — | **Motion: the folk-motif divider slides as it crosses the viewport** — transform-driven, six whole tiles of travel, tied to scroll position. The tricolour band that briefly sat under the header is gone: three solid vertical bands of red/azure/gold read as the Romanian flag, the wrong association for this club. Event cards reveal on scroll again: they carried a hard-coded `is-visible` since the Astro migration, which pre-revealed every one and meant the entrance never played |
-| — | **Fixed scroll-driven effects that had never run** — the minifier folds `animation:` + a separate `animation-timeline` into one shorthand carrying the timeline, which browsers supporting only the longhand must discard *entirely*. Since the `@supports` guard tests the longhand, the motif divider and the magazine-grid card assembly passed the guard and then had no animation and no fallback. Both rewritten as longhands; `check:dist` now fails on a folded shorthand |
-| — | **Fixed links run into the preceding word** — the footer read "managed on**uniclubs.ch**" in all five locales (a newline in the template collapsing to nothing), and German's exchange line read "den Kontakt her.**Kontakt aufnehmen**" (DeepL had restructured the `…Pre` fragment into a complete sentence). `check:dist` now fails on a link glued to the character before it |
+| #44 | **Sveltia CMS removed; `/admin` rebuilt first-party** — a plain HTML/CSS/JS form plus a Cloudflare Worker (`worker/`) that commits through the GitHub Git Data API in **one atomic commit** per save. Access is now a Cloudflare Zero Trust email allow-list instead of a GitHub account + OAuth app + a second worker; one encrypted `GITHUB_TOKEN` replaced per-person tokens. The form is **generated from the same registry the Worker validates with** (`worker/collections.js` → `src/lib/schema.js`), so the config.yml↔schema drift class is gone — along with the `/admin` CSP's `unsafe-inline`, `wasm-unsafe-eval`, GitHub-API and font-CDN allowances. Also **repaired four events** whose `image` Sveltia had saved as `/images/…`, which had been failing the build (and so the deploy) unnoticed |
+| #45 | **Fixed scroll-driven effects that had never run** — the minifier folds `animation:` + a separate `animation-timeline` into one shorthand carrying the timeline, which browsers supporting only the longhand must discard *entirely*. Since the `@supports` guard tests the longhand, the motif divider and the magazine-grid card assembly passed the guard and then had no animation and no fallback. Both rewritten as longhands; `check:dist` now fails on a folded shorthand. Event cards reveal on scroll again, too: they had carried a hard-coded `is-visible` since the Astro migration, which pre-revealed every one so the entrance never played |
+| #46 | **Fixed links run into the preceding word** — the footer read "managed on**uniclubs.ch**" in all five locales (a newline in the template collapsing to nothing), and German's exchange line read "den Kontakt her.**Kontakt aufnehmen**" (DeepL had restructured the `…Pre` fragment into a complete sentence). `check:dist` now fails on a link glued to the character before it |
+| #47–#48 | **The folk-motif divider slides as it crosses the viewport** — transform-driven and tied to scroll position, clipped with `overflow: clip` so the strip actually travels. The tricolour band that briefly sat under the header is gone: three solid vertical bands of red/azure/gold read as the Romanian flag, the wrong association for this club |
+| #49 | **Admin lists are sortable**, and the motif's travel softened to a third of its original distance |
+| — | **Translation pipeline rebuilt; Bosnian split from Croatian** — the board judged the bs/hr/sr copy inadequate, and an audit of all 178 dictionary keys plus all 9 event files found the defects were systematic. Verified samples: the buddy system was described as a **`sustav prijateljskog parenja`** — a *mating* system — on the About page; "Outgoing HSG students" read `Budući studenti` (prospective) in bcs and `Brucoši` (freshmen) in sr, directly above the line "YUnited runs no formal programme for students abroad"; both locales shipped `semestar uSt. Gallenu` with the preposition fused to the city; `contact.formSending`, a submit button's in-flight label, read `Pošalji…` — the imperative "Send"; and Déja Vu Bar became `bar Deža Vju` on a card whose `location` field still said `Déja Vu Bar`. **The cause was architectural, not a bad vendor:** DeepL received each string alone, with no context and no glossary, so a fragment could not agree with the preposition before it and "Sending…" was indistinguishable from a command. Now one request per language carries the whole dictionary, against a pinned glossary (`scripts/lib/glossary.mjs`), and **nothing is written until `scripts/lib/validate.mjs` passes** — key sets, placeholders, tag structure and hrefs, protected names, forbidden renderings, script, regional variant, glued tokens, split-sentence joins; unit-tested and mutation-checked in `npm test`. Also: `bcs.json` served **both** bs and hr while being overwhelmingly Croatian with stray Bosnian forms (the same university appeared under two names in one file), so it is now a real `hr.json` + `bs.json`; the address form is unified on informal `ti`, matching the German that was already informal; and `check:dist` asserts no Cyrillic on Serbian pages. `deepl.mjs` deleted. **All 178 UI keys x 3 languages and all 9 events were re-translated**, and all of it passes the gate at 0 errors / 0 warnings; 60 of the 178 keys now genuinely differ between `bs` and `hr`, so the split earns its keep rather than shipping two files that pretend to differ |
 
 Earlier foundation (pre-#12): Astro migration + build-time image optimization.
 
@@ -117,12 +145,27 @@ Earlier foundation (pre-#12): Astro migration + build-time image optimization.
 
 Manual/account steps (code is in place).
 
-- [x] **`DEEPL_API_KEY` added to the repository's Actions secrets** (2026-07-22) —
-      the "Translate content" workflow reads it; it fails loudly if the secret is
-      ever removed. *The site build never needs this and stays hermetic; the
-      secret is deliberately NOT in the Cloudflare build settings, so a deploy
-      can never depend on DeepL being reachable.* To rotate: update `.env`
-      locally, then `gh secret set DEEPL_API_KEY`.
+- [ ] **`ANTHROPIC_API_KEY` must be added to the repository's Actions secrets**
+      — 🧑 human. The existing copy is already re-translated and clean, so this is
+      not blocking the site today. What it unblocks is the **unattended** path:
+      the workflow that localizes each `/admin` save with no human present. It
+      replaced `DEEPL_API_KEY` (which can be deleted once this is in place): DeepL
+      translated one string at a time with no context, which is what produced a
+      buddy system described as a *mating* system and a submit button whose
+      in-flight label read as the imperative "Send". The "Translate content"
+      workflow reads it and fails loudly if it is missing. *The site build never
+      needs this and stays hermetic; the secret is deliberately NOT in the
+      Cloudflare build settings, so a deploy can never depend on a translation
+      API being reachable.*
+
+      ```bash
+      gh secret set ANTHROPIC_API_KEY     # and paste it into a local .env too
+      gh secret delete DEEPL_API_KEY      # once the above is set
+      ```
+
+      Note this is now the **second** credential on this page — see the
+      `GITHUB_TOKEN` item below, which expires end of August 2026. Worth
+      recording both expiries in one place.
 - [x] ~~Deploy `sveltia-cms-auth` worker + GitHub OAuth app + secrets~~ — obsolete;
       Sveltia and its auth worker were removed. Access + one Worker secret replaced them.
 - [x] **Google Search Console**: sitemap switched to `https://yunited.ch/sitemap-index.xml`.
@@ -135,12 +178,39 @@ Manual/account steps (code is in place).
       build now **warns** whenever no upcoming event has a date, so this state
       cannot go unnoticed for eleven weeks again as it did between May and July.
 
-- [ ] **`GITHUB_TOKEN` expires — reissue before then** — 🧑 human. The admin panel
-      stops saving when it does; `/admin` says so explicitly (502, naming the
-      permission), and GitHub emails the token owner in advance. Reissue as a
-      fine-grained PAT on `alekswithk/yunited` with `Contents: Read and write`,
-      then `npx wrangler secret put GITHUB_TOKEN`. **Expiry date: _fill in when
-      the token is created_.** Full steps in [`worker/README.md`](worker/README.md).
+- [ ] **A standing "grab a coffee & talk" meetup** — 🧑 board, venue and cadence
+      still to decide. A recurring, low-effort get-together (no programme, no
+      RSVP pressure) that gives members a reason to show up between the big
+      termly events, and gives the board something to point new students at in
+      week one.
+      **It also solves the problem above cheaply:** it can go up *now*, before
+      the 26/27 dates are fixed, as a TBA-dated event — which floats to the top
+      of Upcoming — so the events page stops reading as dormant while the term
+      is still being planned. Add it in `/admin` with the date left empty, then
+      fill the date in once the cadence is settled.
+      Open questions for the board: which café (somewhere near the HSG campus
+      that takes a group without a booking), and how often — weekly is a
+      commitment the board has to keep, fortnightly or monthly is easier to
+      sustain and easier to promote.
+
+- [ ] **`GITHUB_TOKEN` expires END OF AUGUST 2026 — replace it before then** —
+      🧑 human. **This is the deadline item on this page.** When it lapses the
+      board loses the only way to publish: every save fails, `/admin` says so
+      explicitly (502 naming the missing permission) and GitHub emails the token
+      owner in advance, but nothing else warns anyone. The plan is to replace it
+      with a **non-expiring** fine-grained PAT so this stops being a recurring
+      deadline — issued on `alekswithk/yunited` with `Contents: Read and write`
+      and nothing else, then:
+
+      ```bash
+      npx wrangler secret put GITHUB_TOKEN
+      ```
+
+      A save from `/admin` immediately afterwards confirms it (the commit shows
+      up in this repo's history within seconds). Full steps, and what each
+      failure message means, in [`worker/README.md`](worker/README.md).
+      **When it is replaced, tick this box and note the date here** — a
+      non-expiring token turns this from a recurring task into a one-off.
 
 _On demand (not a pending task): to give a new board member admin access, add their
 email in Cloudflare Zero Trust → Access → Applications → the `/admin` app → Policies.
@@ -268,13 +338,115 @@ they carry design decisions that need a person. The agent skips them.
     `/_astro` file, and the page's one script is still `src`'d. This is exactly the
     regression that guard exists for.
 
+- [ ] **Brand the Cloudflare Access login screen** — 🧑 human-led *(small,
+      dashboard-only).* Right now the first thing a board member sees when they
+      open `/admin` is an unbranded, generic Cloudflare sign-in page on a
+      `cloudflareaccess.com` domain, which looks like a phishing page to someone
+      who was told "go to yunited.ch/admin". **This is customizable**, and it
+      needs no code and no deploy:
+
+      > **Zero Trust → Reusable components → Custom pages → Access login page →
+      > Manage.** You can set the **organization name**, a **logo**, a **custom
+      > header and footer**, and a **background colour**.
+
+      **The logo field wants a URL, and the club's artwork already is one** —
+      `public/assets/` is copied verbatim into `dist/`, so nothing needs
+      uploading or hosting anywhere:
+
+      ```
+      https://yunited.ch/assets/icon-512.png     ← use this one
+      ```
+
+      That is the red tile with the white "yu" (512×512 PNG). It is preferred
+      over the wordmark at `/assets/yunited-logo.svg` because it **carries its
+      own background**, so it survives whatever background colour is set, and
+      because PNG support is certain where SVG's is not (Cloudflare documents the
+      field but not its accepted formats). The wordmark's "nited" is near-black
+      on transparent and **disappears on a dark background** — if you use it
+      instead, set the background to the site's cream `#f4ecdd`.
+      `/assets/*` is cached `max-age=86400` and is *not* immutable, so replacing
+      the file later propagates within a day without a new filename.
+
+      For the background colour and header/footer text, use the tokens at the top
+      of `global.css` (`--color-paper: #f4ecdd`, `--color-red: #b3202c`) so the
+      page matches the site. Two caveats, both from the
+      Cloudflare docs: the settings are **account-wide, not per-application** —
+      fine here, since this account fronts only YUnited — and a *fully custom
+      HTML* login page is **not** documented as supported (custom HTML is
+      documented for Access **block** pages, not the login page), so treat this
+      as branding the Cloudflare page, not replacing it.
+      Docs: <https://developers.cloudflare.com/cloudflare-one/reusable-components/custom-pages/access-login-page/>
+      **Not verified against this account's dashboard yet** — the option's exact
+      placement moves between Zero Trust UI revisions.
+
 Deferred/among-these per the original roadmap: sitemap `hreflang` — shipped instead
 as `<link rel="alternate" hreflang>` in the page `<head>` (gated to finished locales),
 which Google treats as equivalent; no separate sitemap `hreflang` needed.
 
 ---
 
+## 4.5 Ideas, not yet committed 💡
+
+Parked here rather than in §4 because none is agreed work yet. The weekly agent
+(§7) treats this section as **read-only** — it may propose *into* it, never
+implement *from* it.
+
+- **Test `worker/github.js`** *(M, no decision needed — the strongest purely
+  technical item on this page).* It is 194 lines with no test file, and it is
+  what makes `worker/index.js`'s promise to the board — *"nothing was changed"*
+  on failure — actually true: the whole save is assembled and committed in one
+  atomic ref update at the very end. Everything either side of it (`lib.js`,
+  `collections.js`) is tested; this is the gap. Approach: `node:test` with an
+  injected `fetch`, asserting the blob→tree→commit→ref order, that the ref update
+  is **not** forced (a forced one would silently discard a concurrent save), and
+  that `remove: true` emits a tree entry with a null sha. No network, per the
+  testing rule in `CLAUDE.md`. Note it touches `worker/**`, which §7 forbids the
+  agent from auto-merging — human review either way.
+
+- **Recruiting funnel** — the unbuilt half of the `[~]` partners item above.
+  **Needs the board to define what it means** before any code: a join form? a
+  mailing list? an Instagram-driven signup? The cheapest real version adds a
+  "Join / Membership" topic to the existing Formspree contact form and a CTA on
+  `/join`, with no new backend and no new dependency — worth preferring unless
+  the board wants something the static architecture genuinely can't do.
+
+- **Turnstile on the contact form** *(deferred deliberately, 2026-07-29).* The
+  form's only spam defence is the honeypot field. Reviewed and **left as is**:
+  adding a third-party script to a site whose CSP is currently this clean is not
+  worth it until spam actually appears. Revisit if the club inbox starts filling
+  up or Formspree's monthly quota gets exhausted.
+
+- **A "what's on" nudge when the calendar empties.** The build already warns when
+  no upcoming event has a date, but only a developer running a build ever sees
+  it. The board never does. If the empty-calendar problem recurs, the fix is to
+  surface it where they'll see it, not to warn harder in the terminal.
+
+---
+
 ## 5. Known cleanup / tech debt 🧹
+
+- [x] **Documentation drift caught and fixed** (2026-07-29). Three places had
+      fallen behind the code, all in the same direction — claiming `bs`/`hr`/`sr`
+      were still unpublished, months after #37 made them live:
+  - `README.md` said the site was *"available in English and German, with
+    Bosnian/Croatian/Serbian in progress."* Now: published in five languages.
+  - `EDITABLE-TEXT-FILES.txt` — a maintainer's personal cheat sheet for *which
+    file do I open to change this text* — was **tracked in git while its own
+    header said it wasn't**, and told the board that bs/hr/sr were `noindex` and
+    hidden from the switcher. It is kept (it is genuinely useful for translation
+    work) but is now **untracked and gitignored**, which is what it always
+    claimed to be. Its content is deliberately left alone: as a local scratch
+    file it can be as rough as its owner likes. The authoritative board-facing
+    doc remains [`docs/ADMIN.md`](docs/ADMIN.md).
+  - This file's §1 repo map had **no `worker/` entry at all** — the project's
+    only server-side code, added in #44, was invisible to anyone (or any agent)
+    orienting from the map. Added, with the per-file breakdown.
+
+      The general lesson, and the reason this is logged rather than quietly
+      fixed: **every one of these was a *second* copy of a fact that lives
+      authoritatively somewhere else** — exactly the drift class #44 removed from
+      the admin form. Prefer linking to `src/i18n/config.js` over restating what
+      it says.
 
 - [x] **`README.md` rewritten, `DEPLOY.md` deleted** (2026-07-24). README is now a
       front door for both audiences — board → `/admin` + `docs/ADMIN.md`; developers →

@@ -14,13 +14,17 @@
       "title": "Global Village (mit AIESEC)",
       "description": "Partnerveranstaltung mit AIESEC: „Global Village“ St. Gallen, gemeinsam mit der Ostslawischen Gesellschaft, der MENA-Gesellschaft, der Skandinavischen Gesellschaft, dem Persischen Verein und dem Ungarischen Verein."
     },
-    "bcs": {
-      "title": "Globalno selo (s AIESEC)",
-      "description": "Partnerski događaj s AIESEC: Global Village St. Gallen, zajedno sa Istočno-slovenskim društvom, MENA društvom, Skandinavskim društvom, Perzijskim udruženjem i Mađarskim udruženjem."
+    "hr": {
+      "title": "Global Village (s AIESEC-om)",
+      "description": "Partnerski događaj s AIESEC-om: Global Village St. Gallen, zajedno s Istočnoslavenskim društvom, MENA, Skandinavskim društvom, Perzijskim društvom i Mađarskim društvom."
+    },
+    "bs": {
+      "title": "Global Village (s AIESEC-om)",
+      "description": "Partnerski događaj s AIESEC-om: Global Village St. Gallen, zajedno s Istočnoslavenskim društvom, MENA, Skandinavskim društvom, Perzijskim društvom i Mađarskim društvom."
     },
     "sr": {
-      "title": "Globalno selo (sa AIESEC)",
-      "description": "Partnerski događaj sa AIESEC: Global Village St. Gallen, zajedno sa Istočnoslovenskim društvom, MENA društvom, Skandinavskim društvom, Persijskim udruženjem i Mađarskim udruženjem."
+      "title": "Global Village (sa AIESEC-om)",
+      "description": "Partnerski događaj sa AIESEC-om: Global Village St. Gallen, zajedno sa Istočnoslovenskim društvom, MENA, Skandinavskim društvom, Persijskim društvom i Mađarskim društvom."
     }
   }
 }

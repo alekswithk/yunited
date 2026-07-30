@@ -14,13 +14,17 @@
       "title": "Filmabend – Die Hochzeit",
       "description": "Eine Kinovorführung von „Svadba“."
     },
-    "bcs": {
-      "title": "Kino večer — Vjenčanje",
-      "description": "Kino projekcija Svadbe."
+    "hr": {
+      "title": "Filmska večer — Svadba",
+      "description": "Projekcija filma Svadba u kinu."
+    },
+    "bs": {
+      "title": "Filmska večer — Svadba",
+      "description": "Projekcija filma Svadba u kinu."
     },
     "sr": {
-      "title": "Kino veče — Venčanje",
-      "description": "Kinematografska projekcija filma \"Svadba\"."
+      "title": "Filmsko veče — Svadba",
+      "description": "Projekcija filma Svadba u bioskopu."
     }
   }
 }
