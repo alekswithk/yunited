@@ -47,8 +47,22 @@ const el = {
   helpPanel: $("help-panel"),
   helpClose: $("help-close"),
   confirmDialog: $("confirm-dialog"),
+  confirmTitle: $("confirm-title"),
   confirmBody: $("confirm-body"),
+  confirmWarning: $("confirm-warning"),
+  confirmGoBtn: $("confirm-go-btn"),
+  listBody: $("list-body"),
+  accessBody: $("access-body"),
+  accessLoading: $("access-loading"),
+  accessList: $("access-list"),
+  accessForm: $("access-form"),
+  accessInput: $("access-input"),
+  accessAddBtn: $("access-add-btn"),
+  accessError: $("access-error"),
 };
+
+/** The Access tab is not a content collection; it is the only other section. */
+const ACCESS = "access";
 
 /** Everything the page knows. Replaced wholesale by every reload of state. */
 const state = {
@@ -59,6 +73,14 @@ const state = {
   editing: null,
   /** Chosen sort key per collection, e.g. { events: "date-desc" }. */
   sort: {},
+  /** Non-collection sections, as reported by /admin/api/state. */
+  sections: {},
+  /**
+   * The access list, once the tab has been opened. `emails` doubles as the
+   * "expected" value sent with every change, so the Worker can tell that this
+   * page was looking at a current list — see postAccess in worker/index.js.
+   */
+  access: { loaded: false, emails: [], you: null },
 };
 
 // ---------------------------------------------------------------------------
@@ -73,6 +95,7 @@ async function boot() {
     const data = await api("/admin/api/state");
     state.collections = data.collections;
     state.entries = data.entries;
+    state.sections = data.sections ?? {};
 
     if (data.user?.email) {
       el.signedInAs.textContent = `Signed in as ${data.user.email}`;
@@ -80,7 +103,7 @@ async function boot() {
     }
 
     renderTabs();
-    renderList();
+    openSection();
   } catch (error) {
     el.loading.hidden = true;
     showBanner(
@@ -113,23 +136,42 @@ function collection(name = state.active) {
 
 function renderTabs() {
   el.tabs.replaceChildren();
-  for (const c of state.collections) {
+
+  // The content collections, then Access if this deployment has it configured.
+  // The Worker decides that (sections.access.enabled); with no Cloudflare token
+  // set there is no tab at all rather than a tab that errors when pressed.
+  const tabs = state.collections.map((c) => ({ name: c.name, label: c.label }));
+  if (state.sections.access?.enabled) tabs.push({ name: ACCESS, label: "Access" });
+
+  for (const { name, label } of tabs) {
     const tab = document.createElement("button");
     tab.type = "button";
     tab.className = "tab";
-    tab.textContent = c.label;
+    tab.textContent = label;
     // aria-current, not role="tab"/aria-selected: those are only meaningful
     // inside a proper tablist/tabpanel structure, and this is a nav that swaps
     // the whole view. aria-current is exactly "the one you're on".
-    if (c.name === state.active) tab.setAttribute("aria-current", "true");
+    if (name === state.active) tab.setAttribute("aria-current", "true");
     tab.addEventListener("click", () => {
-      state.active = c.name;
+      state.active = name;
       renderTabs();
-      renderList();
-      showList();
+      openSection();
     });
     el.tabs.append(tab);
   }
+}
+
+/** Show whichever section `state.active` names, loading it if it needs loading. */
+function openSection() {
+  const access = state.active === ACCESS;
+  el.listBody.hidden = access;
+  el.accessBody.hidden = !access;
+
+  if (!access) renderList();
+  else if (!state.access.loaded) loadAccess();
+  else renderAccess();
+
+  showList();
 }
 
 function renderList() {
@@ -460,16 +502,13 @@ el.deleteBtn.addEventListener("click", async () => {
   if (!item) return;
 
   const label = item.data.title ?? item.data.name ?? item.data.role ?? item.file;
-  el.confirmBody.textContent = `“${label}” will be removed from the website, along with its photo.`;
-  el.confirmDialog.returnValue = "cancel";
-  el.confirmDialog.showModal();
-
-  const choice = await new Promise((resolve) => {
-    el.confirmDialog.addEventListener("close", () => resolve(el.confirmDialog.returnValue), {
-      once: true,
-    });
+  const ok = await confirmAction({
+    title: "Delete this entry?",
+    body: `“${label}” will be removed from the website, along with its photo.`,
+    warning: "This cannot be undone from here.",
+    action: "Delete",
   });
-  if (choice !== "delete") return;
+  if (!ok) return;
 
   await run(el.deleteBtn, "Deleting…", async () => {
     const result = await api("/admin/api/delete", {
@@ -482,6 +521,166 @@ el.deleteBtn.addEventListener("click", async () => {
     showList();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Access list
+//
+// The list of email addresses Cloudflare Access checks before letting anyone open
+// this page. Unlike every other section, it is not content in the repository —
+// it is read live from Cloudflare on first open and written straight back, so a
+// change here takes effect in seconds rather than after a rebuild.
+
+async function loadAccess() {
+  el.accessLoading.hidden = false;
+  el.accessList.replaceChildren();
+
+  try {
+    const data = await api("/admin/api/access");
+    state.access = { loaded: true, emails: data.emails, you: data.you };
+    renderAccess();
+  } catch (error) {
+    el.accessLoading.hidden = true;
+    showBanner(`Couldn't load the access list: ${error.message}`, false);
+  }
+}
+
+function renderAccess() {
+  el.accessLoading.hidden = true;
+  el.accessError.hidden = true;
+  el.accessInput.classList.remove("input-bad");
+
+  const you = (state.access.you ?? "").toLowerCase();
+  const last = state.access.emails.length === 1;
+
+  el.accessList.replaceChildren(
+    ...state.access.emails.map((email) => {
+      const row = document.createElement("li");
+      row.className = "entry";
+
+      const text = document.createElement("div");
+      text.className = "entry-text";
+
+      const name = document.createElement("p");
+      name.className = "entry-email";
+      name.textContent = email;
+      if (email === you) name.append(pill("you", "pill-you"));
+      text.append(name);
+      row.append(text);
+
+      const actions = document.createElement("div");
+      actions.className = "entry-actions";
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "btn btn-danger";
+      remove.textContent = "Remove";
+
+      // Both of these are also refused by the Worker (guardChange in
+      // board-access.js), which is what actually enforces them. Disabling the
+      // button here is so nobody has to discover the rule by being told off.
+      if (email === you) {
+        remove.disabled = true;
+        remove.title = "You can't remove your own access — ask someone else on the list.";
+      } else if (last) {
+        remove.disabled = true;
+        remove.title = "This is the last address; removing it would lock everyone out.";
+      } else {
+        remove.addEventListener("click", () => removeEmail(email, remove));
+      }
+
+      actions.append(remove);
+      row.append(actions);
+      return row;
+    }),
+  );
+}
+
+function pill(label, className) {
+  const span = document.createElement("span");
+  span.className = `pill ${className}`;
+  span.textContent = label;
+  return span;
+}
+
+el.accessForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  el.accessError.hidden = true;
+  el.accessInput.classList.remove("input-bad");
+
+  // Two checks here purely so the answer is instant. The Worker validates the
+  // address properly and refuses the change if it is already there.
+  const email = el.accessInput.value.trim().toLowerCase();
+  if (email === "") return failAccess("Type the email address you want to add.", "access-input");
+  if (state.access.emails.includes(email)) {
+    return failAccess(`${email} is already on the list.`, "access-input");
+  }
+
+  await run(
+    el.accessAddBtn,
+    "Adding…",
+    async () => {
+      await saveAccess([...state.access.emails, email]);
+      el.accessInput.value = "";
+    },
+    failAccess,
+  );
+});
+
+async function removeEmail(email, button) {
+  const ok = await confirmAction({
+    title: "Remove this person's access?",
+    body: `${email} will no longer be able to open this page.`,
+    warning: "You can add them back at any time.",
+    action: "Remove",
+  });
+  if (!ok) return;
+
+  await run(
+    button,
+    "Removing…",
+    async () => {
+      await saveAccess(state.access.emails.filter((e) => e !== email));
+    },
+    failAccess,
+  );
+}
+
+/**
+ * Write the whole list, telling the Worker what we thought we were starting from.
+ *
+ * `expected` is what makes a concurrent change safe to refuse rather than
+ * silently overwrite: Cloudflare's API has no compare-and-swap, so this page has
+ * to say what it was looking at. See postAccess in worker/index.js.
+ */
+async function saveAccess(emails) {
+  const result = await api("/admin/api/access", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ emails, expected: state.access.emails }),
+  });
+
+  // What Cloudflare confirmed, not what we asked for.
+  state.access = { loaded: true, emails: result.emails, you: result.you };
+  renderAccess();
+  showBanner(`${result.message} It takes effect immediately.`, true);
+}
+
+/**
+ * The access section's own error line — the equivalent of failForm, which writes
+ * into the entry form and would be invisible from here.
+ *
+ * The input is only marked when the problem IS the input. A refused removal ("you
+ * can't remove your own address") has nothing to do with what is typed in the add
+ * box, and outlining it in red there sends people to fix the wrong thing.
+ */
+function failAccess(message, field) {
+  el.accessError.textContent = message;
+  el.accessError.hidden = false;
+
+  if (field === "access-input") {
+    el.accessInput.classList.add("input-bad");
+    el.accessInput.focus({ preventScroll: true });
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Plumbing
@@ -509,19 +708,51 @@ async function api(path, init) {
   return data;
 }
 
-/** Run an action with the button disabled, turning a thrown error into a message. */
-async function run(button, busyLabel, action) {
+/**
+ * Run an action with the button disabled, turning a thrown error into a message.
+ *
+ * `fail` says where that message goes. It defaults to the entry form's error
+ * line, which is where all of this started; the access list passes its own,
+ * because writing into a hidden section's error line is the same as swallowing
+ * the error.
+ */
+async function run(button, busyLabel, action, fail = failForm) {
   const original = button.textContent;
   button.disabled = true;
   button.textContent = busyLabel;
   try {
     await action();
   } catch (error) {
-    failForm(error.message, error.field);
+    fail(error.message, error.field);
   } finally {
     button.disabled = false;
     button.textContent = original;
   }
+}
+
+/**
+ * The shared confirmation dialog, awaited: true if they went through with it.
+ *
+ * Every word is passed in because the same dialog now guards two different kinds
+ * of action, and they are not equally final — deleting an event takes its photo
+ * with it, whereas an address that was removed can simply be added back. A
+ * warning line that overstates the consequence trains people to ignore it.
+ */
+async function confirmAction({ title, body, warning, action }) {
+  el.confirmTitle.textContent = title;
+  el.confirmBody.textContent = body;
+  el.confirmWarning.textContent = warning;
+  el.confirmGoBtn.textContent = action;
+
+  el.confirmDialog.returnValue = "cancel";
+  el.confirmDialog.showModal();
+
+  const choice = await new Promise((resolve) => {
+    el.confirmDialog.addEventListener("close", () => resolve(el.confirmDialog.returnValue), {
+      once: true,
+    });
+  });
+  return choice === "go";
 }
 
 function failForm(message, fieldName) {

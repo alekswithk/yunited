@@ -398,6 +398,50 @@ h1, h2, h3 {
 .pill-tba {
   color: var(--color-azure);
 }
+.pill-you {
+  color: var(--color-azure);
+}
+
+/* ---------- Access list ---------- */
+/* Reuses .entries/.entry and .btn; only the things the content lists have no
+   equivalent for are declared here. */
+
+.access-lede {
+  max-width: 62ch;
+  margin: 0 0 var(--space-4);
+}
+
+.access-form {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: var(--border);
+  max-width: 62ch;
+}
+
+.access-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.access-row .input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.access-row .btn {
+  flex: 0 0 auto;
+}
+
+/* An address is data the board reads back character by character to check a
+   typo, so it gets the monospace treatment rather than the display face used for
+   event titles. */
+.entry-email {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  word-break: break-all;
+  margin: 0;
+}
 
 /* ---------- Buttons ---------- */
 

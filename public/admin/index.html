@@ -47,20 +47,52 @@
       <section class="view" id="view-list">
         <nav class="tabs" id="tabs" aria-label="Sections"></nav>
 
-        <div class="list-head">
-          <h1 class="list-title" id="list-title">Events</h1>
-          <div class="list-actions">
-            <label class="sort-label" for="sort-select">Sort by</label>
-            <!-- Options are filled from the collection's `sorts`, so the list
-                 can only be ordered in ways the registry declares. -->
-            <select class="sort-select" id="sort-select"></select>
-            <button class="btn btn-primary" id="add-btn" type="button">Add event</button>
+        <!-- One of these two shows at a time, under the same tab bar: the content
+             collections, or the access list. They are siblings rather than
+             separate views so switching tabs never hides the tabs. -->
+        <div id="list-body">
+          <div class="list-head">
+            <h1 class="list-title" id="list-title">Events</h1>
+            <div class="list-actions">
+              <label class="sort-label" for="sort-select">Sort by</label>
+              <!-- Options are filled from the collection's `sorts`, so the list
+                   can only be ordered in ways the registry declares. -->
+              <select class="sort-select" id="sort-select"></select>
+              <button class="btn btn-primary" id="add-btn" type="button">Add event</button>
+            </div>
           </div>
+
+          <p class="loading" id="loading">Loading the current content from GitHub…</p>
+          <ul class="entries" id="entries"></ul>
+          <p class="empty" id="empty" hidden>Nothing here yet. Use the button above to add the first one.</p>
         </div>
 
-        <p class="loading" id="loading">Loading the current content from GitHub…</p>
-        <ul class="entries" id="entries"></ul>
-        <p class="empty" id="empty" hidden>Nothing here yet. Use the button above to add the first one.</p>
+        <!-- ============ ACCESS LIST ============ -->
+        <div id="access-body" hidden>
+          <div class="list-head">
+            <h1 class="list-title">Who can open this page</h1>
+          </div>
+
+          <p class="access-lede">
+            Everyone on this list can sign in at yunited.ch/admin and edit the
+            website. Adding an address lets that person in straight away — they
+            get a one-time code by email, there is nothing for them to install.
+            Removing one ends their access immediately.
+          </p>
+
+          <p class="loading" id="access-loading">Loading the access list from Cloudflare…</p>
+          <ul class="entries" id="access-list"></ul>
+
+          <form class="access-form" id="access-form" novalidate>
+            <label class="label" for="access-input">Add someone</label>
+            <div class="access-row">
+              <input class="input" type="email" id="access-input" name="email"
+                     placeholder="name@student.unisg.ch" autocomplete="off" />
+              <button class="btn btn-primary" id="access-add-btn" type="submit">Add</button>
+            </div>
+            <p class="form-error" id="access-error" role="alert" hidden></p>
+          </form>
+        </div>
       </section>
 
       <!-- ============ EDIT VIEW ============ -->
@@ -183,6 +215,39 @@
           page only appears once there is at least one partner here.
         </p>
 
+        <h3>Access</h3>
+        <p>
+          The <strong>Access</strong> tab is the list of people who can open this
+          page. It is the real thing, not a copy of it — a change here takes effect
+          within seconds, and there is no separate step in the Cloudflare
+          dashboard.
+        </p>
+        <ul>
+          <li><strong>Adding someone:</strong> type their email address and press
+            <strong>Add</strong>. They can sign in immediately: they go to
+            yunited.ch/admin, type that same address, and Cloudflare emails them a
+            one-time code. No account to create, nothing to install.</li>
+          <li><strong>Use the address they will actually type.</strong> The code
+            goes to that mailbox, so an old or misspelled address means nobody can
+            sign in with it — it doesn't fail loudly, it just never arrives.</li>
+          <li><strong>Removing someone:</strong> press <strong>Remove</strong> and
+            confirm. Their access ends at once. This is the whole off-boarding
+            step when someone leaves the board — they never had a password of their
+            own.</li>
+        </ul>
+        <p class="notepad-callout">
+          Two things the page will not let you do, both to stop the board locking
+          itself out: you cannot remove <strong>your own</strong> address, and you
+          cannot remove the <strong>last</strong> one. To hand over your own seat,
+          add the new person first and ask them to remove you.
+        </p>
+        <p>
+          Anyone on the list can change the list. Every change is logged with the
+          email of whoever made it. If the list is ever emptied by accident —
+          which this page refuses to do, but a mistake in the Cloudflare dashboard
+          could — whoever looks after the Cloudflare account can restore it there.
+        </p>
+
         <h3>Photos</h3>
         <ul>
           <li><strong>Format:</strong> JPG, PNG or WebP. <strong>iPhone photos are often HEIC and won't work</strong> — share or export the photo first and it saves as JPEG.</li>
@@ -219,12 +284,15 @@
          escapable, rather than a browser confirm() that can't be styled. -->
     <dialog class="confirm" id="confirm-dialog" aria-labelledby="confirm-title">
       <form method="dialog">
+        <!-- Title, body and warning are all set from admin.js: the same dialog
+             confirms deleting an entry and removing somebody's access, and those
+             are not equally final — a removed email can simply be added back. -->
         <h2 id="confirm-title">Delete this entry?</h2>
         <p id="confirm-body"></p>
-        <p class="confirm-warning">This cannot be undone from here.</p>
+        <p class="confirm-warning" id="confirm-warning">This cannot be undone from here.</p>
         <div class="confirm-actions">
-          <button class="btn" value="cancel" type="submit">Keep it</button>
-          <button class="btn btn-danger" value="delete" type="submit">Delete</button>
+          <button class="btn" id="confirm-keep-btn" value="cancel" type="submit">Keep it</button>
+          <button class="btn btn-danger" id="confirm-go-btn" value="go" type="submit">Delete</button>
         </div>
       </form>
     </dialog>
