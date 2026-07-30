@@ -14,13 +14,17 @@
       "title": "Weihnachtsessen",
       "description": "Ein festliches Abendessen, um das Jahr gemeinsam ausklingen zu lassen."
     },
-    "bcs": {
+    "hr": {
       "title": "Božićna večera",
-      "description": "Svečana večera za zajedničko dočekivanje kraja godine."
+      "description": "Svečana večera da zajedno zatvorimo godinu."
+    },
+    "bs": {
+      "title": "Božićna večera",
+      "description": "Svečana večera da zajedno zatvorimo godinu."
     },
     "sr": {
       "title": "Božićna večera",
-      "description": "Praznična večera da zajedno završimo godinu."
+      "description": "Svečana večera da zajedno zatvorimo godinu."
     }
   }
 }

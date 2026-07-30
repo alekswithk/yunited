@@ -6,7 +6,7 @@ University of St. Gallen (HSG), live at **[yunited.ch](https://yunited.ch)**.
 Static site built with [Astro](https://astro.build) and deployed on Cloudflare
 (Workers static assets). Content is authored as JSON and rendered to HTML **at
 build time** — no database, no server, no client-side data fetching. The site is
-available in English and German, with Bosnian/Croatian/Serbian in progress.
+published in **five languages**: English, German, Bosnian, Croatian and Serbian.
 
 There are two ways to work on it. Pick the one that matches what you're doing:
 
@@ -63,7 +63,7 @@ npm run dev          # local preview at http://localhost:4321
 npm run build        # writes the finished static site to dist/
 npm run preview      # serve the built dist/ locally
 npm run check        # astro check — type/diagnostics, must be 0 errors
-npm test             # unit tests for src/lib and worker/
+npm test             # unit tests for src/lib, worker/ and scripts/lib
 npm run check:dist   # post-build assertions on dist/
 npm run admin:dev    # the admin panel + its Worker, on http://localhost:8787
 ```
@@ -133,16 +133,31 @@ pipeline — drop in any size/format and it's resized to WebP with a 1×/2× src
 
 ### Internationalization
 
-- `src/i18n/{en,de,bcs,sr}.json` are the UI dictionaries; `en.json` is the source
+- `src/i18n/{en,de,hr,bs,sr}.json` are the UI dictionaries; `en.json` is the source
   of truth. Anything missing from a translation falls back to English.
 - `src/i18n/config.js` is the locale registry. `complete: false` gates a locale:
   its pages generate and are viewable at their real URLs but are `noindex`, kept
   out of the sitemap, and hidden from the language switcher until the flag flips.
 - Translations are filled **offline**, never during the build: `npm run translate`
-  (UI strings) and `npm run translate:content` (event/member content) call DeepL
-  and write the JSON, which you review and commit. Both need a `DEEPL_API_KEY` —
+  (UI strings) and `npm run translate:content` (event content) call Claude and
+  write the JSON, which you review and commit. Both need an `ANTHROPIC_API_KEY` —
   copy `.env.example` to `.env` and paste one in. The build itself is hermetic:
   no network, no secrets.
+- **The whole dictionary is translated in one request per language.** This
+  replaced DeepL, which took one string at a time with no surrounding context —
+  and that is where the bad translations came from, not from the vendor. A submit
+  button's in-flight label "Sending…" came back as the imperative "Send"; a link
+  fragment came back unable to agree with the preposition in the fragment before
+  it; the buddy system ended up with four different names per language.
+- `scripts/lib/glossary.mjs` holds the policy: names that are never translated
+  (`Meet & Greet`, `Svadba`, `Déja Vu Bar`), one pinned term per concept per
+  language, the Croatian/Bosnian lexis split, and the address form. **Nothing is
+  written until `scripts/lib/validate.mjs` passes** — it is unit-tested in
+  `npm test`, and it exists because these defects are invisible to every other
+  command in the repo.
+- **Bosnian and Croatian have separate dictionaries.** They shared one (`bcs`)
+  until it turned out to be Croatian with stray Bosnian forms in it, so Bosnian
+  readers were served inconsistent Croatian.
 
 Full i18n conventions are in `CLAUDE.md`.
 
@@ -166,7 +181,7 @@ Three things live **outside** the repo and are worth knowing:
 - **`GITHUB_TOKEN`** is an encrypted Worker secret, set with
   `npx wrangler secret put GITHUB_TOKEN`. It is what lets `/admin` commit. See
   [`worker/README.md`](worker/README.md).
-- **`DEEPL_API_KEY`** is a GitHub Actions secret, used only by the auto-translate
+- **`ANTHROPIC_API_KEY`** is a GitHub Actions secret, used only by the auto-translate
   workflow (`.github/workflows/translate-content.yml`) — never by the site build.
 
 Who may reach `/admin` is managed in the **Cloudflare Zero Trust dashboard**
@@ -189,12 +204,12 @@ src/
   layouts/        BaseLayout.astro — <head>, header, footer, once
   components/     EventCard, MemberLead, MemberRow, Portrait, PageToc, Header, Footer
   lib/            build-time logic: content loading, Zod schema, event/date helpers
-  i18n/           locale registry + {en,de,bcs,sr}.json dictionaries
+  i18n/           locale registry + {en,de,hr,bs,sr}.json dictionaries
   styles/         global.css — design tokens at the top
   images/         source images (optimized at build)
 worker/           the /admin API — the only server-side code; holds the GitHub token
 public/           copied verbatim into dist/ — admin/ (the panel), _headers, assets/
-scripts/          mirror-media + the offline DeepL translation helpers
+scripts/          mirror-media + the offline translation pipeline (glossary, gate)
 .github/          CI (test+build+check on PRs) + the auto-translate workflow
 astro.config.mjs, wrangler.jsonc   build & deploy config
 ```

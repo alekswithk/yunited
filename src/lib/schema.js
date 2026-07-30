@@ -48,8 +48,13 @@ const optional = (schema) =>
   z.preprocess((v) => (v === "" || v === undefined ? null : v), schema.nullable());
 
 // Machine translations of an entry's text, written by scripts/translate-content.mjs
-// and never by hand. Keyed by DICTIONARY name (en/de/bcs/sr — see i18n/config.js),
-// not locale code, so bs and hr keep sharing the one bcs translation.
+// and never by hand. Keyed by DICTIONARY name (en/de/hr/bs/sr — see
+// i18n/config.js). `bs` and `hr` shared one `bcs` block until that shared file
+// turned out to be Croatian with stray Bosnian forms in it; they are separate now.
+//
+// The `.catchall()` below is what made that split a content migration rather than
+// a schema change: dictionary names are data, not enumerated cases, so adding or
+// renaming a locale needs no edit here.
 //
 // `sourceLang` records which language the board actually wrote the entry in, and
 // `sourceHash` fingerprints the source text: when someone edits a description the

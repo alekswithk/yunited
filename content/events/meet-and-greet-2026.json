@@ -14,13 +14,17 @@
       "title": "Meet & Greet",
       "description": "Unser erstes zwangloses Treffen in diesem Semester – kommt vorbei und lernt den Vorstand und andere Mitglieder bei einem Drink kennen, ganz ohne Tagesordnung. Termin und Ort werden in Kürze bekannt gegeben; folgt @yunited.unisg, um als Erste/r davon zu erfahren."
     },
-    "bcs": {
-      "title": "Susret i upoznavanje",
-      "description": "Naše prvo neformalno druženje u semestru — dođite upoznati upravni odbor i ostale članove uz piće, bez dnevnog reda. Datum i mjesto bit će uskoro objavljeni; pratite @yunited.unisg kako biste prvi saznali."
+    "hr": {
+      "title": "Meet & Greet",
+      "description": "Naše prvo neformalno druženje u semestru — dođi upoznati odbor i ostale članove uz piće, bez ikakvog programa. Datum i mjesto bit će objavljeni uskoro; prati @yunited.unisg da prvi doznaš."
+    },
+    "bs": {
+      "title": "Meet & Greet",
+      "description": "Naše prvo neformalno druženje u semestru — dođi upoznati odbor i ostale članove uz piće, bez ikakvog programa. Datum i mjesto bit će objavljeni uskoro; prati @yunited.unisg da prvi saznaš."
     },
     "sr": {
-      "title": "Susret i upoznavanje",
-      "description": "Naše prvo neformalno okupljanje u semestru — dođite da upoznate odbor i ostale članove uz piće, bez dnevnog reda. Datum i mesto biće uskoro objavljeni; pratite @yunited.unisg da prvi saznate."
+      "title": "Meet & Greet",
+      "description": "Naše prvo neformalno druženje u semestru — dođi da upoznaš odbor i ostale članove uz piće, bez ikakvog programa. Datum i mesto biće objavljeni uskoro; prati @yunited.unisg da prvi saznaš."
     }
   }
 }

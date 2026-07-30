@@ -55,6 +55,14 @@ venv/
 .RData
 .Ruserdata
 
+# ---- Personal scratch notes ----
+# A maintainer's own cheat sheet for "which file do I open to change this text".
+# Deliberately untracked: it duplicates facts that live authoritatively in
+# CLAUDE.md, PLAN.md and docs/ADMIN.md, and a tracked copy drifts out of date
+# silently (it once told the board that bs/hr/sr were still unpublished, months
+# after they went live). Keep it local, edit it freely, delete it any time.
+EDITABLE-TEXT-FILES.txt
+
 # ---- Host / deploy tooling ----
 .wrangler/
 .netlify/

@@ -55,6 +55,11 @@ const DATA_BLOCK = /type\s*=\s*["'](application\/ld\+json|application\/json)["']
 // markup is normal in this repo; treating it as markup is the bug.
 const HTML_COMMENT = /<!--[\s\S]*?-->/g;
 
+// The deliberately trilingual hero flourish ("Događaji · Догађаји · Events").
+// It is decorative and identical on every locale, so the Serbian script check
+// below excludes it rather than counting it as stray Cyrillic.
+const HERO_SCRIPT = /<p class="hero-script">[\s\S]*?<\/p>/g;
+
 const checks = [
   {
     name: "no style= attributes (style-src has no 'unsafe-inline')",
@@ -75,6 +80,25 @@ const checks = [
     name: 'brand is spelled "YUnited" in rendered copy',
     find: (html) => (html.match(/\bYunited\b/g) ?? []),
   },
+  {
+    // Serbian on this site is written in LATIN script: src/i18n/config.js
+    // declares htmlLang "sr-Latn" and dateLocale "sr-Latn-RS", so Cyrillic in
+    // the copy contradicts the page's own language tag.
+    //
+    // sr.json has been mixed before — 34 Latin keys against 126 Cyrillic ones —
+    // and the translation pipeline now asserts Latin output at the source
+    // (scripts/lib/validate.mjs). This is the same invariant checked on the
+    // BUILT page, which is the only place it can catch Cyrillic arriving from
+    // somewhere other than the dictionary: an event's i18n block, a hard-coded
+    // string in a component, a hand edit.
+    //
+    // The `.hero-script` flourish is deliberately trilingual — "O nama · О нама
+    // · About us" — and renders identically on every locale, English included.
+    // It is decorative, not copy, so it is excluded rather than counted.
+    name: "Serbian pages carry no Cyrillic (htmlLang is sr-Latn)",
+    only: (rel) => rel === "sr" || rel.startsWith("sr/"),
+    find: (html) => (html.replace(HERO_SCRIPT, "").match(/[Ѐ-ӿ]+/g) ?? []),
+  },
 ];
 
 let failures = 0;
@@ -87,6 +111,8 @@ for (const file of htmlFiles(DIST)) {
   const rel = relative(DIST, file);
   const html = readFileSync(file, "utf8").replace(HTML_COMMENT, "");
   for (const check of checks) {
+    // Most checks apply to every page; `only` scopes one to a locale subtree.
+    if (check.only && !check.only(rel)) continue;
     const hits = check.find(html);
     if (hits.length === 0) continue;
     failures += hits.length;
@@ -421,9 +447,12 @@ if (failures > 0) {
   console.error(
     `\n${failures} violation(s). See the comments in scripts/check-dist.mjs.\n` +
       "Everything asserted here is invisible to `astro build` and `astro check`:\n" +
-      "it breaks the live site only under the CSP, or breaks only /admin.",
+      "it breaks the live site only under the CSP, breaks only /admin, or is\n" +
+      "simply wrong on the page while every command stays green.",
   );
   process.exit(1);
 }
 
-console.log("✓ dist/ — CSP-clean, on-brand, /admin first-party and wired, media previewable");
+console.log(
+  "✓ dist/ — CSP-clean, on-brand, Serbian in Latin, /admin first-party and wired, media previewable",
+);

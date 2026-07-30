@@ -1,0 +1,224 @@
+{
+  "nav": {
+    "home": "Početna",
+    "about": "O nama",
+    "events": "Događaji",
+    "members": "Članovi",
+    "exchange": "Razmjena",
+    "partners": "Partneri",
+    "contact": "Kontakt",
+    "join": "Pridruži se",
+    "aria": "Glavna navigacija",
+    "openMenu": "Otvori meni"
+  },
+  "lang": {
+    "aria": "Odaberi jezik"
+  },
+  "toc": {
+    "aria": "Na ovoj stranici",
+    "mission": "Misija",
+    "buddy": "Sustav prijatelja",
+    "story": "Priča",
+    "values": "Vrijednosti",
+    "upcoming": "Predstojeće",
+    "recent": "Nedavno",
+    "who": "Tko smo mi"
+  },
+  "footer": {
+    "tagline": "Studentski klub na HSG-u koji od 2013. povezuje studente s balkanskim i bivšim jugoslavenskim korijenima — i sve koje zanima ova kultura.",
+    "pages": "Stranice",
+    "connect": "Prati nas",
+    "exchangeLink": "Studenti na razmjeni",
+    "joinOnUniclubs": "Pridruži se na uniclubs",
+    "rights": "studentski klub na Sveučilištu u St. Gallenu (HSG). Članstvo se vodi na"
+  },
+  "meta": {
+    "home": {
+      "title": "YUnited — balkanski i bivši jugoslavenski studentski klub na HSG-u",
+      "description": "YUnited društveno i profesionalno povezuje studente s korijenima iz bivše Jugoslavije i potiče kulturnu razmjenu na Sveučilištu u St. Gallenu."
+    },
+    "about": {
+      "title": "O nama — YUnited",
+      "description": "YUnited potiče kulturnu razmjenu među studentima iz bivše Jugoslavije na Sveučilištu u St. Gallenu. Osnovan 2013."
+    },
+    "events": {
+      "title": "Događaji — YUnited",
+      "description": "Predstojeći događaji i sažeci prošlih događaja — YUnited, balkanski i bivši jugoslavenski studentski klub na HSG-u."
+    },
+    "members": {
+      "title": "Članovi i odbor — YUnited",
+      "description": "Upoznaj odbor kluba YUnited, balkanskog i bivšeg jugoslavenskog studentskog kluba na HSG-u."
+    },
+    "exchange": {
+      "title": "Studenti na razmjeni — YUnited",
+      "description": "Što YUnited nudi studentima na razmjeni koji dolaze na HSG — i kako studenti HSG-a koji odlaze na razmjenu mogu ostati povezani dok su u inozemstvu."
+    },
+    "partners": {
+      "title": "Partneri — YUnited",
+      "description": "Postani partner kluba YUnited i putem naših događaja i zajednice dođi do studenata HSG-a s korijenima iz bivše Jugoslavije."
+    },
+    "join": {
+      "title": "Pridruži se — YUnited",
+      "description": "Postani član kluba YUnited putem uniclubs.ch — CHF 20 po semestru za pristup svim događajima."
+    },
+    "contact": {
+      "title": "Kontakt — YUnited",
+      "description": "Javi se klubu YUnited, balkanskom i bivšem jugoslavenskom studentskom klubu na HSG-u."
+    },
+    "notFound": {
+      "title": "Stranica nije pronađena — YUnited",
+      "description": "Ta stranica ne postoji."
+    }
+  },
+  "home": {
+    "heroTitleMain": "Balkanska i bivša jugoslavenska zajednica",
+    "heroTitleAccent": "na HSG-u.",
+    "heroLede": "YUnited je studentski klub na Sveučilištu u St. Gallenu koji društveno i profesionalno povezuje studente s korijenima iz bivše Jugoslavije — i sve koje zanima ova kultura. Od 2013.",
+    "heroJoin": "Pridruži se klubu YUnited",
+    "heroEvents": "Pogledaj naše događaje",
+    "upcomingEyebrow": "Što slijedi",
+    "upcomingHeading": "Predstojeći događaji",
+    "pastEyebrow": "Nedavno",
+    "pastHeading": "Najnoviji trenuci",
+    "allEvents": "Svi događaji i sažeci",
+    "whoEyebrow": "Tko smo mi",
+    "whoHeading": "Kultura, zajednica, poznanstva.",
+    "whoBody": "Od roštilja na Prvi maj do karaoke večeri i karijernih mreža — YUnited organizira društvene i profesionalne događaje koji studentima pomažu da se osjećaju kao kod kuće u St. Gallenu i da steknu prijateljstva koja traju dugo nakon diplome.",
+    "whoCta": "Više o klubu"
+  },
+  "events": {
+    "heroTitle": "Događaji",
+    "heroLede": "Brunchevi, roštilji, karaoke, casino večeri i karijerni događaji — to je ono čime se bavimo. Članovi dobivaju pristup svim događajima putem uniclubs.",
+    "upcomingEyebrow": "Zabilježi datum",
+    "upcomingHeading": "Predstojeći događaji",
+    "pastEyebrow": "Sažeci",
+    "pastHeading": "Prošli događaji",
+    "pastIntro": "Pogled na ono što smo nedavno radili. Fotografije i priče možeš pronaći i na našem <a href=\"https://www.instagram.com/yunited.unisg\" target=\"_blank\" rel=\"noopener\">Instagramu</a>.",
+    "emptyUpcoming": "Trenutačno nema zakazanih događaja — prati nas na Instagramu (@yunited.unisg) ili provjeri uniclubs da prvi doznaš za sljedeći.",
+    "emptyPast": "Još nema prošlih događaja.",
+    "rsvpCta": "Prijavi se na uniclubs →",
+    "pastCta": "Stranica događaja →",
+    "dateTba": "Datum će biti objavljen",
+    "photoAlt": "Fotografija s događaja {title}"
+  },
+  "about": {
+    "heroTitle": "O klubu YUnited",
+    "heroLede": "Potičemo kulturnu razmjenu među studentima iz bivše Jugoslavije na Sveučilištu u St. Gallenu — od 2013.",
+    "missionEyebrow": "Naša misija",
+    "missionHeading": "Čime se bavimo",
+    "missionP1": "YUnited društveno i profesionalno povezuje studente s korijenima iz bivše Jugoslavije i potiče kulturnu razmjenu na Sveučilištu u St. Gallenu.",
+    "missionP2": "Organiziramo razne društvene i profesionalne događaje za studente iz zemalja bivše Jugoslavije kako bismo im pomogli u osobnom i profesionalnom razvoju tijekom i nakon studija na HSG-u — a dobrodošli su svi koje zanima ova kultura, neovisno o tome imaju li korijene u regiji.",
+    "missionP3": "Izvan kampusa YUnited gradi mrežu među studentima, podupire njihov akademski razvoj, djeluje kao most prema tvrtkama i organizacijama s bivšim jugoslavenskim korijenima te podupire i promiče dobrotvorne kampanje.",
+    "missionP4": "Naš sustav prijatelja nudi podršku studentima Assessment godine i studentima na razmjeni te povezuje ljude sa svih studijskih smjerova i iz svih semestara.",
+    "buddyEyebrow": "Sustav prijatelja",
+    "buddyHeading": "Netko koga možeš pitati, od prvog dana",
+    "buddyLede": "Početak na HSG-u je puno toga odjednom — novi grad, novi sustav, mnogo novih ljudi. Naš sustav prijatelja povezuje te s nekim tko je sve to već prošao. Otvoren je za svakog člana kluba YUnited, ne samo za studente koji dolaze na razmjenu.",
+    "buddyStudentsTitle": "Za studente HSG-a",
+    "buddyStudentsBody": "Studenti Assessment godine dobivaju prvu osobu kojoj se mogu obratiti za ono što ne piše ni u jednom priručniku — kako isplanirati semestar, koji se kolegiji dobro slušaju zajedno, gdje se što nalazi. Povezuje i studente s različitih smjerova i godina, od Assessment godine do magistarskog studija.",
+    "buddyExchangeTitle": "Za studente na razmjeni",
+    "buddyExchangeBody": "Ovdje si na jedan semestar? Tvoj prijatelj iz sustava prva je osoba kojoj se možeš obratiti s pitanjima o HSG-u i svakodnevnom životu u St. Gallenu — balkanski korijeni nisu potrebni.",
+    "buddyMorePre": "Više o tome što nudimo studentima na razmjeni koji dolaze i onima koji odlaze pročitaj na ",
+    "buddyMoreLink": "stranici o razmjeni",
+    "buddyMorePost": ".",
+    "buddyCta": "Pitaj nas o sustavu prijatelja",
+    "storyEyebrow": "Od 2013.",
+    "storyHeading": "Naša priča",
+    "storyIntro": "YUnited je osnovan 2013. kao kulturni klub za studente iz regije bivše Jugoslavije na HSG-u.",
+    "valuesEyebrow": "Vrijednosti",
+    "valuesHeading": "Za što se zalažemo",
+    "valueCommunityTitle": "Zajednica",
+    "valueCommunityBody": "Dom daleko od doma: prijateljstva na svim smjerovima i kroz sve semestre, od Assessment godine do magistarskog studija i dalje.",
+    "valueCultureTitle": "Kultura",
+    "valueCultureBody": "Održavamo hranu, glazbu, humor i tradiciju regije živima u St. Gallenu — i dijelimo ih sa svima koje to zanima.",
+    "valueCareersTitle": "Karijera",
+    "valueCareersBody": "Profesionalni događaji i most prema tvrtkama i organizacijama s bivšim jugoslavenskim korijenima, tijekom studija i nakon njega."
+  },
+  "members": {
+    "heroTitle": "Članovi i odbor",
+    "heroLede": "Ljudi koji drže YUnited na nogama — organiziraju događaje, grade partnerstva i svaki semestar primaju nove članove.",
+    "boardEyebrow": "Odbor",
+    "boardHeading": "Aktualni odbor",
+    "boardEmpty": "Odbor za ovaj semestar još se potvrđuje. Provjeri ponovno uskoro.",
+    "involvedHeading": "Želiš se uključiti?",
+    "involvedBody": "Članovi mogu sudjelovati u oblikovanju događaja, preuzeti uloge u odboru i razvijati zajednicu. Pozdravi nas na bilo kojem događaju ili nam se javi.",
+    "involvedCta": "Javi nam se",
+    "tba": "Bit će objavljeno",
+    "portraitAlt": "Portret osobe {name}"
+  },
+  "exchange": {
+    "heroTitle": "Studenti na razmjeni",
+    "heroLede": "Dolaziš na HSG na jedan semestar ili i sam odlaziš u inozemstvo — evo kako se YUnited uklapa u tvoju razmjenu.",
+    "incomingEyebrow": "Dolazak na HSG",
+    "incomingHeading": "Studenti na razmjeni koji dolaze",
+    "incomingLede": "Provodiš semestar u St. Gallenu? Od srca si pozvan — balkanski korijeni nisu potrebni.",
+    "incomingBuddy": "<strong>Sustav prijatelja:</strong> naš sustav prijatelja nudi podršku studentima Assessment godine i studentima na razmjeni — prva je osoba kojoj se možeš obratiti s pitanjima o HSG-u i životu u St. Gallenu.",
+    "incomingEvents": "<strong>Događaji:</strong> pridruži se našim brunchevima, roštiljima, karaoke i party večerima od prvog tjedna. Članstvo (putem uniclubs) daje pristup svim događajima.",
+    "incomingHome": "<strong>Djelić doma:</strong> ako su tvoji korijeni u regiji, mi smo način da ostaneš povezan s kulturom dok si u inozemstvu. Ako nisu, mi smo zabavan način da je otkriješ.",
+    "incomingCta": "Pitaj nas što god želiš",
+    "outgoingEyebrow": "Odlazak u inozemstvo",
+    "outgoingHeading": "Studenti HSG-a koji odlaze na razmjenu",
+    "outgoingLede": "Odlaziš na razmjenu — u Rotterdam, Beč, Singapur ili nekamo drugdje? Evo iskrene slike:",
+    "outgoingItem1": "YUnited trenutačno ne vodi formalni program za studente u inozemstvu.",
+    "outgoingItem2": "Članovi često i neformalno ostaju povezani — prati <a href=\"https://www.instagram.com/yunited.unisg\" target=\"_blank\" rel=\"noopener\">@yunited.unisg</a> i budi u tijeku sa zajednicom dok si na putu.",
+    "outgoingItem3Pre": "Rado ćemo podijeliti savjete: ako je neki član kluba YUnited studirao na tvojoj destinaciji, spojit ćemo te s njim — samo nam se ",
+    "outgoingItem3Link": "javi",
+    "outgoingItem3Post": ".",
+    "outgoingCta": "Ostani u kontaktu"
+  },
+  "partners": {
+    "heroTitle": "Postani partner kluba YUnited",
+    "heroLede": "Povezujemo studente HSG-a s korijenima iz bivše Jugoslavije — i sve koje zanima ova kultura — društveno i profesionalno. Evo kako partnerstvo funkcionira.",
+    "whyEyebrow": "Zašto s nama",
+    "whyHeading": "Što partnerstvo nudi",
+    "reachTitle": "Zajednica",
+    "reachBody": "YUnited od 2013. organizira društvene i profesionalne događaje za studente HSG-a i povezuje zajednicu koja obuhvaća sve smjerove i semestre.",
+    "visibilityTitle": "Vidljivost",
+    "visibilityBody": "Partneri su istaknuti na našim događajima te na našoj internetskoj stranici i društvenim mrežama, pred angažiranom i povezanom publikom.",
+    "networkTitle": "Talenti i mreža",
+    "networkBody": "Djelujemo kao most prema tvrtkama i organizacijama s bivšim jugoslavenskim korijenima i povezujemo studente s prilikama tijekom studija i nakon njega.",
+    "ctaEyebrow": "Uključi se",
+    "ctaHeading": "Zanima te partnerstvo?",
+    "ctaBody": "Bilo da je riječ o sponzoriranju jednog događaja ili dugoročnijem partnerstvu, rado bismo čuli tvoju ideju. Javi nam se i reci nam što imaš na umu.",
+    "ctaButton": "Javi nam se o partnerstvu",
+    "currentEyebrow": "S kim radimo",
+    "currentHeading": "Naši partneri"
+  },
+  "join": {
+    "heroTitle": "Pridruži se klubu YUnited",
+    "heroLede": "Članstvo se u cijelosti rješava na uniclubs.ch — službenoj platformi klubova na HSG-u. Prijava tamo traje par minuta; ova stranica postoji samo da ti kaže zašto se isplati.",
+    "getEyebrow": "Članstvo",
+    "getHeading": "Što dobivaš",
+    "semesterTitle": "Semestralno članstvo — CHF 20",
+    "semesterBody": "Pristup <strong>svim događajima kluba YUnited</strong> u semestru: brunchevi, roštilji, karaoke, casino večeri, karijerni događaji i još mnogo toga.",
+    "freeTitle": "Besplatni paket",
+    "freeBody": "Još nisi siguran? Besplatna opcija na uniclubs daje ti pristup <strong>uvodnom događaju</strong> pa nas možeš prvo upoznati.",
+    "cta": "Postani član na uniclubs.ch →",
+    "note": "Trebat ćeš se prijaviti sa svojim uniclubs računom. Plaćanje i vođenje članstva odvijaju se u cijelosti na uniclubs — mi to nikada ne radimo na ovoj stranici.",
+    "questionsHeading": "Imaš pitanja prije pridruživanja?",
+    "questionsBody": "Nisi siguran je li klub za tebe ili želiš znati što je planirano ovaj semestar? Samo pitaj.",
+    "questionsCta": "Javi nam se"
+  },
+  "contact": {
+    "heroTitle": "Javi nam se",
+    "heroLede": "Pitanja o članstvu, događajima, partnerstvima ili bilo čemu drugom — rado ćemo ih pročitati.",
+    "formEyebrow": "Pošalji nam poruku",
+    "formHeading": "Kontaktni obrazac",
+    "formSuccess": "Hvala — tvoja je poruka na putu do odbora. Obično odgovaramo u roku od nekoliko dana.",
+    "labelName": "Ime *",
+    "labelEmail": "E-mail *",
+    "labelTopic": "Tema *",
+    "labelMessage": "Poruka *",
+    "topicChoose": "Odaberi…",
+    "topicMembership": "Članstvo",
+    "topicEvents": "Događaji",
+    "topicPartnerships": "Partnerstva",
+    "topicExchange": "Razmjena / sustav prijatelja",
+    "topicOther": "Ostalo",
+    "formError": "Ispuni sva polja (uz važeću e-mail adresu) prije slanja.",
+    "formSend": "Pošalji poruku",
+    "formSending": "Šalje se…",
+    "formFallback": "Nažalost, slanje nije uspjelo. Piši nam izravno na yunited@shsg.ch.",
+    "formNote": "Tvoja poruka ide izravno u sandučić odbora kluba YUnited (yunited@shsg.ch) i koristi se isključivo za odgovor tebi — ni za što drugo.",
+    "plainEmail": "Više voliš običan e-mail? Piši na <a href=\"mailto:yunited@shsg.ch\">yunited@shsg.ch</a> — ili nam pošalji poruku na <a href=\"https://www.instagram.com/yunited.unisg\" target=\"_blank\" rel=\"noopener\">Instagramu</a>."
+  }
+}

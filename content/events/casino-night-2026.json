@@ -14,13 +14,17 @@
       "title": "Casino-Abend",
       "description": "Wir versuchen unser Glück an den Spieltischen des Casinos St. Gallen."
     },
-    "bcs": {
-      "title": "Kazino noć",
-      "description": "Ispitujemo sreću za stolovima kockarnice Casino St. Gallen."
+    "hr": {
+      "title": "Casino večer",
+      "description": "Okušavamo sreću za stolovima Casina St. Gallen."
+    },
+    "bs": {
+      "title": "Casino večer",
+      "description": "Okušavamo sreću za stolovima Casina St. Gallen."
     },
     "sr": {
-      "title": "Noć kazina",
-      "description": "Isprobavamo našu sreću za stolovima kazina St. Gallen."
+      "title": "Casino veče",
+      "description": "Okušavamo sreću za stolovima Casina St. Gallen."
     }
   }
 }

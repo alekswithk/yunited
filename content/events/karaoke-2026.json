@@ -14,13 +14,17 @@
       "title": "Karaoke-Abend",
       "description": "Karaoke-Abend in der Déja Vu Bar."
     },
-    "bcs": {
+    "hr": {
       "title": "Karaoke večer",
-      "description": "Karaoke večer u baru Déja Vu."
+      "description": "Karaoke večer u Déja Vu Baru."
+    },
+    "bs": {
+      "title": "Karaoke večer",
+      "description": "Karaoke večer u Déja Vu Baru."
     },
     "sr": {
       "title": "Karaoke veče",
-      "description": "Karaoke veče u baru Deža Vju."
+      "description": "Karaoke veče u Déja Vu Baru."
     }
   }
 }

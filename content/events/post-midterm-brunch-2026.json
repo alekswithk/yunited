@@ -14,13 +14,17 @@
       "title": "Brunch nach den Zwischenprüfungen",
       "description": "Ein traditioneller Brunch mit ehemaligen Studierenden an einem wunderschönen Ort nach den stressigen Zwischenprüfungen."
     },
-    "bcs": {
-      "title": "Brunch nakon srednjeg roka",
-      "description": "Tradicionalni brunch s alumnima na prekrasnoj lokaciji nakon stresnih ispita na sredini semestra."
+    "hr": {
+      "title": "Brunch nakon međuispita",
+      "description": "Tradicionalni brunch s bivšim studentima na prekrasnoj lokaciji nakon stresnih međuispita."
+    },
+    "bs": {
+      "title": "Brunch nakon međuispita",
+      "description": "Tradicionalni brunch s bivšim studentima na prekrasnoj lokaciji nakon stresnih međuispita."
     },
     "sr": {
-      "title": "Branč nakon srednjih ispita",
-      "description": "Tradicionalni branč sa bivšim studentima na prelepoj lokaciji nakon stresnih ispita na sredini semestra."
+      "title": "Brunč nakon kolokvijuma",
+      "description": "Tradicionalni brunč s bivšim studentima na prelepoj lokaciji nakon stresnih kolokvijuma."
     }
   }
 }
