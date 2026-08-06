@@ -22,6 +22,15 @@ tree. #37–#49 all landed on 2026-07-28: all five locales live, Astro 7 / Zod 4
 TS 6, the guardrail suite, the empty partners collection, Sveltia replaced by the
 first-party `/admin` + Worker, and the motif/reveal motion fixes._
 
+_2026-08-03 (weekly agent, ideate mode — no code changed): every remaining §4/§5
+checkbox was either done or 🧑 human-led (the partials/tab-brand items), so this
+run researched the live code instead of picking an item, and appended five new
+`[ ]` proposals to §4 — event `Event` JSON-LD, a per-event "add to calendar" link,
+a skip-to-content link, an events RSS feed, and a Formspree `preconnect` — each
+scoped to what's actually missing in the current `src/`/`content/` (verified by
+reading `BaseLayout.astro`, `index.astro`, `astro.config.mjs` and `package.json`
+directly, not assumed). Left for human review, per §7._
+
 _**The live items are not code.** (1) **`ANTHROPIC_API_KEY` is not set yet.**
 The bs/hr/sr copy has already been re-translated and is clean through the gate,
 so nothing is waiting on it today — but the key is what lets the pipeline run
@@ -406,6 +415,47 @@ they carry design decisions that need a person. The agent skips them.
       Docs: <https://developers.cloudflare.com/cloudflare-one/reusable-components/custom-pages/access-login-page/>
       **Not verified against this account's dashboard yet** — the option's exact
       placement moves between Zero Trust UI revisions.
+
+- [ ] **Structured data for events (`schema.org/Event` JSON-LD)** *(small–medium).*
+      `index.astro` already emits an `Organization` JSON-LD block (`orgSchema`,
+      rendered via a data-block `<script type="application/ld+json">`, exempt from
+      `script-src` per the CSP convention in `CLAUDE.md`); `/events` and each
+      `EventCard` emit none, so an event never has a shot at Google's Event rich
+      results or "Things to do" carousel. Add one `Event` JSON-LD block per
+      **dated** upcoming event (`name`, `startDate`, `location`, `description`,
+      `url`) sourced from the same `events` export `src/lib/content.js` already
+      provides — no new content field, no new dependency. TBA-dated events are
+      skipped: schema.org requires a `startDate`.
+
+- [ ] **"Add to calendar" (.ics) link on each dated event** *(small).* Every
+      upcoming event already has a title, date, time and location in
+      `content/events/*.json`; attending means retyping all of that into a
+      calendar app by hand. Generate a `data:text/calendar` URI at build time —
+      one small, pure, unit-testable function alongside `src/lib/events.js` — and
+      render it as a download link on `EventCard`. No backend, no new dependency,
+      no content-schema change.
+
+- [ ] **"Skip to main content" link** *(small).* `BaseLayout.astro` has a
+      `<main>` landmark but nothing before it lets a keyboard or screen-reader
+      user bypass the header and nav — the WCAG 2.4.1 "bypass blocks" check. Add a
+      link, visually hidden until focused, as the first element inside `<body>`,
+      pointing at an `id` added to `<main>`; style it in `global.css` (no
+      `style="…"`, per the CSP rule in `CLAUDE.md`).
+
+- [ ] **RSS feed for events** (`/events.xml`) *(small).* Board and members have
+      no way to notice a new or changed event short of checking `/events`.
+      `@astrojs/rss` — the official Astro-maintained sibling of the
+      `@astrojs/sitemap` integration already in use — can generate a feed
+      straight from the same `events` export `src/lib/content.js` provides. One
+      new dependency, but Astro-maintained, and no server code: fits the
+      build-time-only architecture as-is.
+
+- [ ] **`<link rel="preconnect">` to Formspree on the contact page** *(tiny).*
+      `contact.astro`'s form POSTs to `formspree.io`, the one third-party origin
+      the site talks to, with no early-connection hint — the DNS/TLS handshake
+      only starts once the visitor clicks submit. A one-line `preconnect` shaves
+      that off the perceived submit latency; no CSP change needed since the form
+      already targets that origin.
 
 Deferred/among-these per the original roadmap: sitemap `hreflang` — shipped instead
 as `<link rel="alternate" hreflang>` in the page `<head>` (gated to finished locales),
