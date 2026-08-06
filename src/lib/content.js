@@ -12,8 +12,11 @@ import { splitEvents, hasDate } from "./events.js";
 /**
  * Swap an entry's translatable fields for the given dictionary's versions.
  *
- * `dict` is a dictionary name (en/de/bcs/sr), not a locale code — callers get it
- * from getLocale(locale).dict, so bs and hr share bcs exactly as the UI strings do.
+ * `dict` is a dictionary name (en/de/bs/hr/sr), not a locale code — callers get
+ * it from getLocale(locale).dict. Today the two coincide, but they are separate
+ * fields on purpose: bs and hr shared one `bcs` dictionary until that file
+ * turned out to be Croatian wearing a Bosnian label (see src/i18n/config.js),
+ * and nothing here assumes the mapping stays one-to-one.
  *
  * Falls back field by field to the source text, so a partially translated entry
  * still renders completely rather than showing a blank title. Returns the entry

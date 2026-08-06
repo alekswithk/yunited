@@ -274,8 +274,30 @@ delete the secret and manage the list in the dashboard. Nothing else breaks.
 
 - **not set** (or either var empty) → no Access tab; the endpoint answers 503
   naming `wrangler secret put CF_API_TOKEN`.
-- **wrong, expired, or missing the permission** → 502 naming the exact permission
-  to fix.
+- **wrong, expired, malformed, or missing the permission** → 502 naming the exact
+  permission to fix. **Read that message as a list of candidates, not a
+  diagnosis** — it fires on `401` *and* `403` alike (`worker/index.js`), so it
+  cannot tell an expired token from an under-permissioned one from a value that
+  is simply not a token. A **doubled paste** is the one that has actually
+  happened: the secret held the token twice, Cloudflare answered `401`, and the
+  message blamed expiry and permissions. Diagnose in this order — the tab
+  *appearing* already proves the secret is set, a wrong `CF_ACCESS_GROUP_ID`
+  would be a `404` rather than this, and `wrangler whoami` confirms
+  `CF_ACCOUNT_ID`; what is left is the value itself, which is testable **before**
+  installing it:
+
+  ```bash
+  TOKEN=$(pbpaste); echo "length: ${#TOKEN}"   # a Cloudflare API token is 40 chars
+  curl -sS -H "Authorization: Bearer $TOKEN" \
+    https://api.cloudflare.com/client/v4/user/tokens/verify      # is the token alive?
+  curl -sS -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer $TOKEN" \
+    "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/access/groups/$CF_ACCESS_GROUP_ID"
+  ```
+
+  `verify` active + group `200` = good token; active + `403` = the permission is
+  wrong; `verify` failing = the token is dead. Note that **editing a token's
+  permissions keeps the same value**, so a permission fix needs no
+  `wrangler secret put` and no deploy.
 - **rate-limited** (Cloudflare allows 1,200 API calls per five minutes per
   account) → 503 saying to wait a minute. This panel comes nowhere near it; a 429
   means something else on the account is busy.
