@@ -14,13 +14,13 @@ when a step ships, tick it here in the same PR.
   [`worker/README.md`](worker/README.md). This file is the *tracker/index*; those
   are the *reference*.
 
-_Last updated: 2026-07-29 (status review — no code changed. **The engineering
-backlog is empty**: 0 open issues, 0 open PRs, 0 `TODO`/`FIXME` in source, clean
-tree, and all four verification commands green — `npm test` 35/35, `build`,
-`check` at 0/0/0, `check:dist` — with `npm audit` clean across the whole 438-package
-tree. #37–#49 all landed on 2026-07-28: all five locales live, Astro 7 / Zod 4 /
-TS 6, the guardrail suite, the empty partners collection, Sveltia replaced by the
-first-party `/admin` + Worker, and the motif/reveal motion fixes._
+_Last updated: 2026-08-06 (status review. 0 open issues, 0 `TODO`/`FIXME` in
+source, and all four verification commands green — `npm test` 82/82, `build`
+(41 pages), `check` at 0/0/0, `check:dist`. #37–#51 landed 2026-07-28 → 07-30:
+all five locales live, Astro 7 / Zod 4 / TS 6, the guardrail suite, the empty
+partners collection, Sveltia replaced by the first-party `/admin` + Worker, the
+motif/reveal motion fixes, the translation pipeline rebuilt with bs split from
+hr, and the board's own Access allow-list._
 
 _2026-08-03 (weekly agent, ideate mode — no code changed): every remaining §4/§5
 checkbox was either done or 🧑 human-led (the partials/tab-brand items), so this
@@ -29,19 +29,34 @@ run researched the live code instead of picking an item, and appended five new
 a skip-to-content link, an events RSS feed, and a Formspree `preconnect` — each
 scoped to what's actually missing in the current `src/`/`content/` (verified by
 reading `BaseLayout.astro`, `index.astro`, `astro.config.mjs` and `package.json`
-directly, not assumed). Left for human review, per §7._
+directly, not assumed). Merged 2026-08-06 after each claim was re-checked
+against the code independently; all five were accurate._
 
-_**The live items are not code.** (1) **`ANTHROPIC_API_KEY` is not set yet.**
-The bs/hr/sr copy has already been re-translated and is clean through the gate,
-so nothing is waiting on it today — but the key is what lets the pipeline run
-**unattended**, which is how a board member's `/admin` save gets localized
-without a person present. Until it exists, a new event saves and publishes in
-its authored language and its translations are simply not filled. (2) The 26/27
+_**Correction to the 2026-07-29 entry, which claimed `npm audit` was clean.** It
+no longer is: **5 vulnerabilities (2 high, 3 moderate)** as of 2026-08-06 —
+`undici`/`miniflare` via `wrangler` (local `admin:dev` only), `postcss` via
+`astro`/`vite` (build time, over CSS authored in this repo), `fast-uri` via
+`@astrojs/check` (`npm run check` only). All of it is dev tooling: none ships to
+a visitor's browser or runs in the deployed Worker, so this is not urgent — but
+it drifted **silently in one week**, and it drifted because **CI runs no `npm
+audit` step**, which is the actual finding. `fast-uri` and `postcss` have
+non-breaking fixes; ignore npm's suggestion to "fix" the wrangler chain by
+downgrading to 4.35.0. See §5._
+
+_**The live items are not code.** (1) **Automatic translation is switched off.**
+The workflow that localizes each `/admin` save requires `ANTHROPIC_API_KEY`,
+which is not set and — **as of 2026-08-06 — will not be**: the board does not
+want the site to depend on a metered API account belonging to whoever happens to
+be president. The replacement is DeepL's free tier; the procedure is §4's
+**"Translation runs on DeepL's free tier"** item, and it is now the priority
+translation task. Until it lands, a new event saves and publishes in its
+authored language with its translations unfilled, and the "Translate content"
+run fails on every content push (it last failed on 2026-07-30). (2) The 26/27
 calendar is empty — every dated event is in the past,
 so Upcoming shows one TBA card; the build warns about it and is warning right
-now. (3) The `GITHUB_TOKEN` expires **end of August 2026** and must be replaced
-before then, or `/admin` stops saving. All three in §3. New ideas are parked in
-§4.5.)_
+now. (3) ~~The `GITHUB_TOKEN` expires end of August 2026~~ — **replaced
+2026-08-06 with a non-expiring fine-grained PAT; no longer a deadline.** All in
+§3. New ideas are parked in §4.5.)_
 
 ---
 
@@ -159,27 +174,37 @@ Earlier foundation (pre-#12): Astro migration + build-time image optimization.
 
 Manual/account steps (code is in place).
 
-- [ ] **`ANTHROPIC_API_KEY` must be added to the repository's Actions secrets**
-      — 🧑 human. The existing copy is already re-translated and clean, so this is
-      not blocking the site today. What it unblocks is the **unattended** path:
-      the workflow that localizes each `/admin` save with no human present. It
-      replaced `DEEPL_API_KEY` (which can be deleted once this is in place): DeepL
-      translated one string at a time with no context, which is what produced a
-      buddy system described as a *mating* system and a submit button whose
-      in-flight label read as the imperative "Send". The "Translate content"
-      workflow reads it and fails loudly if it is missing. *The site build never
-      needs this and stays hermetic; the secret is deliberately NOT in the
-      Cloudflare build settings, so a deploy can never depend on a translation
-      API being reachable.*
+- [x] ~~**`ANTHROPIC_API_KEY` must be added to the repository's Actions
+      secrets**~~ — **not doing this. Board decision, 2026-08-06.** Anthropic's
+      API is metered and billed to a personal account, and the club cannot
+      inherit that: at the end of a presidency the key either follows the person
+      out of the door (and translation stops) or has to be re-issued and re-paid
+      by the next board. A website whose translations depend on someone's
+      personal card is not a website the club owns. Superseded by the DeepL item
+      in §4 — **see "Translation runs on DeepL's free tier, not a paid Anthropic
+      key"**, which is the actual procedure.
+
+      **What this means until that lands:** the "Translate content" workflow
+      fails on every push to `content/**` (last failure 2026-07-30, run
+      `30544840928`), so a `/admin` save publishes in its authored language on
+      all five locales with the other four unfilled. The pages still render
+      completely — `localizeEntry()` falls back field by field to the source
+      text — so this degrades the site rather than breaking it. If a specific
+      event must be localized before the migration is done, the manual escape
+      hatch still works with any key, from a laptop, without CI:
 
       ```bash
-      gh secret set ANTHROPIC_API_KEY     # and paste it into a local .env too
-      gh secret delete DEEPL_API_KEY      # once the above is set
+      ANTHROPIC_API_KEY=… npm run translate:content   # one-off, then commit
       ```
 
-      Note this is now the **second** credential on this page — see the
-      `GITHUB_TOKEN` item below, which expires end of August 2026. Worth
-      recording both expiries in one place.
+      `DEEPL_API_KEY` **stays** (repo secret + local `.env`) — it is the target
+      of the migration, not a leftover. The earlier instruction to delete it is
+      withdrawn.
+
+      *Unchanged either way: the site build never calls a translation API and
+      stays hermetic; no translation secret belongs in the Cloudflare build
+      settings, so a deploy can never depend on a translation API being
+      reachable.*
 - [x] ~~Deploy `sveltia-cms-auth` worker + GitHub OAuth app + secrets~~ — obsolete;
       Sveltia and its auth worker were removed. Access + one Worker secret replaced them.
 - [x] **Google Search Console**: sitemap switched to `https://yunited.ch/sitemap-index.xml`.
@@ -207,46 +232,65 @@ Manual/account steps (code is in place).
       commitment the board has to keep, fortnightly or monthly is easier to
       sustain and easier to promote.
 
-- [ ] **`GITHUB_TOKEN` expires END OF AUGUST 2026 — replace it before then** —
-      🧑 human. **This is the deadline item on this page.** When it lapses the
-      board loses the only way to publish: every save fails, `/admin` says so
-      explicitly (502 naming the missing permission) and GitHub emails the token
-      owner in advance, but nothing else warns anyone. The plan is to replace it
-      with a **non-expiring** fine-grained PAT so this stops being a recurring
-      deadline — issued on `alekswithk/yunited` with `Contents: Read and write`
-      and nothing else, then:
+- [x] **`GITHUB_TOKEN` replaced with a non-expiring PAT — done 2026-08-06.**
+      This used to be the deadline item on this page: the old token expired end
+      of August 2026, and when it lapsed the board would have lost the only way
+      to publish (every save fails, `/admin` says so explicitly with a 502 naming
+      the missing permission, and GitHub emails the token owner in advance, but
+      nothing else warns anyone). It is now a **non-expiring** fine-grained PAT,
+      so this is a one-off rather than a recurring deadline. Set with:
 
       ```bash
       npx wrangler secret put GITHUB_TOKEN
       ```
 
-      A save from `/admin` immediately afterwards confirms it (the commit shows
-      up in this repo's history within seconds). Full steps, and what each
-      failure message means, in [`worker/README.md`](worker/README.md).
-      **When it is replaced, tick this box and note the date here** — a
-      non-expiring token turns this from a recurring task into a one-off.
+      **Still worth doing once:** a save from `/admin` confirms it end to end —
+      the commit shows up in this repo's history within seconds. Full steps, and
+      what each failure message means, in
+      [`worker/README.md`](worker/README.md).
 
-- [ ] **Verify the `/admin` Access tab in production — 🧑 human** *(small).* The
-      Cloudflare side is done: the `yunited-board` rule group exists, the `/admin`
-      policy includes it instead of a literal email list, `CF_API_TOKEN` is set as
-      a Worker secret, and `CF_ACCESS_GROUP_ID` is filled in. **The tab goes live
-      with the next deploy** — this item is the check that it actually works, in
-      this order:
+- [x] **The `/admin` Access tab is verified in production — done 2026-08-06.**
+      The list loads and matches the `yunited-board` group, an address was added
+      and removed, sign-in was confirmed to work and then to stop, and
+      `wrangler tail` named the acting board member on the change.
 
-      1. Hard-refresh `/admin`; the **Access** tab is next to Partners.
-      2. **The list matches the Zero Trust group exactly.** A wrong-but-valid
-         group UUID shows somebody else's group, or an empty list, with no error —
-         this is the only check that catches it.
-      3. Add a throwaway address, confirm it in Zero Trust, sign in as it in a
-         private window, then remove it and confirm sign-in now fails.
-      4. `npx wrangler tail` during one change: the log line must name *your*
-         email. Cloudflare's own logs only ever name the shared token, so that
-         line is the whole per-person audit trail.
+      **One gotcha worth recording, because it cost an hour and looked like
+      something else.** The tab loaded but every read failed with *"the Cloudflare
+      token was rejected… probably expired, or missing 'Access: Organizations,
+      Identity Providers, and Groups: Edit'"*. The token was neither expired nor
+      under-permissioned: **the secret had been pasted twice**, so the stored
+      value was the token doubled. Cloudflare rejects that with the same `401` as
+      a dead token, and `worker/index.js` phrases 401 and 403 identically — so the
+      message pointed at the two causes it could not distinguish from a
+      malformed one. Diagnosis that actually works, in order: the tab *appearing*
+      already proves the secret is set (`accessConfigured`), a wrong group ID
+      would be a 404 rather than this message, and `wrangler whoami` confirms
+      `CF_ACCOUNT_ID`. That leaves the token value itself, which is testable
+      **before** installing it — `GET /client/v4/user/tokens/verify` says whether
+      the token lives, and a `GET` on the group URL says whether it has the
+      permission. Note also that **editing a token's permissions keeps the same
+      value**, so a permission fix needs no `wrangler secret put` and no deploy.
+
+      **The check that was run**, kept because it is the one to repeat if the
+      group, the token or the policy is ever changed: (1) the **Access** tab is
+      next to Partners; (2) **the list matches the Zero Trust group exactly** — a
+      wrong-but-valid group UUID shows somebody else's group, or an empty list,
+      with no error, and this is the only check that catches it; (3) add a
+      throwaway address, confirm it in Zero Trust, sign in as it in a private
+      window, then remove it and confirm sign-in now fails; (4) `npx wrangler
+      tail` during one change, where the log line must name *your* email —
+      Cloudflare's own logs only ever name the shared token, so that line is the
+      whole per-person audit trail.
 
       **Worth knowing about the token:** Cloudflare has no groups-only permission,
       so it can also write the account's identity providers and Zero Trust
       settings — wider than `GITHUB_TOKEN`. Accepted deliberately; the fallback is
       to delete the secret, which returns `/admin` to exactly what it was.
+
+      *Unrelated but observed while testing: an address on Gmail never received
+      Access's one-time PIN. It comes from `noreply@notify.cloudflare.com` and
+      Gmail files it as spam often enough to be worth telling a new board member
+      before their first sign-in. Nothing to fix in this repo.*
 
 _On demand (not a pending task): board members add and remove each other in the
 `Access` tab at `/admin`; a change takes effect in seconds. The break-glass path,
@@ -375,6 +419,147 @@ they carry design decisions that need a person. The agent skips them.
     `/_astro` file, and the page's one script is still `src`'d. This is exactly the
     regression that guard exists for.
 
+- [ ] **Translation runs on DeepL's free tier, not a paid Anthropic key**
+      *(medium — this is the succession item, and the priority translation
+      task).* **Board decision, 2026-08-06.** The pipeline must not depend on a
+      metered API account belonging to whoever is currently president. Anthropic's
+      API is billed per token to a personal card; at the end of a presidency that
+      key either walks out of the door with its owner — and automatic translation
+      silently stops — or has to be re-issued and re-paid by the next board, who
+      may not know it exists. DeepL's **free** tier is enough for the volume this
+      club actually produces, so the club can run this indefinitely at no cost.
+      See §3's struck-through `ANTHROPIC_API_KEY` item for what is degraded until
+      this lands.
+
+      **The volume, so nobody has to re-litigate whether the free tier fits**
+      (counted from the actual files, 2026-08-06):
+
+      | | chars |
+      |---|---|
+      | `en.json`, all 178 keys | 9,059 |
+      | all 9 events (`title` + `description`) | 855 |
+      | **one full re-translation of everything into 3 targets** | **~29,700** |
+      | DeepL Free allowance | 500,000 / month |
+
+      That is **5.9%** of a single month's allowance to rebuild the entire site's
+      copy from scratch. One `/admin` save re-translates one event — roughly 95
+      characters into 4 targets, about 380 characters. This is not a squeeze; it
+      is two orders of magnitude of headroom, and it is why "free tier" is a real
+      answer here rather than a hopeful one.
+
+      **What DeepL gave this repo before**, from the code #50 deleted — it is
+      still recoverable and is the starting point, not a rewrite:
+
+      ```bash
+      git show 7306f15^:scripts/lib/deepl.mjs > scripts/lib/deepl.mjs
+      ```
+
+      It already contains the free/pro endpoint split (`apiUrlFor()` picks
+      `api-free.deepl.com` when the key ends in `:fx`, so **a free key needs no
+      code change**), the `<x>…</x>` protected-name wrapper, entity decoding, and
+      `toSerbianLatin()`. The targets it used were `DE`, `HR` and `SR`.
+
+      **The one structural problem, and the fix.** There was **no `BS` target** —
+      which is precisely why the old repo had a single shared `bcs.json` fed from
+      `HR`, and #50's central finding was that this shared file was overwhelmingly
+      Croatian with stray Bosnian forms mixed in. Reverting naively would rebuild
+      the exact defect #50 spent a whole PR removing. So: **`bs` is derived from
+      `hr`, never requested from DeepL.** Bosnian differs from Croatian here by a
+      *closed list that is already written down* — `LANGUAGES.bs.rules` in
+      `scripts/lib/glossary.mjs` names it (šta/univerzitet/inostranstvo/sedmica/
+      hiljada/ko, plus international month names). That is a deterministic
+      post-processor of exactly the same shape as `toSerbianLatin()`, which
+      already proves the pattern in production — and it is **gated**, because
+      `validate.mjs` already enforces the hr/bs lexis split, so a transform that
+      misses a word fails the run instead of shipping.
+
+      **What survives the engine swap untouched** — this is why the job is medium
+      rather than large: `scripts/lib/validate.mjs` (the gate checks *output*, not
+      process, so it does not care which engine produced the text),
+      `scripts/lib/flat.mjs`, and the `TERMS`/protected-name policy in
+      `glossary.mjs`. Only the *mechanism* for protecting terms changes — DeepL
+      uses `tag_handling=xml` + `ignore_tags` with the `<x>` wrapper, where Claude
+      was simply told in the prompt.
+
+      **What genuinely regresses, stated plainly so the next board is not
+      surprised.** DeepL cannot be *told* things. Claude received the whole
+      dictionary plus the glossary in one request, and that is what fixed the
+      context defects (`contact.formSending` coming back as the imperative
+      "Pošalji…", `about.buddyMoreLink` glued into two nominatives because nothing
+      said it follows the preposition "na"). DeepL translates string by string.
+      Three mitigations, none a full replacement:
+  - the **`context` parameter** — send adjacent keys / the surrounding sentence as
+    untranslated context. It does **not** count toward the character quota.
+  - **DeepL glossaries** (API-managed term pairs) — pins one rendering per concept,
+    which is the other half of what `glossary.mjs` does by prompt.
+  - **the validator, which is the real net.** Every context defect that shipped in
+    the DeepL era — `Pošalji…`, the glued preposition, four names for the buddy
+    system, `Susret i upoznavanje` — now has a *named check* in `validate.mjs`,
+    written afterwards, from the strings that actually shipped. That gate is the
+    reason this migration is safe to attempt at all.
+
+      **Stages.**
+  0. **Blocking check — do this first, 30 minutes, no code.** On DeepL's current
+     supported-language list confirm: (a) `HR` and `SR` are still targets; (b)
+     whether a `BS` target now exists — if it does, request it directly and skip
+     the derivation entirely; (c) whether glossaries support EN→HR and EN→SR.
+     **Record the answers in this item.** Everything below assumes DE/HR/SR and
+     no BS, which was true as of #50 (2026-07-30) and is the only part of this
+     plan that could have changed underneath it.
+  1. Restore `deepl.mjs` as above. Do **not** restore the old `translate.mjs` /
+     `translate-content.mjs` — they predate both the bs/hr split and the gate.
+  2. Add `deriveBosnian(hrText)` beside `toSerbianLatin()`, driven by the same
+     word list `LANGUAGES.bs.rules` states, with unit tests in the existing
+     `scripts/lib/*.test.js` style.
+  3. Rewire `translate.mjs` and `translate-content.mjs` to call DeepL per string
+     **with `context`**, keeping their current structure — the grouping, gating
+     and review-report flow all stay; only the engine call changes. Delete
+     `claude.mjs` at the end of the migration, not the start.
+  4. Keep `validate.mjs` in the write path **unchanged**. Run it against the
+     currently committed dictionaries first to confirm it passes on known-good
+     input, then against the DeepL output. *Nothing is written until it passes* is
+     the invariant that must survive this entire change.
+  5. `.github/workflows/translate-content.yml`: swap the env to `DEEPL_API_KEY`
+     (the secret is still set). Drop `@anthropic-ai/sdk` from devDependencies.
+     **Leave the two loop guards alone.**
+  6. Re-translate everything with `--force` on a branch and **diff against the
+     committed hr/bs/sr**, which are known-good Claude output. That diff is the
+     real acceptance test — read it, do not just check that the run was green.
+
+      **Verification:** `npm test` (new derivation tests + existing validator
+      tests) · `npm run translate -- --dry-run` writes nothing · a full `--force`
+      run at 0 errors from `validate.mjs` · `npm run build && npm run check:dist`
+      (which asserts **no Cyrillic on Serbian pages**, so the sr Latin conversion
+      has to survive the swap) · the workflow green on a real `/admin` save.
+
+      **Risk — the honest one is quality, not mechanics.** The mechanics are about
+      a day. Whether string-by-string DeepL, plus context, plus a glossary, plus
+      the gate, produces copy the board is happy with is only answerable by
+      reading the stage-6 diff. **If it is not good enough, that is a finding, not
+      a failure** — write it down here and take option B.
+
+      **Option B, the fallback — and arguably the best answer anyway.** Keep DeepL
+      for `de` (German was never the problem) and re-translate hr/bs/sr **by hand,
+      once**, using the board's own native speakers. The corpus is 178 keys. The
+      club has native speakers of all three languages on its board and in its
+      membership, and this is the kind of thing a member can be asked to do in an
+      afternoon. It costs nothing, needs **no key at all**, and is the most
+      succession-proof option on this page. Machine translation would then only
+      ever handle new events (~95 characters each) — the easy case, and the one
+      where a slightly stiff sentence matters least.
+
+      **Succession note, which is the wider point.** The free tier fixes the
+      *cost* half of this problem; it does not fix ownership. Issue
+      `DEEPL_API_KEY` — and ideally `GITHUB_TOKEN` and `CF_API_TOKEN` too — from a
+      **club-owned identity** (`yunited@shsg.ch`) rather than a personal account.
+      Then a handover is a password change instead of a re-issue, and nothing on
+      this page quietly expires when a president graduates.
+
+      *Note for the weekly agent (§7): this item touches
+      `.github/workflows/**` and dependency files, so it may be implemented but
+      **never auto-merged** — open the PR and leave it for a human. Stage 0 must
+      be answered before any code is written.*
+
 - [ ] **Brand the Cloudflare Access login screen** — 🧑 human-led *(small,
       dashboard-only).* Right now the first thing a board member sees when they
       open `/admin` is an unbranded, generic Cloudflare sign-in page on a
@@ -502,6 +687,31 @@ implement *from* it.
 ---
 
 ## 5. Known cleanup / tech debt 🧹
+
+- [ ] **`npm audit` regressed, and nothing in CI would have said so**
+      (found 2026-08-06) *(small).* 5 vulnerabilities — 2 high, 3 moderate — one
+      week after #40 left the tree at 0. Every one is dev tooling that never
+      reaches a visitor or the deployed Worker (`undici`/`miniflare` under
+      `wrangler`, so `npm run admin:dev` only; `postcss` under `astro`/`vite`, at
+      build time over CSS authored in this repo; `fast-uri` under
+      `@astrojs/check`, so `npm run check` only), which is why this sits in §5
+      rather than §3.
+
+      **The finding is the silence, not the CVEs.** #40 was the PR that
+      established dev-dependency CVEs count here — `sharp` processes board
+      uploads at build time — and yet `ci.yml` has no `npm audit` step, so a
+      week's drift was invisible until someone ran it by hand. Fix: `npm update
+      astro wrangler` (7.1.4 → 7.1.6, 4.114.0 → 4.118.0) and `npm audit fix` for
+      the non-breaking `fast-uri`/`postcss` fixes, then add a **non-blocking**
+      `npm audit --audit-level=high` step to `ci.yml`, and record honestly what
+      remains rather than forcing it green.
+
+      **Do not run `npm audit fix --force`** — it "fixes" the wrangler chain by
+      *downgrading* wrangler to 4.35.0, which is the advisory range confusing the
+      resolver, not a real fix. Verify with all four commands afterwards,
+      `check:dist` especially: an Astro bump changing an inlining default is
+      precisely the regression that guard exists for. Touches `ci.yml` and
+      dependency files, so §7 forbids the weekly agent from auto-merging it.
 
 - [x] **Documentation drift caught and fixed** (2026-07-29). Three places had
       fallen behind the code, all in the same direction — claiming `bs`/`hr`/`sr`

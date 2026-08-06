@@ -35,7 +35,31 @@
           <img src="/assets/yunited-logo.svg" alt="YUnited" width="120" height="45" />
         </a>
         <p class="masthead-title">Admin</p>
-        <p class="masthead-user" id="signed-in-as" hidden></p>
+
+        <!--
+          Who you are, and the way out.
+
+          The link is Cloudflare Access's own logout endpoint. It is served at
+          the edge on this hostname, before Workers and static assets, so it
+          needs no route, no Worker code and no CSP allowance — and being
+          root-relative rather than the team domain
+          (silent-recipe-bb34.cloudflareaccess.com) it stays same-origin, which
+          is what `npm run check:dist` requires of everything under
+          public/admin/.
+
+          Deliberately a plain <a>, not a button with a click handler: logging
+          out is a navigation, and this way it still works if admin.js fails to
+          load — which is exactly the moment you most want to be able to sign
+          out and back in. It clears the Access session for this domain; the
+          next visit to /admin goes through the login screen again.
+
+          Note it 404s under `wrangler dev` — there is no Access session to end
+          locally. That is expected, not a regression.
+        -->
+        <div class="masthead-account">
+          <p class="masthead-user" id="signed-in-as" hidden></p>
+          <a class="masthead-logout" href="/cdn-cgi/access/logout">Log out</a>
+        </div>
       </div>
     </header>
 

@@ -200,12 +200,48 @@ h1, h2, h3 {
   border-left: 1px solid rgba(244, 236, 221, 0.35);
 }
 
+/* The identity and the logout link travel together, so the pair is what gets
+   pushed to the right rather than each element separately. That also keeps the
+   link in place when #signed-in-as is still `hidden` — it is only unhidden once
+   GET /admin/api/state answers, and a logout link that drifts left for the first
+   second, or when that call fails, would look broken. */
+.masthead-account {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-left: auto;
+}
+
 .masthead-user {
   font-family: var(--font-mono);
   font-size: 0.7rem;
   color: rgba(244, 236, 221, 0.65);
-  margin: 0 0 0 auto;
+  margin: 0;
   overflow-wrap: anywhere;
+}
+
+/* Quiet by design: signing out is not what anyone came here to do, so it reads
+   as chrome until you look for it. It does NOT reuse .btn — that is paper-on-ink
+   with a hard ink shadow, which on the dark masthead would be a bright block
+   casting an invisible shadow. Borrows the masthead's own muted rule instead
+   (the same rgba the title's divider uses) and firms up on hover/focus. */
+.masthead-logout {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-paper);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid rgba(244, 236, 221, 0.35);
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.masthead-logout:hover,
+.masthead-logout:focus-visible {
+  background: rgba(244, 236, 221, 0.12);
+  border-color: var(--color-paper);
 }
 
 /* ---------- Shell ---------- */
@@ -786,9 +822,12 @@ h1, h2, h3 {
 /* ---------- Small screens ---------- */
 
 @media (max-width: 33rem) {
-  .masthead-user {
+  /* The account pair drops to its own full-width line under the brand, with the
+     address at one end and the link at the other rather than crushed together. */
+  .masthead-account {
     margin-left: 0;
     flex-basis: 100%;
+    justify-content: space-between;
   }
   .entry {
     flex-wrap: wrap;
