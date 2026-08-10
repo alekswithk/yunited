@@ -32,6 +32,19 @@ reading `BaseLayout.astro`, `index.astro`, `astro.config.mjs` and `package.json`
 directly, not assumed). Merged 2026-08-06 after each claim was re-checked
 against the code independently; all five were accurate._
 
+_2026-08-10 (weekly agent): shipped **event `Event` JSON-LD** (§4). The next
+item in order, "Translation runs on DeepL's free tier," was attempted first but
+its own §4 text requires a "Stage 0" check against DeepL's *current* supported-
+language list before any code is written — and that couldn't be done safely
+this run: `developers.deepl.com` is unreachable from this environment's network
+egress, and a web search gave unreliable, self-contradictory results (at one
+point claiming Croatian isn't a supported target, which contradicts this repo's
+own history of using it). Writing the derivation/rewiring code on an unverified
+premise risked shipping something wrong, so it was left for a run — or a human —
+that can actually reach DeepL's docs/API first. Picked the next eligible item
+instead. All four verification commands green — `npm test` 87/87 (82 + 5 new
+`eventJsonLd` cases), `build` (41 pages), `check` at 0/0/0, `check:dist`._
+
 _**Correction to the 2026-07-29 entry, which claimed `npm audit` was clean.** It
 no longer is: **5 vulnerabilities (2 high, 3 moderate)** as of 2026-08-06 —
 `undici`/`miniflare` via `wrangler` (local `admin:dev` only), `postcss` via
@@ -601,16 +614,21 @@ they carry design decisions that need a person. The agent skips them.
       **Not verified against this account's dashboard yet** — the option's exact
       placement moves between Zero Trust UI revisions.
 
-- [ ] **Structured data for events (`schema.org/Event` JSON-LD)** *(small–medium).*
-      `index.astro` already emits an `Organization` JSON-LD block (`orgSchema`,
-      rendered via a data-block `<script type="application/ld+json">`, exempt from
-      `script-src` per the CSP convention in `CLAUDE.md`); `/events` and each
-      `EventCard` emit none, so an event never has a shot at Google's Event rich
-      results or "Things to do" carousel. Add one `Event` JSON-LD block per
-      **dated** upcoming event (`name`, `startDate`, `location`, `description`,
-      `url`) sourced from the same `events` export `src/lib/content.js` already
-      provides — no new content field, no new dependency. TBA-dated events are
-      skipped: schema.org requires a `startDate`.
+- [x] **Structured data for events (`schema.org/Event` JSON-LD)** (2026-08-10).
+      `events.astro` now emits one `Event` JSON-LD block (`name`, `startDate`,
+      `description`, `url`, and `location` when set) per **dated** upcoming
+      event, localized the same way its `EventCard` renders — same pattern as
+      `index.astro`'s existing `Organization` block: a data-block
+      `<script type="application/ld+json">`, exempt from `script-src` per the
+      CSP convention in `CLAUDE.md`. The shaping logic is a new pure function,
+      `eventJsonLd()` in `src/lib/events.js` (5 new `npm test` cases: null for
+      TBA, date+time vs date-only `startDate`, location omitted when unset, a
+      malformed time treated as no time) — no new content field, no new
+      dependency. `url` points at the localized `/events` page itself, since
+      there is no per-event page. Verified against the built HTML with a
+      temporary dated-event fixture (the live calendar has no dated upcoming
+      event right now, so nothing renders on `main` until the board adds one —
+      correct, matching the TBA-skip rule).
 
 - [ ] **"Add to calendar" (.ics) link on each dated event** *(small).* Every
       upcoming event already has a title, date, time and location in

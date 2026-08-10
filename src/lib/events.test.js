@@ -11,7 +11,7 @@
 // deliberately framework-free (see CLAUDE.md), so the tests import it directly.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { splitEvents, hasDate, formatEventDate } from "./events.js";
+import { splitEvents, hasDate, formatEventDate, eventJsonLd } from "./events.js";
 
 // `now` is injected into splitEvents precisely so these assertions do not rot:
 // the same input must give the same answer whenever the suite is run.
@@ -142,4 +142,45 @@ test("formatEventDate does not drift by a day across timezones", () => {
   // Parsing "2026-01-01" as UTC midnight and rendering it west of Greenwich
   // would print 31 December. The module appends T00:00:00 to force local time.
   assert.equal(formatEventDate("2026-01-01", "en-GB"), "1 January 2026");
+});
+
+test("eventJsonLd returns null for a TBA event", () => {
+  // schema.org Event requires a startDate; there is nothing valid to emit.
+  const tba = { title: "Meet & Greet", description: "Say hi.", date: null };
+  assert.equal(eventJsonLd(tba, { url: "https://yunited.ch/events" }), null);
+});
+
+test("eventJsonLd combines date and time into startDate when a time is set", () => {
+  const event = {
+    title: "Karaoke Night",
+    description: "Sing along.",
+    date: "2026-05-13",
+    time: "20:30",
+    location: "Déja Vu Bar",
+  };
+  const schema = eventJsonLd(event, { url: "https://yunited.ch/events" });
+  assert.equal(schema["@type"], "Event");
+  assert.equal(schema.name, "Karaoke Night");
+  assert.equal(schema.startDate, "2026-05-13T20:30");
+  assert.equal(schema.description, "Sing along.");
+  assert.equal(schema.url, "https://yunited.ch/events");
+  assert.deepEqual(schema.location, { "@type": "Place", name: "Déja Vu Bar" });
+});
+
+test("eventJsonLd falls back to a date-only startDate when there is no time", () => {
+  const event = { title: "Global Village", description: "…", date: "2026-05-13", time: null };
+  const schema = eventJsonLd(event, { url: "https://yunited.ch/events" });
+  assert.equal(schema.startDate, "2026-05-13");
+});
+
+test("eventJsonLd omits location rather than emitting an empty Place", () => {
+  const event = { title: "TBD Venue", description: "…", date: "2026-05-13" };
+  const schema = eventJsonLd(event, { url: "https://yunited.ch/events" });
+  assert.equal("location" in schema, false);
+});
+
+test("eventJsonLd treats a malformed time as no time", () => {
+  const event = { title: "Bad Time", description: "…", date: "2026-05-13", time: "7pm" };
+  const schema = eventJsonLd(event, { url: "https://yunited.ch/events" });
+  assert.equal(schema.startDate, "2026-05-13");
 });
