@@ -22,6 +22,21 @@ partners collection, Sveltia replaced by the first-party `/admin` + Worker, the
 motif/reveal motion fixes, the translation pipeline rebuilt with bs split from
 hr, and the board's own Access allow-list._
 
+_2026-08-07 (catch-up review — no code changed). All four commands verified green
+locally on `a822588`: `npm test` 82/82, `build` 41 pages, `check` 0/0/0,
+`check:dist`. Three things this run established. (1) **The DeepL item's blocking
+Stage 0 is answered** — see §4; `BS` now exists as a DeepL target, which deletes
+a whole stage, and glossaries turned out **not** to cover en→hr/bs/sr, which is
+the one answer that went against the plan. **The board chose DeepL over the
+hand-translation fallback (Option B), 2026-08-07.** (2) **GitHub's hosted runners
+failed on 2026-08-06** — the last CI run on `main` died with *"the job was not
+acquired by Runner of type hosted"* and the merges of #52/#53 produced no runs at
+all. The runners are working again, but **no CI run has ever validated `a822588`**;
+the next PR will be the first. Nothing was wrong with the code — the local run
+proves that — and the real finding is that **a failed run on `main` notifies
+nobody**, which is the same shape as the audit drift below and the empty-calendar
+warning nobody sees. (3) `npm audit` drifted **again**, in a single day: 5 → 6._
+
 _2026-08-03 (weekly agent, ideate mode — no code changed): every remaining §4/§5
 checkbox was either done or 🧑 human-led (the partials/tab-brand items), so this
 run researched the live code instead of picking an item, and appended five new
@@ -33,15 +48,18 @@ directly, not assumed). Merged 2026-08-06 after each claim was re-checked
 against the code independently; all five were accurate._
 
 _**Correction to the 2026-07-29 entry, which claimed `npm audit` was clean.** It
-no longer is: **5 vulnerabilities (2 high, 3 moderate)** as of 2026-08-06 —
+no longer is: **6 vulnerabilities (3 high, 3 moderate)** as of 2026-08-07 —
 `undici`/`miniflare` via `wrangler` (local `admin:dev` only), `postcss` via
 `astro`/`vite` (build time, over CSS authored in this repo), `fast-uri` via
-`@astrojs/check` (`npm run check` only). All of it is dev tooling: none ships to
-a visitor's browser or runs in the deployed Worker, so this is not urgent — but
-it drifted **silently in one week**, and it drifted because **CI runs no `npm
-audit` step**, which is the actual finding. `fast-uri` and `postcss` have
-non-breaking fixes; ignore npm's suggestion to "fix" the wrangler chain by
-downgrading to 4.35.0. See §5._
+`@astrojs/check` (`npm run check` only), and **`js-yaml`
+(`GHSA-5p4m-2wfm-xmqj`, quadratic CPU in `!!omap`) — new on 2026-08-07**. All of
+it is dev tooling: none ships to a visitor's browser or runs in the deployed
+Worker, so this is not urgent — but it drifted **silently in one week**, and then
+**again the very next day** (5 → 6), and it drifted because **CI runs no `npm
+audit` step**, which is the actual finding. That second drift is the argument for
+the CI step: two data points eight days apart, neither noticed by any command
+anyone runs. `fast-uri`, `postcss` and `js-yaml` have non-breaking fixes; ignore
+npm's suggestion to "fix" the wrangler chain by downgrading to 4.35.0. See §5._
 
 _**The live items are not code.** (1) **Automatic translation is switched off.**
 The workflow that localizes each `/admin` save requires `ANTHROPIC_API_KEY`,
@@ -166,6 +184,8 @@ extensionless; events are never marked "past" by hand; shared chrome lives once 
 
 | — | **The board manages its own `/admin` allow-list** — a fourth tab reads and rewrites the Cloudflare Access rule group that decides who can open the panel, so adding a board member no longer needs the Zero Trust dashboard and therefore no longer needs the one person who has it. `worker/board-access.js` is the client; **it authenticates nobody** — Access still does that, and an added address still has to pass Access's own login. Two lockout rails are enforced server-side (`guardChange`): you cannot remove yourself, and you cannot empty the list. The Cloudflare API has no PATCH, no ETag and a `PUT` that replaces the whole group, so every write round-trips `name`/`exclude`/`require` and any non-email include rule (a unit test guards exactly that), and the panel sends the list it was showing so a concurrent edit is refused with a 409 instead of silently overwritten. The Worker logs the actor's verified email on every change — Cloudflare's own logs only ever name the shared API token. **Inert until the human steps in §3 are done** |
 
+| — | **TOC rail moved to the right gutter, sized from the gutter, and made compositing-independent** — the rail had been placed with `left: max(--space-4, (100vw - --max-width)/2 - 140px)`, which clamps to 24px the moment the gutter runs out; that is exactly where the `.container` text edge sits, so **between the 1100px breakpoint and ~1480px the 150px rail was drawn on top of the leftmost content** at `z-index: 20`. Position and width are now both derived from `--toc-gutter`, the whitespace beside the content column, so the rail's inner edge sits a constant `--toc-gap` from the text at every width and its outer edge never reaches the screen edge; it shrinks from 150px to a 6.5rem floor (sized off the longest label) instead of holding one width, and the breakpoint moves to **1400px**, below which the gutter genuinely cannot hold a labelled rail. The gutter is a percentage of `<main>` rather than `100vw`, which excludes a classic scrollbar — the old formula was ~7.5px off on Windows/Linux. Separately, `.page-toc ol` was `position: sticky` with `transform: translateY(-50%)`, so the box sticking was resolved against and the box painted disagreed by half a rail; **sticky resolves on the compositor thread when the layer is accelerated and on the main thread when it is not, so the rail's detach at the bottom of `<main>` differed with hardware acceleration on vs. off**. The transform is gone — the sticky box is now exactly `100vh` with the list flex-centred in it, landing on the same optical centre (`50vh + 3rem`) with the sticky box and the painted box identical. Do not reintroduce `will-change`/`translate3d`/`backface-visibility` here; each force-promotes a layer and brings the divergence back. Also: the full-height column no longer eats clicks (`pointer-events`), and the rail line is mirrored to the outer edge with labels right-aligned |
+
 Earlier foundation (pre-#12): Astro migration + build-time image optimization.
 
 ---
@@ -231,6 +251,13 @@ Manual/account steps (code is in place).
       that takes a group without a booking), and how often — weekly is a
       commitment the board has to keep, fortnightly or monthly is easier to
       sustain and easier to promote.
+
+      **Reaffirmed 2026-08-07: this stays a board action until further notice.**
+      Not deferred and not dropped — it needs a venue and a cadence, and neither
+      is a decision code can make. Recording it so a later review does not read
+      the standing checkbox as neglect and try to "unblock" it. Nothing in the
+      repo is waiting on it; the empty-calendar warning is expected to keep
+      firing until it (or a real 26/27 date) lands.
 
 - [x] **`GITHUB_TOKEN` replaced with a non-expiring PAT — done 2026-08-06.**
       This used to be the deadline item on this page: the old token expired end
@@ -347,6 +374,17 @@ they carry design decisions that need a person. The agent skips them.
         "forum", and "Meet & Greet" rendered as *"Srećem i pozdravljam"* — "I meet and
         I greet"). Hand corrections to an event's `i18n` block survive: the workflow
         re-translates only when `sourceHash` changes.
+  - [x] **The copy is good as it stands, and further corrections are made by
+        hand** (board judgement, 2026-08-07). The post-#50 hr/bs/sr dictionaries
+        and all nine events' `i18n` blocks have been read and are considered
+        sound — this closes the "reviews continuously" loop above with an actual
+        verdict rather than leaving it open indefinitely. **Consequence for the
+        DeepL item in §4:** its stage 6 `--force` run is a comparison instrument
+        only, never a wholesale replacement, because `--force` is exactly the
+        flag that bypasses the `sourceHash` gate protecting hand edits. Verified
+        the same day: all 9 events carry a complete `de,hr,bs,sr` block with
+        `sourceLang: en`, so there is no unfilled entry hiding behind the
+        fallback.
 - [~] **Partners / recruiting funnel** *(content + feature).* Sponsor/partner page
       and a recruiting flow. Scope with the board. Done: a `/partners` pitch page
       (`src/pages/[...locale]/partners.astro`) explaining why a company would
@@ -439,13 +477,20 @@ they carry design decisions that need a person. The agent skips them.
       | `en.json`, all 178 keys | 9,059 |
       | all 9 events (`title` + `description`) | 855 |
       | **one full re-translation of everything into 3 targets** | **~29,700** |
-      | DeepL Free allowance | 500,000 / month |
+      | DeepL Free allowance | **1,000,000 / month** (measured 2026-08-07) |
 
-      That is **5.9%** of a single month's allowance to rebuild the entire site's
+      That is **~3%** of a single month's allowance to rebuild the entire site's
       copy from scratch. One `/admin` save re-translates one event — roughly 95
       characters into 4 targets, about 380 characters. This is not a squeeze; it
       is two orders of magnitude of headroom, and it is why "free tier" is a real
       answer here rather than a hopeful one.
+
+      *(The 500,000 figure this table used to carry was wrong — the live
+      `/v2/usage` endpoint reports `character_limit: 1000000`. Corrected
+      2026-08-07, along with the 5.9% derived from it. The key already in the
+      maintainer's local `.env` **is** a free-tier key — it ends in `:fx`, which
+      is what `apiUrlFor()` switches on — and had used 25,014 of the million when
+      checked, so no new account is needed to start.)*
 
       **What DeepL gave this repo before**, from the code #50 deleted — it is
       still recoverable and is the starting point, not a rewrite:
@@ -459,19 +504,26 @@ they carry design decisions that need a person. The agent skips them.
       code change**), the `<x>…</x>` protected-name wrapper, entity decoding, and
       `toSerbianLatin()`. The targets it used were `DE`, `HR` and `SR`.
 
-      **The one structural problem, and the fix.** There was **no `BS` target** —
-      which is precisely why the old repo had a single shared `bcs.json` fed from
-      `HR`, and #50's central finding was that this shared file was overwhelmingly
-      Croatian with stray Bosnian forms mixed in. Reverting naively would rebuild
-      the exact defect #50 spent a whole PR removing. So: **`bs` is derived from
-      `hr`, never requested from DeepL.** Bosnian differs from Croatian here by a
-      *closed list that is already written down* — `LANGUAGES.bs.rules` in
-      `scripts/lib/glossary.mjs` names it (šta/univerzitet/inostranstvo/sedmica/
-      hiljada/ko, plus international month names). That is a deterministic
-      post-processor of exactly the same shape as `toSerbianLatin()`, which
-      already proves the pattern in production — and it is **gated**, because
-      `validate.mjs` already enforces the hr/bs lexis split, so a transform that
-      misses a word fails the run instead of shipping.
+      **The one structural problem — RESOLVED 2026-08-07, and it deletes a
+      stage.** This item used to say there was **no `BS` target**, which is why
+      the old repo fed a single shared `bcs.json` from `HR`, and why #50's central
+      finding was that this shared file was overwhelmingly Croatian with stray
+      Bosnian forms. The plan was therefore to derive `bs` from `hr` with a
+      deterministic post-processor (`deriveBosnian()`), shaped like
+      `toSerbianLatin()` and gated by the hr/bs lexis checks already in
+      `validate.mjs`.
+
+      **None of that is needed. `BS` is now a DeepL target.** Confirmed twice on
+      2026-08-07 — against the published supported-language list and against the
+      live API with this repo's own free-tier key, which returned `BS Bosnian`,
+      `HR Croatian`, `SR Serbian` and `DE German` (plus, incidentally, `DE-CH`
+      Swiss German). So **request `BS` directly**, exactly like the other three.
+      No derivation, no word-list transform, no new tests for it — **stage 2 below
+      is struck**. The `LANGUAGES.bs.rules` list in `glossary.mjs` stays where it
+      is and keeps doing its real job: `validate.mjs` still enforces the hr/bs
+      lexis split on the **output**, so if DeepL's `BS` turns out to be Croatian
+      wearing a label, the gate fails the run rather than shipping the defect #50
+      spent a whole PR removing. That check is now more load-bearing, not less.
 
       **What survives the engine swap untouched** — this is why the job is medium
       rather than large: `scripts/lib/validate.mjs` (the gate checks *output*, not
@@ -490,8 +542,17 @@ they carry design decisions that need a person. The agent skips them.
       Three mitigations, none a full replacement:
   - the **`context` parameter** — send adjacent keys / the surrounding sentence as
     untranslated context. It does **not** count toward the character quota.
-  - **DeepL glossaries** (API-managed term pairs) — pins one rendering per concept,
-    which is the other half of what `glossary.mjs` does by prompt.
+  - ~~**DeepL glossaries** (API-managed term pairs) — pins one rendering per
+    concept, which is the other half of what `glossary.mjs` does by prompt.~~
+    **Not available for these languages. Checked 2026-08-07** against
+    `/v2/glossary-language-pairs`: of this site's four targets, only **`de`**
+    supports an en→ glossary. There is **no en→hr, en→bs or en→sr glossary**.
+    So the one mitigation that would have pinned terminology mechanically is
+    missing for **precisely the three languages whose terminology was the
+    problem** — the other half of `glossary.mjs` cannot be handed to the API and
+    stays a prompt-shaped policy with no engine to enforce it. Use a glossary for
+    `de` if it helps; for hr/bs/sr, `context` and the validator are the whole
+    story. Plan accordingly: this is the answer that went *against* the plan.
   - **the validator, which is the real net.** Every context defect that shipped in
     the DeepL era — `Pošalji…`, the glued preposition, four names for the buddy
     system, `Susret i upoznavanje` — now has a *named check* in `validate.mjs`,
@@ -499,18 +560,23 @@ they carry design decisions that need a person. The agent skips them.
     reason this migration is safe to attempt at all.
 
       **Stages.**
-  0. **Blocking check — do this first, 30 minutes, no code.** On DeepL's current
-     supported-language list confirm: (a) `HR` and `SR` are still targets; (b)
-     whether a `BS` target now exists — if it does, request it directly and skip
-     the derivation entirely; (c) whether glossaries support EN→HR and EN→SR.
-     **Record the answers in this item.** Everything below assumes DE/HR/SR and
-     no BS, which was true as of #50 (2026-07-30) and is the only part of this
-     plan that could have changed underneath it.
+  0. [x] **Blocking check — DONE 2026-08-07.** Answers, as this item instructed
+     they be recorded here: **(a) `HR` and `SR` are still targets** — yes, both.
+     **(b) A `BS` target now exists** — yes; request it directly and skip the
+     derivation, which strikes stage 2. **(c) Glossaries support EN→HR / EN→SR** —
+     **no.** Only `de` among this site's targets has an en→ glossary pair. Method,
+     so it can be repeated: the published supported-language list, then the live
+     API with the free-tier key already in `.env` (`GET /v2/languages?type=target`
+     and `GET /v2/glossary-language-pairs`; neither consumes quota). The
+     assumption this stage existed to test — "DE/HR/SR and no BS, true as of #50" —
+     **had in fact changed underneath the plan**, in both directions: one answer
+     made the job smaller, one made it riskier.
   1. Restore `deepl.mjs` as above. Do **not** restore the old `translate.mjs` /
      `translate-content.mjs` — they predate both the bs/hr split and the gate.
-  2. Add `deriveBosnian(hrText)` beside `toSerbianLatin()`, driven by the same
+  2. ~~Add `deriveBosnian(hrText)` beside `toSerbianLatin()`, driven by the same
      word list `LANGUAGES.bs.rules` states, with unit tests in the existing
-     `scripts/lib/*.test.js` style.
+     `scripts/lib/*.test.js` style.~~ **Struck — stage 0(b): `BS` is a real
+     target, so add it to the target list and derive nothing.**
   3. Rewire `translate.mjs` and `translate-content.mjs` to call DeepL per string
      **with `context`**, keeping their current structure — the grouping, gating
      and review-report flow all stay; only the engine call changes. Delete
@@ -526,6 +592,19 @@ they carry design decisions that need a person. The agent skips them.
      committed hr/bs/sr**, which are known-good Claude output. That diff is the
      real acceptance test — read it, do not just check that the run was green.
 
+     **Do not merge that forced output wholesale.** Board decision, 2026-08-07:
+     the currently committed hr/bs/sr copy is **judged good**, and from here on
+     **corrections to it are made by hand**. So the `--force` run is a
+     *measuring instrument*, not a migration step — it exists to show whether
+     DeepL's output is as good as what is already committed. If it is merely
+     equal, keep what is committed; a lateral rewrite of good copy buys nothing
+     and costs the hand corrections. What DeepL is actually being adopted for is
+     **new and changed content from here on** — a new event is ~95 characters,
+     the easy case. Note the trap: `--force` is precisely the flag that bypasses
+     the `sourceHash` gate protecting hand edits, so a forced run on `main`
+     would silently overwrite exactly the corrections this decision creates.
+     Keep it on a branch.
+
       **Verification:** `npm test` (new derivation tests + existing validator
       tests) · `npm run translate -- --dry-run` writes nothing · a full `--force`
       run at 0 errors from `validate.mjs` · `npm run build && npm run check:dist`
@@ -538,15 +617,22 @@ they carry design decisions that need a person. The agent skips them.
       reading the stage-6 diff. **If it is not good enough, that is a finding, not
       a failure** — write it down here and take option B.
 
-      **Option B, the fallback — and arguably the best answer anyway.** Keep DeepL
-      for `de` (German was never the problem) and re-translate hr/bs/sr **by hand,
-      once**, using the board's own native speakers. The corpus is 178 keys. The
-      club has native speakers of all three languages on its board and in its
-      membership, and this is the kind of thing a member can be asked to do in an
-      afternoon. It costs nothing, needs **no key at all**, and is the most
-      succession-proof option on this page. Machine translation would then only
-      ever handle new events (~95 characters each) — the easy case, and the one
-      where a slightly stiff sentence matters least.
+      **Option B, the fallback — NOT TAKEN. Board decision, 2026-08-07: DeepL.**
+      Recorded with its reasoning intact, because it stays the fallback if stage
+      6's diff disappoints. It was: keep DeepL for `de` (German was never the
+      problem) and re-translate hr/bs/sr **by hand, once**, using the board's own
+      native speakers — 178 keys, an afternoon's work for a member, no key at
+      all, and the most succession-proof option on this page.
+
+      **Why the decision does not lose much of it.** The board also judged the
+      committed hr/bs/sr copy **good as it stands** and will **correct it by
+      hand** from here (see stage 6). That is Option B's substance arriving by a
+      different route: the hand-written corpus already exists — #50 built it —
+      and human judgement stays in the loop over it. What DeepL is being adopted
+      for is the *incremental* case Option B also assigned to a machine, new
+      events at ~95 characters each. The two options converged; what was actually
+      declined is the *bulk re-translation by hand*, which is work #50 already
+      did.
 
       **Succession note, which is the wider point.** The free tier fixes the
       *cost* half of this problem; it does not fix ownership. Issue
@@ -689,13 +775,19 @@ implement *from* it.
 ## 5. Known cleanup / tech debt 🧹
 
 - [ ] **`npm audit` regressed, and nothing in CI would have said so**
-      (found 2026-08-06) *(small).* 5 vulnerabilities — 2 high, 3 moderate — one
-      week after #40 left the tree at 0. Every one is dev tooling that never
-      reaches a visitor or the deployed Worker (`undici`/`miniflare` under
-      `wrangler`, so `npm run admin:dev` only; `postcss` under `astro`/`vite`, at
-      build time over CSS authored in this repo; `fast-uri` under
-      `@astrojs/check`, so `npm run check` only), which is why this sits in §5
-      rather than §3.
+      (found 2026-08-06; **drifted again 2026-08-07**) *(small).* Now **6
+      vulnerabilities — 3 high, 3 moderate**, one week after #40 left the tree at
+      0. Every one is dev tooling that never reaches a visitor or the deployed
+      Worker (`undici`/`miniflare` under `wrangler`, so `npm run admin:dev` only;
+      `postcss` under `astro`/`vite`, at build time over CSS authored in this
+      repo; `fast-uri` under `@astrojs/check`, so `npm run check` only; and
+      **`js-yaml`**, `GHSA-5p4m-2wfm-xmqj`, new on 2026-08-07), which is why this
+      sits in §5 rather than §3.
+
+      **It moved 5 → 6 in a single day**, which is the strongest available
+      argument for the CI step below: the count changed twice in eight days and
+      no command anyone runs said so either time. `js-yaml` has a non-breaking
+      fix.
 
       **The finding is the silence, not the CVEs.** #40 was the PR that
       established dev-dependency CVEs count here — `sharp` processes board
@@ -712,6 +804,28 @@ implement *from* it.
       `check:dist` especially: an Astro bump changing an inlining default is
       precisely the regression that guard exists for. Touches `ci.yml` and
       dependency files, so §7 forbids the weekly agent from auto-merging it.
+
+- [ ] **A red CI run on `main` tells nobody** (found 2026-08-07) *(small).* On
+      2026-08-06 GitHub's hosted runners failed to pick up this repo's jobs — the
+      run against `5136f53` died with *"the job was not acquired by Runner of type
+      hosted even after multiple attempts"* after 15 minutes, and the merges of
+      #52 and #53 later that evening produced **no runs at all**. The runners
+      recovered on their own and nothing was wrong with the code (all four
+      commands were verified green locally on `a822588`). **The gap is that the
+      outage was only found by someone going to look.** A failed push-run on
+      `main` produces no notification anyone reads, and `ci.yml` has no
+      `workflow_dispatch` trigger, so there is not even a one-click way to
+      re-validate `main` without pushing a commit.
+
+      Two cheap fixes, either sufficient: add `workflow_dispatch:` to `ci.yml`'s
+      `on:` block so `main` can be re-checked on demand, and/or turn on failure
+      notifications for the repo's Actions. **This is the same shape as the two
+      items either side of it** — the audit that drifted unseen, and the
+      empty-calendar warning that only a developer running a build ever reads.
+      The repo is good at building assertions and poor at delivering them to a
+      person; that pattern, not any one of the three, is the thing worth fixing.
+      Touches `.github/workflows/**`, so §7 forbids the weekly agent from
+      auto-merging it.
 
 - [x] **Documentation drift caught and fixed** (2026-07-29). Three places had
       fallen behind the code, all in the same direction — claiming `bs`/`hr`/`sr`

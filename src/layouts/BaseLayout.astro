@@ -204,6 +204,9 @@ const showAlternates = alternates.length > 1 && !noindex;
       // Per entry, not per rail: the rail is ~150px tall, so at a section
       // boundary a single toggle would always leave one end of it unreadable.
       //
+      // Side-agnostic on purpose — it measures where each entry actually is, so
+      // it kept working unchanged when the rail moved to the right gutter.
+      //
       // This measures on scroll rather than with IntersectionObserver bands.
       // The rail is position:sticky now, so it MOVES within the viewport — it
       // scrolls in, holds, then scrolls away with the content — and any
@@ -224,7 +227,7 @@ const showAlternates = alternates.length > 1 && !noindex;
 
           tocLinks.forEach((link, i) => {
             const box = linkBoxes[i];
-            if (box.height === 0) return; // rail hidden (below 1100px)
+            if (box.height === 0) return; // rail hidden (below 1400px)
             // Test the entry's midpoint: it flips once it is more than half
             // over ink, which reads as deliberate rather than flickering at the
             // exact moment an edge touches.
