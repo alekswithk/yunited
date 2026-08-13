@@ -227,7 +227,7 @@ const showAlternates = alternates.length > 1 && !noindex;
 
           tocLinks.forEach((link, i) => {
             const box = linkBoxes[i];
-            if (box.height === 0) return; // rail hidden (below 1400px)
+            if (box.height === 0) return; // rail hidden (below 1480px)
             // Test the entry's midpoint: it flips once it is more than half
             // over ink, which reads as deliberate rather than flickering at the
             // exact moment an edge touches.
