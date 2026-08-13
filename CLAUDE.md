@@ -23,6 +23,10 @@ npm run admin:dev  # wrangler dev — the admin panel + its Worker on :8787
 
 "Verifying a change" means `npm test`, `npm run build`, `npm run check` and `npm run check:dist` all pass — that is exactly what CI runs — and, for content or rendering changes, the relevant text appears in the built HTML (e.g. `grep "Meet & Greet" dist/events.html`).
 
+**For layout and CSS changes that is not enough, and the four commands cannot tell you so.** None of them renders a page: `check:dist` greps the built HTML for CSP violations, brand spelling and image resolution, and never opens anything. Overlap, wrapping, sticky and stacking behaviour are all invisible to every command in this repo — the same shape of blind spot that `scripts/lib/validate.mjs` exists to cover for translations, where `test`, `build`, `check` and `check:dist` all passed for months while the About page described the buddy system as a *mating* system. So a change to layout also needs **a browser pass at the widths its breakpoints name, in a locale with long labels** — `npm run dev`, then look. hr/bs are the long-label locales: the TOC's `toc.buddy` is "Sustav/Sistem prijatelja" (17ch) against "Buddy system" (12ch) in English, so `/hr/about` breaks a rail before `/about` does.
+
+**A claim in a code comment is not verification.** The `--toc-width` comments in `src/styles/global.css` asserted a longest label of "Buddy-System" and shipped in PR #55 having never been rendered; the actual longest label is half again as wide and in a different language. If a comment asserts rendered behaviour, either check it in a browser or say plainly that it is derived and unchecked.
+
 ## Deploy
 
 Cloudflare builds the repo with `npm run build` and serves `dist/` (`wrangler.jsonc` sets `assets.directory: "./dist"`). The build command must be configured in the Cloudflare Workers Builds settings — it is not in the repo. `public/_headers` carries the CSP and cache rules and is copied verbatim into `dist/`.
