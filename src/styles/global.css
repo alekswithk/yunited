@@ -137,17 +137,6 @@
   --shadow-hard-sm: 3px 3px 0 var(--color-ink);
   --max-width: 1180px;
 
-  /* Table-of-contents rail. The rail is sized and placed from the gutter left
-     over beside the content column (see the .page-toc block), so these two are
-     the only numbers to turn: how wide it may get, and how far it stands off
-     the content. --toc-width-max is 150px; the rail shrinks below it to a
-     6.5rem floor, and reaches the full 150px from about 1512px up. The floor
-     is live, not decorative: it binds from the 1400px breakpoint to ~1424px,
-     where it holds the rail at 104px (an 86px text box) rather than letting it
-     collapse with the gutter. Verified in Chrome, 2026-08-13. */
-  --toc-width-max: 9.375rem;
-  --toc-gap: 1rem;
-
   /* Motion. One curve and three durations for the whole site, so nothing
      animates on its own private timing. --ease-out is the everyday curve;
      --ease-snap overshoots very slightly, which suits the hard-shadow press
@@ -1055,11 +1044,21 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
 }
 
 /* ---------- Scroll-spy table of contents ----------
-   A rail in the RIGHT-HAND gutter, vertically centred. Only shown when the
-   gutter can actually hold it: the content column is --max-width wide plus its
-   own padding, which leaves ~50px a side at 1280px — no labelled rail fits
-   there, so below 1400px the whole thing is display:none rather than squeezed
-   or laid over the text.
+   A rail in the right-hand margin, vertically centred. This is the pre-#55
+   rail — fixed 150px, offset by the same formula, sticky by the same mechanism
+   — mirrored to the right. The gutter-derived version that briefly replaced it
+   shrank the rail with the viewport and swapped the short sticky box for a
+   100vh one, and both of those changed how it moves; this is the behaviour
+   that was there before, on the other side.
+
+   The one number that had to change is the breakpoint, from 1100px to 1480px,
+   and the old offset formula is why. `max(--space-4, …)` clamps to 24px as
+   soon as the margin runs out, which is exactly where the `.container` text
+   edge sits, so below 1480px the 150px rail was drawn on top of the content it
+   sits beside — on the left before, and it would do the same on the right.
+   1480px is where the second branch takes over and the overlap stops: at that
+   width the rail's inner edge and the text edge meet exactly. Above it, this
+   is pixel-identical to the old rail; below it, the old one was broken.
 
    Gated on `scripting: enabled` like .reveal above. Without JS neither the
    current-section highlight nor the light/dark adaptation below can run, and an
@@ -1069,90 +1068,58 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
   display: none;
 }
 
-@media (min-width: 1400px) and (scripting: enabled) {
-  /* The rail is bound to the CONTENT, not the viewport, in both axes.
+@media (min-width: 1480px) and (scripting: enabled) {
+  /* The rail is bound to the CONTENT, not the viewport. It used to be
+     position:fixed, which meant it followed the screen the whole way down and
+     ended up floating over the footer, straddling the motif divider.
 
-     Vertically: an absolutely-positioned column spanning <main> (the footer and
+     Instead: an absolutely-positioned column spanning <main> (the footer and
      the trailing divider live outside <main>, so the column stops exactly where
-     the content does), with the list sticky inside it. It used to be
-     position:fixed, which followed the screen the whole way down and ended up
-     floating over the footer, straddling the motif divider.
+     the content does), with the list sticky inside it. The list is held at the
+     offset below while you scroll the content, then scrolls up and away with
+     the column before the footer is ever reached.
 
-     Horizontally: everything is derived from --toc-gutter, the whitespace
-     between the edge and the content column's text edge, so the rail's inner
-     edge lands exactly --toc-gap from the content at every width and its outer
-     edge never reaches the screen edge. It shrinks with the gutter instead of
-     holding one width; a fixed width has only two outcomes, fitting or
-     overlapping.
-
-     --toc-gutter is a percentage of <main>, not 100vw, on purpose: <main> is
-     the content box, so it excludes a classic (non-overlay) scrollbar, which
-     100vw includes. Both use sites below resolve % against the same box. */
+     Once the margin is wide enough for the second branch, this formula holds
+     the rail a constant 14px from the content's text edge and lets the outer
+     margin grow with the viewport — measured, not derived. */
   .page-toc {
-    --toc-gutter: calc((100% - var(--max-width)) / 2 + var(--space-4));
-    /* The subtracted term IS the rail's outer margin: with width taken as
-       gutter - gap - N, the right offset below resolves to exactly N wherever
-       the clamp's middle value is live. At 0.5rem that pinned the rail 8px off
-       the window edge for the whole 1400-1480 band, which read as accidental.
-       1.5rem gives 14px at the breakpoint (where the floor takes over) and a
-       full 24px from 1440 up. Measured in Chrome, 2026-08-13. */
-    --toc-width: clamp(
-      6.5rem,
-      calc(var(--toc-gutter) - var(--toc-gap) - 1.5rem),
-      var(--toc-width-max)
-    );
-
     display: block;
     position: absolute;
     top: 0;
     bottom: 0;
-    right: calc(var(--toc-gutter) - var(--toc-gap) - var(--toc-width));
-    width: var(--toc-width);
+    right: max(var(--space-4), calc((100vw - var(--max-width)) / 2 - 140px));
+    width: 150px;
     z-index: 20;
     /* The column is as tall as <main> and always overlaps the outer margin, so
        left as-is it would swallow clicks and text selection down a whole strip
-       of the page. Only the links themselves are interactive. */
+       of the page. Invisible either way; only the links are interactive. */
     pointer-events: none;
   }
   .page-toc ol {
     list-style: none;
     margin: 0;
-    /* The sticky box is exactly one viewport tall and the list is centred in
-       it, which puts the rail's CENTRE on the offset with NO transform
-       involved. That matters beyond tidiness: the previous version stuck a
-       short box at `top: calc(50vh + 3rem)` and painted it half its height
-       higher with translateY(-50%), so the box the browser resolved sticking
-       against and the box you saw disagreed by half a rail. Sticky is resolved
-       on the compositor thread when the layer is accelerated and on the main
-       thread when it is not, and with a transform in between the two paths
-       disagreed — the rail detached early at the bottom of the column by a
-       different amount depending on whether the GPU was in play. Here the
-       sticky box IS the painted box, so both paths land identically and the
-       rail slides in and out continuously with the ends of the column.
-
-       Do not "optimise" this with will-change / translate3d / backface-
-       visibility: each force-promotes a compositing layer and reintroduces
-       exactly the divergence above.
-
-       padding-top + centring is what nudges the rail just below the optical
-       centre — dead centre rides too high against the page-hero on About.
-       With border-box the content area is 100vh - 6rem, so the centre lands on
-       50vh + 3rem. A rem offset rather than a larger percentage, so the nudge
-       stays 48px on a laptop and on a tall external display. */
-    padding: 6rem 0 0;
+    padding: 0;
     position: sticky;
-    top: 0;
-    height: 100vh;
-    max-height: 100%;   /* never overhang a <main> shorter than the viewport */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    /* Sits just below the optical centre — dead centre rides too high against
+       the page-hero on About. A rem offset rather than a larger percentage, so
+       the nudge stays 48px on a laptop and on a tall external display; a
+       percentage would drift further down the taller the screen.
+       translateY is visual only — sticking is computed on the untransformed
+       box — so the rail's CENTRE lands on the offset, and it detaches from the
+       bottom of the column half a rail early, clearing the footer.
+
+       Keep the box the height of the RAIL. A full-100vh sticky box centred by
+       flexbox lands on the same offset and looks identical while held, but it
+       stops sticking a whole viewport earlier, so the rail rides up and hangs
+       clipped under the header for the last stretch of the page. */
+    top: calc(50vh + 3rem);
+    transform: translateY(-50%);
   }
   .page-toc li { margin: 0; }
   /* The rail line is a border on each link rather than one border on the <ol>,
      so it can recolour per entry along with the text — see .is-on-dark below.
-     It sits on the OUTER edge with the labels right-aligned, mirroring the old
-     left-hand rail, so the text is the part that hugs the content column. */
+     Mirrored from the old left-hand rail: the rule sits on the OUTER edge with
+     the labels right-aligned, so the text is the part that hugs the content. */
   .page-toc a {
     display: block;
     padding: var(--space-2) var(--space-3) var(--space-2) 0;
@@ -1165,28 +1132,12 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
     color: var(--color-muted);
     text-decoration: none;
     line-height: 1.3;
-    /* Backstop, same reasoning as the h1–h3 rule near the top. Two different
-       metrics apply here and it is easy to quote the wrong one. Space Mono
-       advances 612/1000 em, so with 0.04em tracking a character is 6.885px at
-       0.66rem, and the text box is the rail minus 1rem padding and the 2px
-       rule — 86px at the 1400px breakpoint, 132px from ~1512px up.
-
-       - The longest unbreakable TOKEN decides whether text escapes the box:
-         "Vrijednosti"/"Predstojeće", 11ch ≈ 76px, which clears 86px. This rule
-         is insurance against a future compound that would not.
-       - The longest LABEL decides whether an entry wraps. That is now 12ch —
-         de "Buddy-System"/"Wer wir sind" ≈ 83px — which fits 86px, but only
-         just. Keep TOC labels at or under 12 characters.
-
-       That ceiling is why hr/bs/sr say "Prijatelji" for toc.buddy rather than
-       the section's own "sustav/sistem prijatelja": at 17ch ≈ 117px the label
-       wrapped to two lines below ~1450px, and no geometry fixes it — at 1440
-       the entire gutter is 154px. The pinned glossary term is untouched
-       everywhere else, and the validator matches on the "prijat" stem, so it
-       still passes. English already does the same thing: the TOC reads
-       "Buddy system", not the full heading.
-
-       Widths measured in Chrome, 2026-08-13, not derived. */
+    /* Backstop, same reasoning as the h1–h3 rule near the top. The rail is a
+       fixed 150px, so the text box is 132px, and the longest label in any
+       dictionary — hr "Sustav prijatelja", 17ch — measures 117.0px in Chrome
+       (Space Mono advances 612/1000 em, so a character is 6.885px at 0.66rem
+       with 0.04em tracking). That fits, with 15px to spare. A longer one would
+       not, and the overflow would land in the outer margin. */
     overflow-wrap: break-word;
     pointer-events: auto;
     transition: color var(--dur-base) var(--ease-out),
@@ -1218,7 +1169,6 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
     border-right-color: var(--color-gold);
   }
 }
-
 /* ---------- Reduced motion ----------
    One place that turns everything off. The signature effects above are each
    wrapped in `prefers-reduced-motion: no-preference`, so they never start in
