@@ -140,8 +140,11 @@
   /* Table-of-contents rail. The rail is sized and placed from the gutter left
      over beside the content column (see the .page-toc block), so these two are
      the only numbers to turn: how wide it may get, and how far it stands off
-     the content. --toc-width-max is 150px; the rail shrinks below it, never
-     past the 6.5rem floor that holds the longest label ("Buddy-System"). */
+     the content. --toc-width-max is 150px; the rail shrinks below it to a
+     6.5rem floor, and reaches the full 150px from about 1512px up. The floor
+     is live, not decorative: it binds from the 1400px breakpoint to ~1424px,
+     where it holds the rail at 104px (an 86px text box) rather than letting it
+     collapse with the gutter. Verified in Chrome, 2026-08-13. */
   --toc-width-max: 9.375rem;
   --toc-gap: 1rem;
 
@@ -1087,9 +1090,15 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
      100vw includes. Both use sites below resolve % against the same box. */
   .page-toc {
     --toc-gutter: calc((100% - var(--max-width)) / 2 + var(--space-4));
+    /* The subtracted term IS the rail's outer margin: with width taken as
+       gutter - gap - N, the right offset below resolves to exactly N wherever
+       the clamp's middle value is live. At 0.5rem that pinned the rail 8px off
+       the window edge for the whole 1400-1480 band, which read as accidental.
+       1.5rem gives 14px at the breakpoint (where the floor takes over) and a
+       full 24px from 1440 up. Measured in Chrome, 2026-08-13. */
     --toc-width: clamp(
       6.5rem,
-      calc(var(--toc-gutter) - var(--toc-gap) - 0.5rem),
+      calc(var(--toc-gutter) - var(--toc-gap) - 1.5rem),
       var(--toc-width-max)
     );
 
@@ -1156,10 +1165,28 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
     color: var(--color-muted);
     text-decoration: none;
     line-height: 1.3;
-    /* Backstop, same reasoning as the h1–h3 rule near the top: the longest
-       label today ("Predstojeće", 11ch ≈ 74px) clears the 86px text box the
-       6.5rem floor gives, but a future German compound would not, and the
-       overflow would land in the outer margin. */
+    /* Backstop, same reasoning as the h1–h3 rule near the top. Two different
+       metrics apply here and it is easy to quote the wrong one. Space Mono
+       advances 612/1000 em, so with 0.04em tracking a character is 6.885px at
+       0.66rem, and the text box is the rail minus 1rem padding and the 2px
+       rule — 86px at the 1400px breakpoint, 132px from ~1512px up.
+
+       - The longest unbreakable TOKEN decides whether text escapes the box:
+         "Vrijednosti"/"Predstojeće", 11ch ≈ 76px, which clears 86px. This rule
+         is insurance against a future compound that would not.
+       - The longest LABEL decides whether an entry wraps. That is now 12ch —
+         de "Buddy-System"/"Wer wir sind" ≈ 83px — which fits 86px, but only
+         just. Keep TOC labels at or under 12 characters.
+
+       That ceiling is why hr/bs/sr say "Prijatelji" for toc.buddy rather than
+       the section's own "sustav/sistem prijatelja": at 17ch ≈ 117px the label
+       wrapped to two lines below ~1450px, and no geometry fixes it — at 1440
+       the entire gutter is 154px. The pinned glossary term is untouched
+       everywhere else, and the validator matches on the "prijat" stem, so it
+       still passes. English already does the same thing: the TOC reads
+       "Buddy system", not the full heading.
+
+       Widths measured in Chrome, 2026-08-13, not derived. */
     overflow-wrap: break-word;
     pointer-events: auto;
     transition: color var(--dur-base) var(--ease-out),
