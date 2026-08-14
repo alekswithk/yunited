@@ -1099,6 +1099,23 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
     list-style: none;
     margin: 0;
     padding: 0;
+    /* A rail of the same length on every page, so it starts and ends at the
+       same place as you move between them. Left to size itself the rail is as
+       tall as its entries, and the pages don't have the same number of them —
+       /about has four and / has three, which with the centring below put the
+       two rails 15px out from each other at both ends. Fixed height + entries
+       that share it: the ends line up and the spacing absorbs the difference.
+
+       min-height, not height, so a label that ever wraps to two lines grows the
+       rail instead of overflowing it. Nothing wraps today — the longest label in
+       any dictionary is hr/bs/sr `toc.buddy` (17ch) at 117px in a 132px text
+       box — so in practice this is exactly 120px on both pages. Keep it close to
+       the natural height of the longest rail: a much taller box would stick for
+       a shorter stretch of the page and detach early, which is what went wrong
+       when #55 made it 100vh. */
+    display: flex;
+    flex-direction: column;
+    min-height: 120px;
     position: sticky;
     /* Sits just below the optical centre — dead centre rides too high against
        the page-hero on About. A rem offset rather than a larger percentage, so
@@ -1115,13 +1132,27 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
     top: calc(50vh + 3rem);
     transform: translateY(-50%);
   }
-  .page-toc li { margin: 0; }
+  /* Entries divide the rail's height between them rather than each taking the
+     height of its own text, so the rule stays one unbroken line from end to end
+     — it is a border on each link (see below), so any gap between them would
+     show as a gap in the line. */
+  .page-toc li {
+    margin: 0;
+    display: flex;
+    flex: 1 1 auto;
+  }
   /* The rail line is a border on each link rather than one border on the <ol>,
      so it can recolour per entry along with the text — see .is-on-dark below.
      Mirrored from the old left-hand rail: the rule sits on the OUTER edge with
      the labels right-aligned, so the text is the part that hugs the content. */
   .page-toc a {
-    display: block;
+    /* Flex rather than block so the label sits in the middle of whatever height
+       its entry ends up with — the entries are stretched to fill the rail, so
+       that height is no longer the height of the text. */
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: flex-end;
     padding: var(--space-2) var(--space-3) var(--space-2) 0;
     border-right: 2px solid color-mix(in srgb, var(--color-ink) 18%, transparent);
     font-family: var(--font-mono);

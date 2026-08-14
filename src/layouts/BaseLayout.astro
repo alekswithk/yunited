@@ -149,105 +149,105 @@ const showAlternates = alternates.length > 1 && !noindex;
     }
 
     // --- Table-of-contents scroll spy ---
-    // Marks the entry for whichever section is currently nearest the top of the
-    // viewport. Without JS the links still work as plain anchors; they just
-    // don't highlight. aria-current is the single source of truth here, so what
-    // is announced and what is styled can never drift apart.
+    // Marks the entry for the section you are reading. Without JS the links
+    // still work as plain anchors; they just don't highlight. aria-current is
+    // the single source of truth here, so what is announced and what is styled
+    // can never drift apart.
     const tocLinks = document.querySelectorAll<HTMLAnchorElement>("[data-toc-link]");
 
-    if (tocLinks.length > 0 && "IntersectionObserver" in window) {
-      const linkFor = new Map<string, HTMLAnchorElement>();
-      const watched: Element[] = [];
+    if (tocLinks.length > 0) {
+      const entries: { link: HTMLAnchorElement; section: HTMLElement }[] = [];
 
       tocLinks.forEach((link) => {
         const id = link.dataset.tocLink;
         if (!id) return;
         const section = document.getElementById(id);
         if (!section) return; // a TOC entry naming a section that isn't here
-        linkFor.set(id, link);
-        watched.push(section);
+        entries.push({ link, section });
       });
 
-      const onScreen = new Set<string>();
+      // The reading line: a section becomes current once its top has passed this
+      // far down the viewport, and stays current until the next one does. The
+      // page's sections are contiguous, so this is the same as "the section the
+      // line is currently inside".
+      //
+      // This replaced an IntersectionObserver watching a 10%-tall band pinned at
+      // 20% of the viewport, which had two faults, both seen in Chrome on
+      // /hr/about. It fired late — 20% down is high enough that a full-width
+      // dark section (#story) had filled almost the whole screen before its
+      // entry lit — and the band could not be reached at all by a section too
+      // close to the end of the document: the last entry stays reachable only
+      // while `document height - last section top > (1 - line) * viewport`, so
+      // at 0.2 "Vrijednosti" went unlit at every viewport taller than ~1154px,
+      // with "Priča" left highlighted over a screen full of Values. 0.4 both
+      // moves the switch to where the eye already is and widens that margin;
+      // `atBottom` closes the case outright.
+      const READING_LINE = 0.4;
 
-      const setCurrent = (id: string | null) => {
-        linkFor.forEach((link, key) => {
-          if (key === id) link.setAttribute("aria-current", "true");
-          else link.removeAttribute("aria-current");
-        });
-      };
-
-      const tocObserver = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            if (entry.isIntersecting) onScreen.add(entry.target.id);
-            else onScreen.delete(entry.target.id);
-          }
-          // Several sections can be in view at once; the topmost one in document
-          // order is the one you are actually reading.
-          const first = watched.find((section) => onScreen.has(section.id));
-          setCurrent(first ? first.id : null);
-        },
-        // Bias the band toward the upper part of the viewport so the highlight
-        // moves when a heading reaches reading position, not when it exits.
-        { rootMargin: "-20% 0px -70% 0px" }
-      );
-
-      watched.forEach((section) => tocObserver.observe(section));
-
-      // --- Keep each TOC entry legible against what is behind it ---
-      // The rail passes over the dark sections (.hero / .page-hero /
+      // The rail also passes over the dark sections (.hero / .page-hero /
       // .section-dark, all --color-ink) as they scroll past, and its dark inks
       // vanish against them. Each entry is told when ink is behind IT and flips
       // to the paper palette.
       //
-      // Per entry, not per rail: the rail is ~150px tall, so at a section
+      // Per entry, not per rail: the rail is ~120px tall, so at a section
       // boundary a single toggle would always leave one end of it unreadable.
       //
       // Side-agnostic on purpose — it measures where each entry actually is, so
       // it kept working unchanged when the rail moved to the right gutter.
-      //
-      // This measures on scroll rather than with IntersectionObserver bands.
-      // The rail is position:sticky now, so it MOVES within the viewport — it
-      // scrolls in, holds, then scrolls away with the content — and any
-      // precomputed band would be wrong the moment it stopped sticking.
       const darkSurfaces = Array.from(
         document.querySelectorAll(".hero, .page-hero, .section-dark, .site-footer")
       );
 
-      if (darkSurfaces.length > 0) {
-        let queued = 0;
+      // Both jobs measure on scroll, on one rAF-throttled pass. Neither can be
+      // precomputed: the rail is position:sticky, so it MOVES within the
+      // viewport — it scrolls in, holds, then scrolls away with the content.
+      let queued = 0;
 
-        const syncBackdrops = () => {
-          queued = 0;
-          // All reads first, then all writes — never interleaved, so this
-          // cannot thrash layout while scrolling.
-          const darkBoxes = darkSurfaces.map((el) => el.getBoundingClientRect());
-          const linkBoxes = Array.from(tocLinks, (link) => link.getBoundingClientRect());
+      const sync = () => {
+        queued = 0;
+        // All reads first, then all writes — never interleaved, so this cannot
+        // thrash layout while scrolling.
+        const line = window.innerHeight * READING_LINE;
+        const sectionTops = entries.map(({ section }) => section.getBoundingClientRect().top);
+        const darkBoxes = darkSurfaces.map((el) => el.getBoundingClientRect());
+        const linkBoxes = entries.map(({ link }) => link.getBoundingClientRect());
+        // The last section is only reachable by the line if the document
+        // continues far enough past its top. When it doesn't, hitting the end of
+        // the page is the answer: you cannot be reading anything else.
+        const atBottom =
+          window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
 
-          tocLinks.forEach((link, i) => {
-            const box = linkBoxes[i];
-            if (box.height === 0) return; // rail hidden (below 1480px)
-            // Test the entry's midpoint: it flips once it is more than half
-            // over ink, which reads as deliberate rather than flickering at the
-            // exact moment an edge touches.
-            const middle = (box.top + box.bottom) / 2;
-            const onDark = darkBoxes.some((d) => d.top < middle && d.bottom > middle);
-            link.classList.toggle("is-on-dark", onDark);
-          });
-        };
+        // Sections are in document order, so the LAST one whose top has crossed
+        // the line is the one being read; before the first has crossed it —
+        // while the hero is still filling the screen — nothing is current.
+        let current = atBottom ? entries.length - 1 : -1;
+        if (!atBottom) sectionTops.forEach((top, i) => { if (top <= line) current = i; });
 
-        const requestSync = () => {
-          if (!queued) queued = requestAnimationFrame(syncBackdrops);
-        };
+        entries.forEach(({ link }, i) => {
+          if (i === current) link.setAttribute("aria-current", "true");
+          else link.removeAttribute("aria-current");
 
-        syncBackdrops();
-        window.addEventListener("scroll", requestSync, { passive: true });
-        window.addEventListener("resize", requestSync);
-        // The rail is set in Space Mono with font-display: swap, so its height
-        // changes when the real font lands — usually after this first runs.
-        document.fonts?.ready.then(syncBackdrops);
-      }
+          const box = linkBoxes[i];
+          if (box.height === 0) return; // rail hidden (below 1480px)
+          // Test the entry's midpoint: it flips once it is more than half over
+          // ink, which reads as deliberate rather than flickering at the exact
+          // moment an edge touches.
+          const middle = (box.top + box.bottom) / 2;
+          const onDark = darkBoxes.some((d) => d.top < middle && d.bottom > middle);
+          link.classList.toggle("is-on-dark", onDark);
+        });
+      };
+
+      const requestSync = () => {
+        if (!queued) queued = requestAnimationFrame(sync);
+      };
+
+      sync();
+      window.addEventListener("scroll", requestSync, { passive: true });
+      window.addEventListener("resize", requestSync);
+      // The rail is set in Space Mono with font-display: swap, so its height
+      // changes when the real font lands — usually after this first runs.
+      document.fonts?.ready.then(sync);
     }
   </script>
 </body>
