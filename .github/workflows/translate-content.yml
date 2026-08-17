@@ -15,8 +15,8 @@ name: Translate content
 # Removing one is survivable; removing both creates an infinite, billable loop.
 #
 # The build itself never calls a translation API and needs no key — this is the
-# only place in CI that does. It requires the ANTHROPIC_API_KEY repository
-# secret; without it the job fails loudly rather than silently skipping.
+# only place in CI that does. It requires the DEEPL_API_KEY repository secret;
+# without it the job fails loudly rather than silently skipping.
 #
 # The translation is GATED: scripts/lib/validate.mjs checks the output before
 # anything is written, and a validation failure exits non-zero. That matters here
@@ -66,7 +66,7 @@ jobs:
       # ("friendly mating system") is what went unnoticed without this.
       - name: Fill missing translations
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}
         run: npm run translate:content
 
       # Validates the files this job just wrote, against the same Zod schema the

@@ -7,25 +7,26 @@
 //
 // Put your key in a .env file (copy .env.example -> .env); it is gitignored, and
 // `npm run translate` loads it automatically. An inline env var works too:
-// `ANTHROPIC_API_KEY=xxx npm run translate`.
+// `DEEPL_API_KEY=xxx npm run translate`.
 //
 // NOT PART OF THE BUILD. The build stays hermetic — no network, no secrets. You
 // run this by hand, read the review report, and commit the JSON.
 //
-// HOW THIS DIFFERS FROM THE DEEPL VERSION IT REPLACED
+// HOW THIS DIFFERS FROM THE CLAUDE VERSION IT REPLACED
 //
-// The old script sent one string per request. This one sends the WHOLE
-// dictionary in a single request per language, because almost every defect that
-// shipped was a missing-context defect rather than a bad-dictionary defect:
-//
-//   * contact.formSending, a submit button's in-flight label, came back as the
-//     imperative "Pošalji…" ("Send") — identical in force to the button's
-//     resting label, so the button appeared not to react. With no context,
-//     "Sending…" is genuinely ambiguous.
-//   * about.buddyMoreLink ("exchange page") came back as "razmjena stranice" —
-//     two nominatives glued together, because nothing told it the fragment
-//     follows the preposition "na".
-//   * The buddy system acquired four names per language.
+// The Claude version sent the whole dictionary in one request per language, so
+// the model could see a button's resting label next to its in-flight state and
+// decide terminology once across all 178 keys. That depended on
+// ANTHROPIC_API_KEY, a metered key billed to whoever is currently president —
+// the board decided (2026-08-06, PLAN.md §4) the site must not depend on that.
+// DeepL's per-string API cannot see the whole dictionary at once, so this sends
+// one request PER STRING instead, with DeepL's `context` parameter carrying
+// whatever disambiguates it: a hand-written NOTE below, or — for a key that is
+// part of a Pre/Link/Post split sentence — the sentence joined back together.
+// Context is not translated and does not count toward the character quota, but
+// it is one string per request, so it cannot pin terminology or address form
+// across the whole set the way the Claude prompt did; scripts/lib/validate.mjs
+// is what still catches that, unchanged by this swap.
 //
 // NOTHING IS WRITTEN UNTIL THE GATE PASSES. scripts/lib/validate.mjs checks the
 // output before any file is touched; on an error the run aborts and the
@@ -38,7 +39,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-import { formatUsage, requireApiKey, translateSetComplete } from "./lib/claude.mjs";
+import { formatUsage, requireApiKey, translateSetComplete } from "./lib/deepl.mjs";
 import { LANGUAGES } from "./lib/glossary.mjs";
 import { flatten, splitSentenceGroups, unflatten } from "./lib/flat.mjs";
 import { checkDictionary, errorsOf, formatFindings } from "./lib/validate.mjs";
@@ -63,7 +64,7 @@ for (const code of targets) {
   }
 }
 
-const apiKey = dryRun ? (process.env.ANTHROPIC_API_KEY ?? "") : requireApiKey("translate");
+const apiKey = dryRun ? (process.env.DEEPL_API_KEY ?? "") : requireApiKey("translate");
 
 const pathFor = (name) => join(I18N_DIR, `${name}.json`);
 const readDict = (name) => JSON.parse(readFileSync(pathFor(name), "utf8"));

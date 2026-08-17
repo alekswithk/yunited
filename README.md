@@ -139,16 +139,17 @@ pipeline — drop in any size/format and it's resized to WebP with a 1×/2× src
   its pages generate and are viewable at their real URLs but are `noindex`, kept
   out of the sitemap, and hidden from the language switcher until the flag flips.
 - Translations are filled **offline**, never during the build: `npm run translate`
-  (UI strings) and `npm run translate:content` (event content) call Claude and
-  write the JSON, which you review and commit. Both need an `ANTHROPIC_API_KEY` —
-  copy `.env.example` to `.env` and paste one in. The build itself is hermetic:
-  no network, no secrets.
-- **The whole dictionary is translated in one request per language.** This
-  replaced DeepL, which took one string at a time with no surrounding context —
-  and that is where the bad translations came from, not from the vendor. A submit
-  button's in-flight label "Sending…" came back as the imperative "Send"; a link
-  fragment came back unable to agree with the preposition in the fragment before
-  it; the buddy system ended up with four different names per language.
+  (UI strings) and `npm run translate:content` (event content) call DeepL and
+  write the JSON, which you review and commit. Both need a `DEEPL_API_KEY` —
+  copy `.env.example` to `.env` and paste one in (the free tier is enough). The
+  build itself is hermetic: no network, no secrets.
+- **Each string is translated in its own request, with DeepL's `context`
+  parameter carrying whatever disambiguates it** — the sentence a split
+  Pre/Link/Post fragment belongs to, or an event's other translated field. This
+  replaced an offline Claude pipeline (2026-08, board decision — a metered key
+  billed to whoever is currently president is not something the club can
+  depend on); see the header comment in `scripts/translate.mjs` for what that
+  trades away and how `scripts/lib/validate.mjs` covers for it.
 - `scripts/lib/glossary.mjs` holds the policy: names that are never translated
   (`Meet & Greet`, `Svadba`, `Déja Vu Bar`), one pinned term per concept per
   language, the Croatian/Bosnian lexis split, and the address form. **Nothing is
@@ -181,7 +182,7 @@ Three things live **outside** the repo and are worth knowing:
 - **`GITHUB_TOKEN`** is an encrypted Worker secret, set with
   `npx wrangler secret put GITHUB_TOKEN`. It is what lets `/admin` commit. See
   [`worker/README.md`](worker/README.md).
-- **`ANTHROPIC_API_KEY`** is a GitHub Actions secret, used only by the auto-translate
+- **`DEEPL_API_KEY`** is a GitHub Actions secret, used only by the auto-translate
   workflow (`.github/workflows/translate-content.yml`) — never by the site build.
 
 Who may reach `/admin` is managed in the **Cloudflare Zero Trust dashboard**
