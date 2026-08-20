@@ -18,7 +18,7 @@ name: Translate content
 # only place in CI that does. It requires the DEEPL_API_KEY repository secret;
 # without it the job fails loudly rather than silently skipping.
 #
-# The translation is GATED: scripts/lib/validate.mjs checks the output before
+# The translation is GATED: src/lib/translate/validate.js checks the output before
 # anything is written, and a validation failure exits non-zero. That matters here
 # because the "Verify the result still builds" step below would PASS on a failed
 # translation — nothing was written, so nothing is broken — making the script's

@@ -149,11 +149,11 @@ pipeline — drop in any size/format and it's resized to WebP with a 1×/2× src
   replaced an offline Claude pipeline (2026-08, board decision — a metered key
   billed to whoever is currently president is not something the club can
   depend on); see the header comment in `scripts/translate.mjs` for what that
-  trades away and how `scripts/lib/validate.mjs` covers for it.
-- `scripts/lib/glossary.mjs` holds the policy: names that are never translated
+  trades away and how `src/lib/translate/validate.js` covers for it.
+- `src/lib/translate/glossary.js` holds the policy: names that are never translated
   (`Meet & Greet`, `Svadba`, `Déja Vu Bar`), one pinned term per concept per
   language, the Croatian/Bosnian lexis split, and the address form. **Nothing is
-  written until `scripts/lib/validate.mjs` passes** — it is unit-tested in
+  written until `src/lib/translate/validate.js` passes** — it is unit-tested in
   `npm test`, and it exists because these defects are invisible to every other
   command in the repo.
 - **Bosnian and Croatian have separate dictionaries.** They shared one (`bcs`)

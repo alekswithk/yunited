@@ -13,9 +13,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { checkString, checkDictionary, checkSplitSentences, errorsOf } from "./validate.mjs";
-import { PROTECTED, TERMS } from "./glossary.mjs";
-import { flatten, unflatten, splitSentenceGroups } from "./flat.mjs";
+import { checkString, checkDictionary, checkSplitSentences, errorsOf } from "./validate.js";
+import { PROTECTED, TERMS } from "./glossary.js";
+import { flatten, unflatten, splitSentenceGroups } from "./flat.js";
 
 const errs = (...args) => errorsOf(checkString(...args));
 // Key AND message: a finding is only useful if it says which string is wrong,
@@ -349,7 +349,7 @@ test("no protected name contains the glued-token pattern", () => {
   // name has a lowercase letter immediately followed by an uppercase one within
   // a word. If someone adds "iPhone" or "eBay" to PROTECTED, this test fails and
   // says so — rather than the glue check silently flagging every string that
-  // mentions it. See the GLUED_RE comment in validate.mjs.
+  // mentions it. See the GLUED_RE comment in validate.js.
   for (const term of PROTECTED) {
     assert.ok(
       !/[\p{Ll}][\p{Lu}]/u.test(term),

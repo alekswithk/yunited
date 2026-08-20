@@ -1,6 +1,14 @@
-// DeepL plumbing for the two translation scripts:
-//   translate.mjs          — the UI dictionaries in src/i18n/
-//   translate-content.mjs  — the board's content in content/
+// DeepL plumbing, shared by everything that translates anything here:
+//   scripts/translate.mjs          — the UI dictionaries in src/i18n/
+//   scripts/translate-content.mjs  — the board's content in content/
+//   worker/translate.js            — the same, when the board presses Save
+//
+// IT RUNS IN TWO RUNTIMES, so it must stay free of Node built-ins: no fs, no
+// process, no node: imports, in this file or in the three beside it. `fetch`,
+// `crypto.subtle` and the standard library are the whole budget. The key comes
+// in as an argument (scripts/lib/require-api-key.mjs reads it from the
+// environment; the Worker resolves it from KV or a secret), and `fetchImpl` is
+// injectable so a test never touches the network.
 //
 // This replaces claude.mjs. The reason for the swap is succession, not quality:
 // the Claude pipeline depends on ANTHROPIC_API_KEY, a metered key billed to
@@ -21,25 +29,25 @@
 //     the joined sentence for a split Pre/Link/Post group, or a hand-written
 //     note (see NOTES in translate.mjs / the sibling field in
 //     translate-content.mjs).
-//   * scripts/lib/validate.mjs, unchanged by this swap — it checks the output,
+//   * src/lib/translate/validate.js, unchanged by this swap — it checks the output,
 //     not the process, so it is the real net regardless of which engine wrote
 //     the text. NOTHING IS WRITTEN until it passes.
 //
 // Terminology pinning has no live enforcement here: DeepL glossaries do not
-// exist for en->hr/bs/sr (checked against the live API, PLAN.md §4). validate.mjs
+// exist for en->hr/bs/sr (checked against the live API, PLAN.md §4). validate.js
 // asserts the canonical term as a warning, not silently.
 //
 // NOT PART OF THE BUILD. `npm run build` never calls this — the build stays
 // hermetic, which is load-bearing in CLAUDE.md.
 
-import { PROTECTED } from "./glossary.mjs";
+import { PROTECTED } from "./glossary.js";
 
 const escapeRe = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const PROTECT_RE = new RegExp(`(${PROTECTED.map(escapeRe).join("|")})`, "g");
 
 // Wrapped in <x>…</x> before sending; DeepL is told (tag_handling: "html",
 // ignore_tags: ["x"]) to leave anything inside alone. Stripped again on the way
-// back. One list, shared with validate.mjs via glossary.mjs — a term protected
+// back. One list, shared with validate.js via glossary.js — a term protected
 // here and not there is how "YUnited" quietly becomes "Vereinigt" in event
 // descriptions only.
 export const protect = (s) => s.replace(PROTECT_RE, "<x>$1</x>");
@@ -118,20 +126,32 @@ export function apiUrlFor(apiKey) {
     : "https://api.deepl.com/v2/translate";
 }
 
-export function requireApiKey(scriptName = "translate") {
-  const apiKey = process.env.DEEPL_API_KEY;
-  if (!apiKey) {
-    console.error(
-      "DEEPL_API_KEY is not set.\n" +
-        "Locally: copy .env.example to .env and paste your key (get one at\n" +
-        "https://www.deepl.com/pro-api — the free tier's 1,000,000 chars/month is\n" +
-        `plenty here), then run:  npm run ${scriptName}\n` +
-        "In CI: add DEEPL_API_KEY to the repository's Actions secrets.\n" +
-        "The site build never needs this and stays hermetic.",
-    );
-    process.exit(1);
+/** DeepL's usage endpoint, on whichever host the key belongs to. */
+const usageUrlFor = (apiKey) => apiUrlFor(apiKey).replace(/\/translate$/, "/usage");
+
+/**
+ * How much of this month's allowance is gone — and, incidentally, whether the
+ * key works at all.
+ *
+ * This call costs no quota, which is what makes it usable as a liveness probe:
+ * /admin verifies a pasted key with it before storing it, so a typo is caught
+ * where the board can read it rather than at the next save.
+ *
+ * @returns {Promise<{count: number, limit: number}>}
+ */
+export async function usage({ apiKey, fetchImpl = globalThis.fetch, signal } = {}) {
+  const res = await fetchImpl(usageUrlFor(apiKey), {
+    headers: { Authorization: `DeepL-Auth-Key ${apiKey}` },
+    signal,
+  });
+  if (!res.ok) {
+    throw Object.assign(new Error(`DeepL ${res.status} ${res.statusText}: ${await res.text()}`), {
+      status: res.status,
+      service: "deepl",
+    });
   }
-  return apiKey;
+  const data = await res.json();
+  return { count: data.character_count ?? 0, limit: data.character_limit ?? 0 };
 }
 
 /**
@@ -142,7 +162,11 @@ export function requireApiKey(scriptName = "translate") {
  * character quota. Only one value per request, which is why this function
  * takes a single string rather than a batch — see translateSet below.
  */
-async function deeplTranslate(text, targetLang, { apiKey, sourceLang, context } = {}) {
+async function deeplTranslate(
+  text,
+  targetLang,
+  { apiKey, sourceLang, context, fetchImpl = globalThis.fetch, signal } = {},
+) {
   const url = apiUrlFor(apiKey);
   const body = {
     text: [protect(text)],
@@ -153,16 +177,22 @@ async function deeplTranslate(text, targetLang, { apiKey, sourceLang, context } 
   if (sourceLang) body.source_lang = sourceLang;
   if (context) body.context = protect(context);
 
-  const res = await fetch(url, {
+  const res = await fetchImpl(url, {
     method: "POST",
     headers: {
       Authorization: `DeepL-Auth-Key ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
+    signal,
   });
   if (!res.ok) {
-    throw new Error(`DeepL ${res.status} ${res.statusText}: ${await res.text()}`);
+    // `status` and `service` are what the Worker branches on to tell the board
+    // "wait a minute" (429) apart from "the key was rejected" (403).
+    throw Object.assign(new Error(`DeepL ${res.status} ${res.statusText}: ${await res.text()}`), {
+      status: res.status,
+      service: "deepl",
+    });
   }
   const data = await res.json();
   const [translation] = data.translations ?? [];
@@ -202,9 +232,19 @@ function contextFor(item, groups) {
  * @param {string} options.apiKey
  * @param {string} [options.sourceLang] source dictionary code; defaults to "en"
  * @param {Record<string, Record<string,string>>} [options.groups] split-sentence groups
+ * @param {typeof fetch} [options.fetchImpl] injected for tests and for the Worker
+ * @param {AbortSignal} [options.signal] one budget for a whole batch of calls
  * @returns {Promise<{ values: Record<string,string>, usage: {charsIn: number, charsOut: number} }>}
  */
-export async function translateSet({ items, code, apiKey, sourceLang = "en", groups = {} }) {
+export async function translateSet({
+  items,
+  code,
+  apiKey,
+  sourceLang = "en",
+  groups = {},
+  fetchImpl,
+  signal,
+}) {
   const targetLang = code.toUpperCase();
   const withAll = items.map((item) => ({ ...item, all: items }));
 
@@ -215,8 +255,13 @@ export async function translateSet({ items, code, apiKey, sourceLang = "en", gro
   for (const item of withAll) {
     const { text } = await deeplTranslate(item.source, targetLang, {
       apiKey,
-      sourceLang: sourceLang.toUpperCase(),
+      // No source_lang when the caller doesn't know it: asserting EN over
+      // Croatian text produces confident garbage, where DeepL's own detection
+      // gets it right. See detectSourceLang.
+      sourceLang: sourceLang ? sourceLang.toUpperCase() : undefined,
       context: contextFor(item, groups),
+      fetchImpl,
+      signal,
     });
     values[item.key] = postProcess(text, code);
     charsIn += item.source.length;
@@ -232,14 +277,34 @@ export async function translateSet({ items, code, apiKey, sourceLang = "en", gro
  * A dropped key is the most invisible defect available here: the page still
  * renders, silently in the source language, and nothing fails.
  */
-export async function translateSetComplete({ items, code, apiKey, sourceLang = "en", groups = {} }) {
-  const { values, usage } = await translateSet({ items, code, apiKey, sourceLang, groups });
+export async function translateSetComplete({
+  items,
+  code,
+  apiKey,
+  sourceLang = "en",
+  groups = {},
+  fetchImpl,
+  signal,
+  // A script prints an indented line under the language it is working on; the
+  // Worker writes one flat "[translate] …" line that `wrangler tail` can be
+  // grepped for. A library that hardcodes console formatting serves neither.
+  onNote = (message) => console.warn(`  ${message}`),
+}) {
+  const { values, usage } = await translateSet({ items, code, apiKey, sourceLang, groups, fetchImpl, signal });
 
   const missing = items.filter((i) => typeof values[i.key] !== "string" || values[i.key].trim() === "");
   if (missing.length === 0) return { values, usage };
 
-  console.warn(`  ${code}: ${missing.length} key(s) came back empty — asking again for those`);
-  const retry = await translateSet({ items: missing, code, apiKey, sourceLang, groups: {} });
+  onNote(`${code}: ${missing.length} key(s) came back empty — asking again for those`);
+  const retry = await translateSet({
+    items: missing,
+    code,
+    apiKey,
+    sourceLang,
+    groups: {},
+    fetchImpl,
+    signal,
+  });
   return { values: { ...values, ...retry.values }, usage };
 }
 
@@ -248,19 +313,25 @@ export async function translateSetComplete({ items, code, apiKey, sourceLang = "
  *
  * DeepL returns `detected_source_language` on every call for free, so this
  * translates the text once (target is arbitrary — "EN" always exists) purely
- * to read that field off the response. Falls back to "en" rather than
- * throwing: a wrong guess costs one redundant translation, while an exception
- * would block the board's save from being localized at all.
+ * to read that field off the response.
+ *
+ * Returns null rather than throwing, and rather than guessing "en": a caller
+ * that knows the language should pass it to DeepL, and a caller that does not
+ * should pass nothing and let DeepL decide per request. Asserting the wrong
+ * source_lang is worse than asserting none — "translate this Croatian text,
+ * which is English" produces fluent nonsense.
+ *
+ * @returns {Promise<string|null>} a code from `allowed`, or null
  */
-export async function detectSourceLang(texts, { apiKey, allowed }) {
+export async function detectSourceLang(texts, { apiKey, allowed, fetchImpl, signal }) {
   const sample = texts.filter(Boolean).join("\n\n");
-  if (!sample) return "en";
+  if (!sample) return null;
   try {
-    const { detected } = await deeplTranslate(sample, "EN", { apiKey });
+    const { detected } = await deeplTranslate(sample, "EN", { apiKey, fetchImpl, signal });
     const code = detected?.toLowerCase();
-    return code && allowed.includes(code) ? code : "en";
+    return code && allowed.includes(code) ? code : null;
   } catch {
-    return "en";
+    return null;
   }
 }
 

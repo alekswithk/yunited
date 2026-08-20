@@ -12,7 +12,7 @@
     "preview": "astro preview",
     "admin:dev": "wrangler dev",
     "check": "astro check",
-    "test": "node --test \"src/lib/**/*.test.js\" \"worker/**/*.test.js\" \"scripts/lib/**/*.test.js\"",
+    "test": "node --test \"src/lib/**/*.test.js\" \"worker/**/*.test.js\"",
     "check:dist": "node scripts/check-dist.mjs",
     "translate": "node --env-file-if-exists=.env scripts/translate.mjs",
     "translate:content": "node --env-file-if-exists=.env scripts/translate-content.mjs"

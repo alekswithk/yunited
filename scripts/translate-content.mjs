@@ -43,9 +43,10 @@ import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-import { detectSourceLang, formatUsage, requireApiKey, translateSetComplete } from "./lib/deepl.mjs";
-import { LANGUAGES } from "./lib/glossary.mjs";
-import { checkString, errorsOf, formatFindings } from "./lib/validate.mjs";
+import { detectSourceLang, formatUsage, translateSetComplete } from "../src/lib/translate/deepl.js";
+import { requireApiKey } from "./lib/require-api-key.mjs";
+import { LANGUAGES } from "../src/lib/translate/glossary.js";
+import { checkString, errorsOf, formatFindings } from "../src/lib/translate/validate.js";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -121,10 +122,14 @@ for (const [collection, fields] of Object.entries(TRANSLATABLE)) {
       continue;
     }
 
-    const sourceDict = await detectSourceLang(
+    // null when DeepL couldn't tell (or answered with a language this site has
+    // no dictionary for). Recorded as "en", but passed on as null so each
+    // request lets DeepL detect for itself rather than being told a guess.
+    const detected = await detectSourceLang(
       nonEmpty.map((f) => String(entry[f])),
       { apiKey, allowed: DICTS },
     );
+    const sourceDict = detected ?? "en";
 
     const i18n = { sourceLang: sourceDict, sourceHash: hash };
     let entryFailed = false;
@@ -149,7 +154,7 @@ for (const [collection, fields] of Object.entries(TRANSLATABLE)) {
           .map((other) => `The event's ${other}: ${JSON.stringify(String(entry[other]))}`)
           .join(" "),
       }));
-      const { values, usage } = await translateSetComplete({ items, code: dict, apiKey, sourceLang: sourceDict });
+      const { values, usage } = await translateSetComplete({ items, code: dict, apiKey, sourceLang: detected });
 
       // THE GATE, per field. On an error nothing is written for this entry —
       // a half-translated event is worse than an untranslated one.

@@ -9,7 +9,7 @@
 // A page reading "Freshmen: we run no programme for students abroad" is not a
 // build error. Neither is a buddy system described as a mating system.
 //
-// So: pure functions, no network, unit-tested in scripts/lib/validate.test.js,
+// So: pure functions, no network, unit-tested in src/lib/translate/validate.test.js,
 // and mutation-checked (break a rule, confirm a case fails). A validator nobody
 // tested is itself a silent-failure surface.
 //
@@ -39,8 +39,8 @@ import {
   PROTECTED,
   TERMS,
   VARIANT_FORMS,
-} from "./glossary.mjs";
-import { splitSentenceGroups } from "./flat.mjs";
+} from "./glossary.js";
+import { splitSentenceGroups } from "./flat.js";
 
 // Letters of these languages, for word-boundary matching.
 //
