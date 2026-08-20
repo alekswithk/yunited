@@ -1,8 +1,10 @@
 /* ==========================================================================
    YUnited — shared stylesheet for every page.
    Editorial / broadsheet direction: print-inspired serif type, square
-   corners, hard-offset shadows, flat flag-colour blocks. Design tokens live
-   at the top; change a value here and it updates across the whole site.
+   corners, hairline rules, and one hard-offset shadow per screen — on the
+   primary call to action, and on nothing else. Gold is the only interactive
+   colour; red and azure are punctuation. Design tokens live at the top; change
+   a value here and it updates across the whole site.
    ========================================================================== */
 
 /* ---------- Self-hosted fonts ----------
@@ -132,15 +134,41 @@
   --space-7: 6rem;
 
   --radius: 0;                 /* square corners — print, not app */
-  --border: 2px solid var(--color-ink);
-  --shadow-hard: 6px 6px 0 var(--color-ink);   /* hard offset, no blur */
-  --shadow-hard-sm: 3px 3px 0 var(--color-ink);
+
+  /* Rules. Two weights, and both are hairlines — see the note below on why the
+     2px ink border went away. --rule draws a box (cards, panels, inputs);
+     --rule-strong draws structure the page is built out of (the header edge,
+     the motif divider, the masthead roster) and is the heavier of the two only
+     by opacity, never by width. */
+  --rule: color-mix(in srgb, var(--color-ink) 14%, transparent);
+  --rule-strong: color-mix(in srgb, var(--color-ink) 24%, transparent);
+  --rule-on-ink: rgba(244, 236, 221, 0.18);
+  --border: 1px solid var(--rule);
+  --border-structural: 1px solid var(--rule-strong);
+
+  /* The hard offset shadow, and there is exactly one of it per screen.
+     It used to sit on every button, every card hover, the language menu and
+     form focus — which is what made the page read as unfinished, because a
+     device used everywhere emphasises nothing. It now belongs to the primary
+     call to action and to nothing else. --shadow-hard-ink is for a gold button
+     on paper; --shadow-hard-paper for the same button on an ink surface, where
+     an ink shadow is invisible. */
+  --shadow-hard-ink: 5px 5px 0 var(--color-ink);
+  --shadow-hard-paper: 5px 5px 0 rgba(244, 236, 221, 0.9);
   --max-width: 1180px;
+
+  /* Section rhythm. Three values, not one. Which a section gets is decided by
+     structure — a dark band breathes, a section following another section of
+     the same ground does not need the full gap twice — so the page has a shape
+     when you scroll it instead of an even stripe every 4rem. */
+  --pad-wide: var(--space-7);
+  --pad-base: var(--space-6);
+  --pad-tight: var(--space-5);
 
   /* Motion. One curve and three durations for the whole site, so nothing
      animates on its own private timing. --ease-out is the everyday curve;
-     --ease-snap overshoots very slightly, which suits the hard-shadow press
-     (things here move like stamped paper, not like springs). */
+     --ease-snap overshoots very slightly, which suits the press on the one
+     hard-shadowed button (things here move like stamped paper, not springs). */
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
   --ease-snap: cubic-bezier(0.34, 1.24, 0.64, 1);
   --dur-fast: 0.12s;   /* hovers, presses — must feel instant */
@@ -180,7 +208,16 @@ body {
 
 img { max-width: 100%; display: block; }
 
-a { color: var(--color-azure); }
+/* Links are ink with a gold rule under them, not azure. Gold is the one
+   interactive colour on the site now; red and azure stay in the palette but
+   appear as punctuation (the kilim motif, the tick on an event date, a panel's
+   top rule) rather than as a third and fourth thing competing for attention. */
+a {
+  color: var(--color-ink);
+  text-decoration-color: var(--color-gold);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
 
 /* ---------- Focus ----------
    One visible ring for everything reachable by keyboard. The browser default
@@ -217,7 +254,10 @@ h1, h2, h3 {
 
 h1 { font-size: clamp(2.6rem, 7vw, 5rem); font-weight: 900; }
 h2 { font-size: clamp(1.8rem, 4vw, 2.85rem); font-weight: 700; margin-bottom: var(--space-4); }
-h3 { font-size: 1.2rem; font-weight: 600; letter-spacing: -0.005em; }
+/* 1.5rem/700, not 1.2rem/600. h3 is the card title, and at 1.2rem it was 13%
+   larger than the body text under it — too close to outrank the sentence it is
+   supposed to head. This is the step the scale was missing between h2 and body. */
+h3 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; }
 
 p + p { margin-top: var(--space-3); }
 
@@ -227,7 +267,40 @@ p + p { margin-top: var(--space-3); }
   padding: 0 var(--space-4);
 }
 
-section { padding: var(--space-6) 0; }
+section { padding: var(--pad-base) 0; }
+/* A dark band is a change of ground, so it gets the wide gap; a section that
+   follows another on the same ground does not need the full gap twice. */
+section.section-dark { padding: var(--pad-wide) 0; }
+section + section { padding-top: var(--pad-tight); }
+section.section-dark + section { padding-top: var(--pad-base); }
+
+/* The rule that opens a section, replacing the 2px underline the eyebrow used
+   to carry. It spans the measure instead of the label, so it reads as the
+   section boundary it actually is. The heroes and the 404 open a page rather
+   than a section and are left alone. */
+/* Two rules that cannot both match, rather than one rule plus an override.
+
+   The override version was written first and did not work: `.section-dark >
+   .container { border-top-color: … }` lost to the `section:not(…) > .container`
+   rule above it, so the dark band's rule stayed drawn in ink on ink and was
+   invisible. Raising the override's specificity did not fix it either — a
+   test rule at (0,2,0) also lost. I did not get to the bottom of why, and the
+   same shape of override works fine elsewhere in this file (.info-panel.panel-red
+   overrides .info-panel's border-top without trouble), so the shorthand is not
+   the whole story.
+
+   Rather than depend on an interaction I could not explain, the two selectors
+   are mutually exclusive: .section-dark is excluded above and carries its own
+   rule below. Both were then checked in a browser — paper at 18% on the dark
+   band, ink at 14% on the light ones, nothing on either hero. */
+section:not(.hero, .page-hero, .error-page, .section-dark) > .container {
+  border-top: var(--border);
+  padding-top: var(--space-4);
+}
+.section-dark > .container {
+  border-top: 1px solid var(--rule-on-ink);
+  padding-top: var(--space-4);
+}
 
 /* Containing block for the table-of-contents rail, which is an absolutely
    positioned column spanning exactly this element. No offsets, so nothing about
@@ -256,8 +329,6 @@ main { position: relative; }
   text-transform: uppercase;
   color: var(--color-red);
   margin-bottom: var(--space-3);
-  padding-bottom: var(--space-1);
-  border-bottom: 2px solid var(--color-red);
 }
 /* Marks the second of two side-by-side panels as the other audience, the way
    .panel-red / .panel-gold do for the panels themselves. Text only — the rule
@@ -275,8 +346,8 @@ main { position: relative; }
    every scroll frame, on every divider, on every page. */
 .motif-divider {
   height: 16px;
-  border-top: 2px solid var(--color-ink);
-  border-bottom: 2px solid var(--color-ink);
+  border-top: var(--border-structural);
+  border-bottom: var(--border-structural);
   position: relative;
   /* `overflow: clip`, and it has to be exactly this. Not hidden, not clip-path.
      The strip inside is deliberately wider than the divider, so it needs
@@ -325,7 +396,7 @@ main { position: relative; }
   top: 0;
   z-index: 50;
   background: var(--color-paper);        /* solid — no blur */
-  border-bottom: 2px solid var(--color-ink);
+  border-bottom: var(--border-structural);
 }
 .site-header .container {
   display: flex;
@@ -361,8 +432,8 @@ main { position: relative; }
   padding-bottom: 2px;
   border-bottom: 2px solid transparent;
 }
-.main-nav a:hover { color: var(--color-red); border-bottom-color: var(--color-red); }
-.main-nav a[aria-current="page"] { color: var(--color-red); border-bottom-color: var(--color-red); font-weight: 700; }
+.main-nav a:hover { border-bottom-color: var(--color-gold); }
+.main-nav a[aria-current="page"] { border-bottom-color: var(--color-gold); font-weight: 700; }
 .main-nav a.nav-join:hover,
 .main-nav a.nav-join[aria-current="page"] { border-bottom-color: var(--color-ink); }
 
@@ -418,7 +489,7 @@ main { position: relative; }
   list-style: none;
   background: var(--color-paper);
   border: var(--border);
-  box-shadow: var(--shadow-hard-sm);
+  box-shadow: none;
 }
 .lang-menu li { margin: 0; }
 .lang-menu a {
@@ -448,13 +519,16 @@ main { position: relative; }
   .lang-menu a { padding-left: 0; }
 }
 
-/* Buttons: square, solid fill, hard offset shadow, tactile press */
+/* The base button is the quiet one: a hairline outline, flat, no shadow. Only
+   .btn-gold — the primary call to action — carries the hard offset, and there
+   should be one of those on a screen. */
 .btn {
   display: inline-block;
   padding: 0.7rem 1.5rem;
-  border: var(--border);
+  border: 1px solid var(--rule-strong);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-hard-sm);
+  background: transparent;
+  color: var(--color-ink);
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 0.82rem;
@@ -462,21 +536,35 @@ main { position: relative; }
   text-transform: uppercase;
   text-decoration: none;
   cursor: pointer;
-  transition: transform var(--dur-fast) var(--ease-snap), box-shadow var(--dur-fast) var(--ease-snap), background-color var(--dur-fast) var(--ease-out);
+  transition: transform var(--dur-fast) var(--ease-snap), box-shadow var(--dur-fast) var(--ease-snap), background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
-.btn:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--color-ink); }
-.btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--color-ink); }
+.btn:hover { background: var(--color-paper-soft); border-color: var(--color-ink); }
+.btn:active { transform: translate(1px, 1px); }
 
-.btn-gold { background: var(--color-gold); color: var(--color-ink); }
-.btn-gold:hover { background: var(--color-gold-dark); }
+/* The primary. This is where the whole design spends its boldness. */
+.btn-gold {
+  background: var(--color-gold);
+  color: var(--color-ink);
+  border-color: transparent;
+  box-shadow: var(--shadow-hard-ink);
+}
+.btn-gold:hover {
+  background: var(--color-gold-dark);
+  border-color: transparent;
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0 var(--color-ink);
+}
+.btn-gold:active { transform: translate(1px, 1px); box-shadow: 2px 2px 0 var(--color-ink); }
 
-.btn-red { background: var(--color-red); color: #fff; }
-.btn-red:hover { background: var(--color-red-dark); }
+/* Secondary actions. Both are the quiet button; .btn-red keeps its name so no
+   page markup has to change, but red is no longer a button fill — it is
+   punctuation now, and two filled buttons side by side is what made the pair
+   read as two primaries. */
+.btn-red,
+.btn-outline { background: transparent; color: var(--color-ink); }
 
-.btn-outline { background: var(--color-paper); color: var(--color-ink); }
-.btn-outline:hover { background: var(--color-paper-soft); }
-
-.nav-join { padding: 0.5rem 1.15rem; box-shadow: 2px 2px 0 var(--color-ink); }
+.nav-join { padding: 0.5rem 1.15rem; box-shadow: 3px 3px 0 var(--color-ink); }
+.nav-join:hover { box-shadow: 5px 5px 0 var(--color-ink); }
 
 /* Mobile menu button (hidden on desktop) */
 .nav-toggle {
@@ -507,8 +595,8 @@ main { position: relative; }
     align-items: flex-start;
     background: var(--color-paper);
     padding: var(--space-4);
-    border-top: 2px solid var(--color-ink);
-    border-bottom: 2px solid var(--color-ink);
+    border-top: var(--border-structural);
+    border-bottom: var(--border-structural);
     gap: var(--space-3);
   }
   .main-nav.is-open { display: flex; }
@@ -548,19 +636,37 @@ main { position: relative; }
 
 .hero-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
 
-/* Buttons on dark backgrounds: light border + light hard shadow */
+/* Buttons on dark surfaces. The quiet one keeps a light hairline and stays
+   flat; the primary keeps its hard offset but in paper, because an ink shadow
+   on an ink ground is invisible — which is exactly what it was. */
 .hero .btn,
 .section-dark .btn,
 .page-hero .btn {
-  border-color: var(--color-paper);
-  box-shadow: 3px 3px 0 rgba(244, 236, 221, 0.55);
+  border-color: rgba(244, 236, 221, 0.38);
+  color: var(--color-paper);
+  box-shadow: none;
 }
 .hero .btn:hover,
 .section-dark .btn:hover,
-.page-hero .btn:hover { box-shadow: 5px 5px 0 rgba(244, 236, 221, 0.55); }
-.hero .btn:active,
-.section-dark .btn:active,
-.page-hero .btn:active { box-shadow: 1px 1px 0 rgba(244, 236, 221, 0.55); }
+.page-hero .btn:hover {
+  background: rgba(244, 236, 221, 0.08);
+  border-color: var(--color-paper);
+}
+.hero .btn-gold,
+.section-dark .btn-gold,
+.page-hero .btn-gold {
+  background: var(--color-gold);
+  color: var(--color-ink);
+  border-color: transparent;
+  box-shadow: var(--shadow-hard-paper);
+}
+.hero .btn-gold:hover,
+.section-dark .btn-gold:hover,
+.page-hero .btn-gold:hover {
+  background: var(--color-gold-dark);
+  border-color: transparent;
+  box-shadow: 7px 7px 0 rgba(244, 236, 221, 0.9);
+}
 
 /* Dark sections reuse hero styling */
 .section-dark { background: var(--color-ink); color: var(--color-paper); }
@@ -582,29 +688,52 @@ main { position: relative; }
   border: var(--border);
   border-radius: var(--radius);
   overflow: hidden;
-  transition: transform var(--dur-fast) var(--ease-snap), box-shadow var(--dur-fast) var(--ease-snap);
+  transition: transform var(--dur-fast) var(--ease-snap), border-color var(--dur-fast) var(--ease-out);
   display: flex;
   flex-direction: column;
 }
 .card:hover {
-  transform: translate(-3px, -3px);
-  box-shadow: var(--shadow-hard);
+  transform: translateY(-3px);
+  border-color: var(--rule-strong);
 }
 
-/* Image area: real photo if provided, flat colour block otherwise */
+/* Image area: real photo if provided, a waiting state otherwise.
+   The waiting state used to be a flat saturated red block with a 2.4rem
+   initial, which read as a hole in the page rather than as a card whose photo
+   has not arrived yet. It is now paper-soft with the kilim strip along the
+   bottom edge and the initial demoted — the same motif the dividers use, so an
+   unfilled card still belongs to the page.
+
+   The img is positioned rather than sized, because `height: 100%` against a
+   parent whose height comes from `aspect-ratio` resolves to auto: the photo's
+   own proportions then win and a tall picture drags the card out of 16:9. */
 .card-image {
+  position: relative;
   aspect-ratio: 16 / 9;
-  background: var(--color-red);
-  border-bottom: 2px solid var(--color-ink);
+  min-height: 0;
+  overflow: hidden;
+  background: var(--color-paper-soft);
+  border-bottom: var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-paper);
   font-family: var(--font-display);
   font-weight: 900;
   font-size: 2.4rem;
 }
-.card-image img { width: 100%; height: 100%; object-fit: cover; }
+.card-image img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+.card-image:not(:has(img)) {
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: var(--space-3);
+  font-size: 1.9rem;
+  color: color-mix(in srgb, var(--color-ink) 42%, transparent);
+  background-image: url("/assets/motif.svg");
+  background-repeat: repeat-x;
+  background-position: center bottom;
+  background-size: 64px 16px;
+}
 
 .card-body { padding: var(--space-4); flex: 1; display: flex; flex-direction: column; gap: var(--space-2); }
 
@@ -614,7 +743,17 @@ main { position: relative; }
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-red);
+  color: var(--color-muted);
+}
+/* Red, two pixels of it. Present, not competing. */
+.card-date::before {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 0.72em;
+  background: var(--color-red);
+  margin-right: var(--space-2);
+  vertical-align: -1px;
 }
 
 .card-location { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.04em; color: var(--color-muted); }
@@ -629,12 +768,12 @@ main { position: relative; }
   letter-spacing: 0.06em;
   text-transform: uppercase;
   text-decoration: none;
-  color: var(--color-azure);
-  border-bottom: 2px solid var(--color-azure);
+  color: var(--color-ink);
+  border-bottom: 2px solid var(--color-gold);
   align-self: flex-start;
   padding-bottom: 1px;
 }
-.card-link:hover { color: var(--color-red); border-bottom-color: var(--color-red); }
+.card-link:hover { border-bottom-color: var(--color-gold-dark); }
 
 /* ---------- Board masthead (members page) ----------
    The board has a real hierarchy — a president, a deputy, then the heads —
@@ -683,7 +822,7 @@ main { position: relative; }
   );
 }
 .masthead-lead .portrait {
-  border-right: 2px solid var(--color-ink);
+  border-right: var(--border-structural);
   font-size: clamp(3.5rem, 9vw, 7rem);
 }
 .masthead-body {
@@ -714,7 +853,7 @@ main { position: relative; }
    Set two-up on desktop so the block reads as dense as a printed masthead
    rather than four lonely names across a wide page. --- */
 .roster {
-  border-top: 2px solid var(--color-ink);
+  border-top: var(--border-structural);
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -722,11 +861,11 @@ main { position: relative; }
 .roster-row {
   display: grid;
   grid-template-columns: 168px minmax(0, 1fr);
-  border-bottom: 2px solid var(--color-ink);
+  border-bottom: var(--border-structural);
   transition: background-color var(--dur-base) var(--ease-out);
 }
 /* Column rule between the two roster columns */
-.roster-row:nth-child(odd) { border-right: 2px solid var(--color-ink); }
+.roster-row:nth-child(odd) { border-right: var(--border-structural); }
 .roster-row:hover { background: var(--color-paper-soft); }
 
 .roster-role {
@@ -739,7 +878,7 @@ main { position: relative; }
   text-align: right;
   text-wrap: balance;
   padding: var(--space-4) var(--space-3) var(--space-4) 0;
-  border-right: 2px solid var(--color-ink);
+  border-right: var(--border-structural);
 }
 
 .roster-person {
@@ -752,7 +891,7 @@ main { position: relative; }
 .roster-person .portrait {
   flex: 0 0 76px;
   width: 76px;
-  border: 2px solid var(--color-ink);
+  border: var(--border-structural);
   font-size: 1.7rem;
 }
 .roster-name {
@@ -792,7 +931,7 @@ main { position: relative; }
   .masthead-lead { grid-template-columns: 1fr; }
   .masthead-lead .portrait {
     border-right: 0;
-    border-bottom: 2px solid var(--color-ink);
+    border-bottom: var(--border-structural);
     aspect-ratio: 3 / 2;
   }
   .masthead-body { padding: var(--space-4); }
@@ -840,11 +979,10 @@ input, select, textarea {
   background: #fffdf8;
   transition: box-shadow var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
-input:focus, select:focus, textarea:focus {
-  outline: none;
-  border-color: var(--color-azure);
-  box-shadow: 3px 3px 0 var(--color-azure);
-}
+/* No bespoke focus shadow here any more. The one visible ring at the top of
+   this file is the site's focus indicator; a field that grew its own was both
+   a second shadow language and a second thing to keep accessible. */
+input:focus, select:focus, textarea:focus { border-color: var(--color-ink); }
 /* The submit handler sets aria-invalid on whatever failed. Mirror it visually,
    so the state is not carried by the screen-reader layer alone. */
 input[aria-invalid="true"],
@@ -852,7 +990,7 @@ select[aria-invalid="true"],
 textarea[aria-invalid="true"] { border-color: var(--color-red); }
 input[aria-invalid="true"]:focus,
 select[aria-invalid="true"]:focus,
-textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow: 3px 3px 0 var(--color-red); }
+textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
 
 /* Honeypot: off-screen rather than display:none, because a bot that fills in
    forms reads the DOM and skips hidden fields. Sighted people never see it and
@@ -872,13 +1010,12 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
   max-width: 560px;
   padding: var(--space-4);
   border: var(--border);
-  border-top: 4px solid var(--color-azure);
+  border-top: 3px solid var(--color-azure);
   border-radius: var(--radius);
   background: #fffdf8;
   font-weight: 600;
 }
 .form-success.is-visible { display: block; }
-.form-success:focus-visible { outline: none; box-shadow: 3px 3px 0 var(--color-azure); }
 
 /* ---------- Footer ---------- */
 .site-footer {
@@ -917,50 +1054,17 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
   color: rgba(244, 236, 221, 0.6);
 }
 
-/* ---------- Reveal-on-scroll (respects reduced motion) ----------
-   The whole thing is gated behind `scripting: enabled`, because the hidden
-   state is only ever undone by JavaScript. Without that gate a visitor with JS
-   off gets opacity:0 sections that nothing will ever reveal — the page loads
-   and most of the copy is simply not there. An older browser that doesn't know
-   the query fails the condition and shows the content, which is the safe way
-   round. */
-@media (scripting: enabled) {
-  .reveal {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
-  }
-  .reveal.is-visible { opacity: 1; transform: none; }
+/* ---------- Reveal-on-scroll: removed ----------
+   There were six independent animations on this site: the hero rise, the
+   section reveal, a per-child stagger inside it, the motif parallax, a rule
+   that drew itself under every eyebrow, and a scatter-and-settle on the events
+   grid. Six effects, each on its own timing, is not motion design — it is
+   noise, and it was the largest part of why the site read as unfinished.
 
-  /* Stagger the contents of a revealed block so it assembles top-down instead
-     of arriving as one slab. The base rule comes first and the per-child delays
-     after it, because `transition` is a shorthand and would otherwise reset the
-     delay back to zero. */
-  .reveal > * {
-    opacity: 0;
-    transform: translateY(10px);
-    transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
-  }
-  .reveal.is-visible > * { opacity: 1; transform: none; }
-
-  .reveal > h2 { transition-delay: 0.06s; }
-  .reveal > .section-intro { transition-delay: 0.12s; }
-  .reveal > .split-grid,
-  .reveal > .magazine-grid,
-  .reveal > .section-cta { transition-delay: 0.18s; }
-
-  /* Event cards reveal individually, so a grid assembles left-to-right instead
-     of appearing as one slab. Done with nth-child rather than a per-card
-     --index, because setting that would need a style="…" attribute and the CSP
-     forbids inline styles (see check-dist.mjs).
-
-     Only the first row is staggered. Beyond that the cards are far enough apart
-     that each is observed on its own as you scroll, and a delay that kept
-     growing would just feel like lag. */
-  .magazine-grid > .card:nth-child(2) { transition-delay: 0.08s; }
-  .magazine-grid > .card:nth-child(3) { transition-delay: 0.16s; }
-  .magazine-grid > .card:nth-child(4) { transition-delay: 0.24s; }
-}
+   Two are left: the hero entrance and the motif drift. The reveal went with
+   the rest, and its removal also deletes the `scripting: enabled` gate, the
+   IntersectionObserver in BaseLayout and the `.reveal` class on eighteen
+   elements — content is now simply present when the page loads. */
 
 /* ---------- Signature motion ----------
    Three deliberate moments, all native CSS. Everything animates only opacity,
@@ -1018,31 +1122,6 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
   }
 }
 
-/* 3. A rule that draws itself under each section heading as the heading
-      arrives. Scaling a pseudo-element on the X axis — no layout cost. */
-.eyebrow { position: relative; }
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    @keyframes rule-draw {
-      from { transform: scaleX(0); }
-      to   { transform: scaleX(1); }
-    }
-    .eyebrow::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      bottom: -6px;
-      width: 100%;
-      height: 2px;
-      background: var(--color-red);
-      transform-origin: left center;
-      animation: rule-draw var(--dur-base) var(--ease-out) both;
-      animation-timeline: view();
-      animation-range: entry 20% cover 22%;
-    }
-  }
-}
-
 /* ---------- Scroll-spy table of contents ----------
    A rail in the right-hand margin, vertically centred. This is the pre-#55
    rail — fixed 150px, offset by the same formula, sticky by the same mechanism
@@ -1060,7 +1139,7 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
    width the rail's inner edge and the text edge meet exactly. Above it, this
    is pixel-identical to the old rail; below it, the old one was broken.
 
-   Gated on `scripting: enabled` like .reveal above. Without JS neither the
+   Gated on `scripting: enabled`. Without JS neither the
    current-section highlight nor the light/dark adaptation below can run, and an
    unreadable rail over the dark sections is worse than no rail — every section
    is still reachable by scrolling. */
@@ -1208,8 +1287,7 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
    than by remembering to come back here. */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .reveal, .reveal > * { opacity: 1; transform: none; transition: none; }
-  .btn:hover, .btn:active, .card:hover { transform: none; }
+  .btn-gold:hover, .btn:active, .card:hover { transform: none; }
   *, *::before, *::after {
     animation: none !important;
     transition-duration: 0.01ms !important;
@@ -1220,8 +1298,8 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
 .page-hero {
   background: var(--color-ink);
   color: var(--color-paper);
-  padding: var(--space-6) 0;
-  border-bottom: 4px solid var(--color-red);
+  padding: var(--pad-base) 0;
+  border-bottom: 2px solid var(--color-red);
 }
 .page-hero h1 { color: var(--color-paper); font-size: clamp(2.2rem, 5vw, 3.4rem); }
 .page-hero p { color: rgba(244, 236, 221, 0.8); font-size: 1.2rem; max-width: 62ch; margin-top: var(--space-3); }
@@ -1240,7 +1318,7 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
   background: #fffdf8;
   border: var(--border);
   border-radius: var(--radius);
-  border-top: 6px solid var(--color-azure);
+  border-top: 3px solid var(--color-azure);
   padding: var(--space-5);
 }
 .info-panel.panel-red { border-top-color: var(--color-red); }
@@ -1339,17 +1417,13 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
   aspect-ratio: auto;
   min-height: 240px;
   border-bottom: none;
-  border-right: 2px solid var(--color-ink);
+  border-right: var(--border);
 }
 
 /* Lead story carries larger display type */
 .magazine-grid > .card:nth-child(5n + 1) .card-body { padding: var(--space-5); gap: var(--space-3); }
-.magazine-grid > .card:nth-child(5n + 1) h3 { font-size: clamp(1.6rem, 2.6vw, 2.3rem); font-weight: 900; }
+.magazine-grid > .card:nth-child(5n + 1) h3 { font-size: clamp(1.9rem, 2.8vw, 2.5rem); font-weight: 900; }
 .magazine-grid > .card:nth-child(5n + 1) .card-description { font-size: 1.15rem; }
-
-/* Alternate the flat placeholder colours so the grid reads like a spread */
-.magazine-grid > .card:nth-child(3n + 2) .card-image:not(:has(img)) { background: var(--color-azure); }
-.magazine-grid > .card:nth-child(3n + 3) .card-image:not(:has(img)) { background: var(--color-ink); color: var(--color-gold); }
 
 /* Empty-state note spans the full width instead of one narrow column */
 .magazine-grid > .empty-note { grid-column: 1 / -1; }
@@ -1363,59 +1437,6 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); box-shadow
     aspect-ratio: 16 / 9;
     min-height: 0;
     border-right: none;
-    border-bottom: 2px solid var(--color-ink);
-  }
-}
-
-/* ---------- Scroll-assembled "puzzle" motion (events grid) ----------
-   As each card scrolls into view it settles from a scattered pose — nudged
-   outward, tilted, shrunk and faded — into its exact grid slot, so the spread
-   reads as pieces converging into place the further you scroll.
-
-   Built on native CSS scroll-driven animation (animation-timeline: view()),
-   so it's tied to scroll position with no JS. It only animates the individual
-   translate/rotate/scale properties, leaving `transform` free for the card
-   hover-lift. Guarded by @supports + reduced-motion so any browser without
-   scroll-timeline support (or a user who asked for less motion) simply gets
-   the settled layout with nothing moving — and transforms never reflow the
-   grid, so there is no layout shift either way. */
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    @keyframes puzzle-in {
-      from {
-        opacity: 0;
-        translate: var(--pz-x, 0) var(--pz-y, 12%);
-        rotate: var(--pz-rot, 0deg);
-        scale: 0.93;
-      }
-      to {
-        opacity: 1;
-        translate: 0 0;
-        rotate: 0deg;
-        scale: 1;
-      }
-    }
-
-    /* Longhands, not the `animation` shorthand — see the note on motif-drift.
-       The minifier folds a shorthand plus a separate animation-timeline into
-       one declaration that some browsers discard entirely, taking the effect
-       with it and leaving no fallback. */
-    .magazine-grid > .card {
-      animation-name: puzzle-in;
-      animation-timing-function: linear;
-      animation-fill-mode: both;
-      animation-timeline: view();
-      /* Assemble across the card's entry into the viewport, settled by the
-         time it's fully visible — so it's readable well before centre. */
-      animation-range: entry 15% cover 30%;
-    }
-
-    /* Scatter direction follows each card's slot in the 5-card cycle, so the
-       pieces fly apart toward their own edge and snap back toward the centre. */
-    .magazine-grid > .card:nth-child(5n + 1) { --pz-x: -9%;  --pz-y: 0;    --pz-rot: -2deg;  } /* lead — from the left  */
-    .magazine-grid > .card:nth-child(5n + 2) { --pz-x: 10%;  --pz-y: 0;    --pz-rot: 1.5deg; } /* wide — from the right */
-    .magazine-grid > .card:nth-child(5n + 3) { --pz-x: 11%;  --pz-y: 9%;   --pz-rot: 3deg;   } /* from bottom-right    */
-    .magazine-grid > .card:nth-child(5n + 4) { --pz-x: -10%; --pz-y: 7%;   --pz-rot: -2.5deg;} /* from bottom-left     */
-    .magazine-grid > .card:nth-child(5n + 5) { --pz-x: 0;    --pz-y: 11%;  --pz-rot: 2deg;   } /* from below           */
+    border-bottom: var(--border);
   }
 }
