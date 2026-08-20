@@ -41,6 +41,21 @@
     "nodejs_compat"
   ],
 
+  // The safety net under translation, not the mechanism. An event is translated
+  // as it is saved (worker/translate.js), which is where it normally happens;
+  // this catches the entry whose save-time attempt hit a DeepL outage, or that
+  // a maintainer committed straight to the repo without one.
+  //
+  // Once a day, not hourly: the board also has a Translate button, so the real
+  // question is how long an entry may sit untranslated with nobody noticing,
+  // and a day is the honest answer. Cost is not the constraint — a full
+  // re-translation of all nine events is about 3% of one month's free
+  // allowance. 04:17 UTC is off-peak for a Swiss club, on an odd minute rather
+  // than joining every cron on the platform at the top of the hour.
+  "triggers": {
+    "crons": ["17 4 * * *"]
+  },
+
   // Not secrets. The repo is public, the branch is no surprise, and the two
   // CF_ACCESS_* values are public identifiers — the AUD tag is visible in the
   // Access login URL of anyone who visits /admin. The only secret is the token

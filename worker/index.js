@@ -63,6 +63,7 @@ import {
   NO_DEEPL_KEY,
   putKey,
   resolveKey,
+  stateOf,
   translateEntry,
   withTranslationState,
 } from "./translate.js";
@@ -153,7 +154,131 @@ export default {
       );
     }
   },
+
+  /**
+   * The nightly translation sweep (wrangler.jsonc `triggers.crons`).
+   *
+   * Note this is the ONLY place `ctx` appears. `fetch` deliberately does not
+   * take it: doing the translation in `waitUntil` after answering a save would
+   * mean a second commit and a second rebuild, which is the arrangement this
+   * whole change exists to replace.
+   *
+   * @param {ScheduledController} _event
+   * @param {Record<string, any>} env
+   * @param {{waitUntil: (p: Promise<any>) => void}} ctx
+   */
+  async scheduled(_event, env, ctx) {
+    ctx.waitUntil(sweep(env));
+  },
 };
+
+/** How many entries one sweep will fix. */
+const SWEEP_LIMIT = 5;
+
+/**
+ * Fill in any translations that are missing or out of date.
+ *
+ * Never throws and never alarms: nobody is watching a scheduled run, so the
+ * useful behaviour on any failure is a log line and a clean exit. It is
+ * idempotent — the source hash decides the work — so anything missed today is
+ * simply picked up tomorrow.
+ */
+async function sweep(env) {
+  if (!env.GITHUB_TOKEN) return console.warn("[translate] sweep: no GitHub token, nothing to do");
+  if (!(await resolveKey(env))) return console.warn("[translate] sweep: no DeepL key, nothing to do");
+
+  try {
+    const gh = github(env);
+    const content = await gh.readContent();
+
+    for (const [name, collection] of Object.entries(COLLECTIONS)) {
+      if (!collection.translations) continue;
+
+      const prefix = collection.dir.replace(/^content\//, "") + "/";
+      const entries = Object.entries(content)
+        .filter(([path]) => path.startsWith(prefix))
+        .map(([path, data]) => ({ file: path.slice(prefix.length), data }))
+        .sort((a, b) => a.file.localeCompare(b.file));
+
+      const needing = [];
+      for (const entry of entries) {
+        const { state } = await stateOf(entry.data, collection.translations.fields);
+        if (state === "missing" || state === "stale" || state === "partial") needing.push({ ...entry, state });
+      }
+
+      if (needing.length === 0) {
+        console.log(`[translate] sweep: ${entries.length} ${name}, all current`);
+        continue;
+      }
+
+      // Capped, not because nine files are a problem, but because one bad
+      // change to the hash would otherwise queue the whole collection into a
+      // single invocation and against one subrequest budget.
+      const batch = needing.slice(0, SWEEP_LIMIT);
+      console.log(
+        `[translate] sweep: ${entries.length} ${name}, ${needing.length} need work — ` +
+          batch.map((e) => `${e.file} (${e.state})`).join(", ") +
+          (needing.length > batch.length ? ` … ${needing.length - batch.length} left for tomorrow` : ""),
+      );
+
+      const changes = [];
+      let failed = 0;
+      for (const entry of batch) {
+        const translation = await translateEntry({
+          entry: entry.data,
+          existing: entry.data.i18n ?? null,
+          env,
+          label: entry.file,
+          fields: collection.translations.fields,
+          budgetMs: 25000,
+        });
+
+        if (translation.status !== "translated" || translation.i18n === undefined) {
+          console.warn(`[translate] ${entry.file}: ${translation.reason ?? translation.status} — left unchanged`);
+          failed++;
+          continue;
+        }
+
+        const candidate = { ...entry.data, i18n: translation.i18n };
+        const result = collection.schema.safeParse(candidate);
+        if (!result.success) {
+          console.error(`[translate] ${entry.file}: the filled block does not validate — left unchanged`);
+          failed++;
+          continue;
+        }
+        changes.push({
+          path: `${collection.dir}/${entry.file}`,
+          content: JSON.stringify(toFile(result.data, candidate), null, 2) + "\n",
+        });
+      }
+
+      if (changes.length === 0) {
+        console.log(`[translate] sweep done: nothing committed, ${failed} failed`);
+        continue;
+      }
+
+      try {
+        const commit = await gh.commit(
+          `content: fill translations for ${changes.length} ${changes.length === 1 ? "event" : "events"} [auto-translate]`,
+          changes,
+        );
+        console.log(`[translate] sweep done: ${changes.length} updated, ${failed} failed — commit ${commit.sha}`);
+      } catch (error) {
+        // The ref update is fast-forward only, so this is very likely a board
+        // member saving mid-sweep. Do not retry: the sweep is idempotent and
+        // runs again tomorrow, whereas a retry loop against a repo somebody is
+        // actively editing is how a surprise gets committed on their behalf.
+        if (error?.status === 409 || error?.status === 422) {
+          console.warn("[translate] a save landed mid-sweep; nothing was changed, tomorrow's run picks it up");
+        } else {
+          throw error;
+        }
+      }
+    }
+  } catch (error) {
+    console.error("[translate] sweep failed:", error);
+  }
+}
 
 /**
  * @param {Request} request

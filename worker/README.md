@@ -339,6 +339,34 @@ is never allowed to fail a save. A key DeepL rejects → the tab says *the key i
 set but not working*, which is a different problem from *no key* and has a
 different fix. Quota exhausted (456) → says so, and names when it resets.
 
+#### The nightly sweep
+
+`wrangler.jsonc` has a cron trigger (`17 4 * * *`) and the Worker exports a
+`scheduled` handler for it. Once a day it looks for events whose translations
+are missing, stale or half-filled, fixes up to five of them, and commits the lot
+in one commit marked `[auto-translate]`.
+
+It is the net, not the mechanism — an entry is normally translated as it is
+saved. It exists for the save that hit a DeepL outage, and for entries a
+maintainer commits straight to the repo. It never alarms: no key or no token is
+a log line and a clean exit, because nobody is watching a scheduled run. A
+concurrent save makes the fast-forward-only ref update fail, and that is logged
+and **not** retried — the sweep is idempotent and runs again tomorrow.
+
+**Testing it locally needs one temporary edit, and the documented recipe does
+not work here as-is.** `wrangler dev --test-scheduled` serves `/__scheduled`,
+but this Worker sits behind static assets with `run_worker_first` limited to
+`/admin/api/*`, so that path is answered by `dist/404.html` and the handler
+never runs. To exercise it, add `"/__scheduled*"` to `run_worker_first`, run:
+
+```bash
+npx wrangler dev --test-scheduled --port 8792
+curl "http://127.0.0.1:8792/__scheduled?cron=17+4+*+*+*"
+```
+
+…read the `[translate]` lines, then **put `run_worker_first` back**. Shipping
+that entry would put a public, unauthenticated path on the Worker.
+
 #### Creating the settings store (once, out of band)
 
 Until this exists, the panel shows the Translations tab read-only: the status is
