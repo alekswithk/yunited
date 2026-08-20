@@ -308,6 +308,67 @@ delete the secret and manage the list in the dashboard. Nothing else breaks.
 To rotate: issue a new token, `wrangler secret put CF_API_TOKEN` again, delete
 the old one. No deploy needed.
 
+### `DEEPL_API_KEY` — the third secret, and the one the board can replace
+
+What fills in an event's German, Croatian, Bosnian and Serbian title and
+description when the board presses Save. Set it the same way as the others:
+
+```bash
+npx wrangler secret put DEEPL_API_KEY
+```
+
+A **DeepL API Free** key is enough and always will be — 1,000,000 characters a
+month against roughly 400 for one event. A key ending `:fx` is a free-tier key
+and `apiUrlFor()` sends it to `api-free.deepl.com` on its own; nothing needs
+configuring for that.
+
+**Unlike the other two, this one is not only yours.** A value in the
+`ADMIN_SETTINGS` KV namespace overrides the secret, and the Translations tab in
+`/admin` writes that value — so a board with no Cloudflare account can replace a
+dead key themselves. The secret stays underneath as the fallback: removing the
+board's key in the panel returns the deployment to whatever is set here.
+
+That ordering is deliberate and worth keeping. The failure this guards against
+is not a bug, it is a graduation: whoever created the DeepL account leaves, the
+key eventually stops working, and the people left have no way to fix it and
+nobody to ask. See the comment at the top of `worker/translate.js`.
+
+**Failure modes are explicit, not silent.** No key at all → events still save,
+untranslated, and the banner and the Translations tab both say so; translation
+is never allowed to fail a save. A key DeepL rejects → the tab says *the key is
+set but not working*, which is a different problem from *no key* and has a
+different fix. Quota exhausted (456) → says so, and names when it resets.
+
+#### Creating the settings store (once, out of band)
+
+Until this exists, the panel shows the Translations tab read-only: the status is
+reported, but there is no box to paste a new key into, because there would be
+nowhere to put it.
+
+```bash
+npx wrangler kv namespace create ADMIN_SETTINGS
+npx wrangler kv namespace create ADMIN_SETTINGS --preview   # for `wrangler dev`
+```
+
+Each prints an id. Add them to `wrangler.jsonc`:
+
+```jsonc
+"kv_namespaces": [
+  { "binding": "SETTINGS", "id": "<id>", "preview_id": "<preview id>" }
+]
+```
+
+Then deploy. The binding is called `SETTINGS` rather than `DEEPL` on purpose —
+it is the store for anything the board should be able to change without a
+maintainer, and the next such value should not need a second namespace.
+
+It holds one key, `deepl.apiKey`, whose value is
+`{"key": "…", "setAt": "…", "setBy": "…"}`. **A DeepL key in KV is a
+credential**: it is readable by anyone who can run `wrangler kv key get` against
+this account, which is the same set of people who can already read every other
+secret's effects. It is never returned to the browser — the panel only ever sees
+`configured`, the last four characters, who set it and this month's usage.
+
 ### Plain variables in `wrangler.jsonc`
 
 | name | what it does |

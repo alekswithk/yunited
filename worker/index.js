@@ -56,7 +56,14 @@ import {
   imagePathFor,
   uniqueSlug,
 } from "./lib.js";
-import { withTranslationState } from "./translate.js";
+import {
+  clearKey,
+  describeDeeplError,
+  keyStatus,
+  putKey,
+  resolveKey,
+  withTranslationState,
+} from "./translate.js";
 
 export default {
   /**
@@ -180,6 +187,11 @@ async function handle(request, env, url) {
     "POST delete": { handler: postDelete, needs: "github" },
     "GET access": { handler: getAccess, needs: "cloudflare" },
     "POST access": { handler: postAccess, needs: "cloudflare" },
+    // "none" because this pair is how a deployment with nothing configured
+    // gets configured. Guarding it on the key it exists to set would lock the
+    // board out of the one screen that unlocks them.
+    "GET settings": { handler: getSettings, needs: "none" },
+    "POST settings": { handler: postSettings, needs: "none" },
   }[`${request.method} ${route}`];
 
   // Route first, THEN check the configuration. The other order answers "no such
@@ -264,8 +276,54 @@ async function getState(request, env) {
     // does NOT call the Cloudflare API, because loading the panel must not depend
     // on a second service. If the access list is unreachable, that is the access
     // tab's problem to report, not a reason for the Events tab to be empty.
-    sections: { access: { enabled: accessConfigured(env) } },
+    sections: {
+      access: { enabled: accessConfigured(env) },
+      // Always enabled: the tab is how a deployment with no key gets one, so
+      // hiding it when nothing is configured would hide the fix along with the
+      // problem. `configured` is one KV read — a binding, not a second service,
+      // so the same rule as above is not broken. The DeepL usage call that
+      // proves the key still WORKS stays out of here and runs when the tab is
+      // opened, because loading Events must not wait on deepl.com.
+      translations: { enabled: true, configured: Boolean(await resolveKey(env)) },
+    },
   });
+}
+
+// --- GET|POST /admin/api/settings --------------------------------------------
+// The DeepL key: whether there is one, whether it still works, and — when this
+// deployment has somewhere to keep it — replacing it without a maintainer.
+// See the long comment at the top of worker/translate.js for why it lives in
+// two places at once.
+
+async function getSettings(request, env) {
+  return json({ ok: true, deepl: await keyStatus(env) });
+}
+
+async function postSettings(request, env) {
+  const { deeplKey, remove } = await request.json();
+  const who = identity(request).email;
+
+  try {
+    if (remove) {
+      await clearKey(env, who);
+      return json({ ok: true, message: "Key removed.", deepl: await keyStatus(env) });
+    }
+
+    const { last4 } = await putKey(env, deeplKey, who);
+    return json({
+      ok: true,
+      // A pasted key can take up to a minute to reach every Cloudflare
+      // location, and "I saved it and it still says no key" is otherwise a
+      // phone call to someone who has graduated.
+      message: `Key saved (…${last4}). It can take up to a minute to take effect everywhere.`,
+      deepl: await keyStatus(env),
+    });
+  } catch (error) {
+    // Not the outer catch: a rejected key is the board mistyping something,
+    // not this Worker failing, and it should read that way.
+    console.error("[admin] DeepL key change failed:", error);
+    return json({ ok: false, error: describeDeeplError(error), field: "deeplKey" }, 400);
+  }
 }
 
 // --- GET /admin/api/access ---------------------------------------------------

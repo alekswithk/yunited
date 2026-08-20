@@ -59,10 +59,20 @@ const el = {
   accessInput: $("access-input"),
   accessAddBtn: $("access-add-btn"),
   accessError: $("access-error"),
+  translationsBody: $("translations-body"),
+  translationsLoading: $("translations-loading"),
+  translationsStatus: $("translations-status"),
+  translationsUsage: $("translations-usage"),
+  translationsKeyForm: $("translations-key-form"),
+  translationsKeyInput: $("translations-key-input"),
+  translationsSaveBtn: $("translations-save-btn"),
+  translationsRemoveBtn: $("translations-remove-btn"),
+  translationsError: $("translations-error"),
 };
 
-/** The Access tab is not a content collection; it is the only other section. */
+/** The two tabs that are not content collections. */
 const ACCESS = "access";
+const TRANSLATIONS = "translations";
 
 /** Everything the page knows. Replaced wholesale by every reload of state. */
 const state = {
@@ -81,6 +91,8 @@ const state = {
    * page was looking at a current list — see postAccess in worker/index.js.
    */
   access: { loaded: false, emails: [], you: null },
+  /** The DeepL key's status, once the Translations tab has been opened. */
+  translations: { loaded: false, deepl: null },
 };
 
 // ---------------------------------------------------------------------------
@@ -142,6 +154,9 @@ function renderTabs() {
   // set there is no tab at all rather than a tab that errors when pressed.
   const tabs = state.collections.map((c) => ({ name: c.name, label: c.label }));
   if (state.sections.access?.enabled) tabs.push({ name: ACCESS, label: "Access" });
+  // Always present, unlike Access. This tab is where a key gets set, so hiding
+  // it when none is set would hide the fix along with the problem.
+  if (state.sections.translations?.enabled) tabs.push({ name: TRANSLATIONS, label: "Translations" });
 
   for (const { name, label } of tabs) {
     const tab = document.createElement("button");
@@ -163,13 +178,22 @@ function renderTabs() {
 
 /** Show whichever section `state.active` names, loading it if it needs loading. */
 function openSection() {
-  const access = state.active === ACCESS;
-  el.listBody.hidden = access;
-  el.accessBody.hidden = !access;
+  const active = state.active;
+  el.listBody.hidden = active === ACCESS || active === TRANSLATIONS;
+  el.accessBody.hidden = active !== ACCESS;
+  el.translationsBody.hidden = active !== TRANSLATIONS;
 
-  if (!access) renderList();
-  else if (!state.access.loaded) loadAccess();
-  else renderAccess();
+  if (active === ACCESS) {
+    if (!state.access.loaded) loadAccess();
+    else renderAccess();
+  } else if (active === TRANSLATIONS) {
+    // Loaded on open, never on boot: this one asks DeepL whether the key still
+    // works, and the Events tab must not wait on deepl.com to draw itself.
+    if (!state.translations.loaded) loadTranslations();
+    else renderTranslations();
+  } else {
+    renderList();
+  }
 
   showList();
 }
@@ -701,6 +725,135 @@ function failAccess(message, field) {
   if (field === "access-input") {
     el.accessInput.classList.add("input-bad");
     el.accessInput.focus({ preventScroll: true });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Translations
+//
+// Not content either: this is the DeepL key every event's translations depend
+// on. The key itself never reaches this page — the Worker sends back whether
+// there is one, the last four characters so it can be told apart from another,
+// and this month's usage, which doubles as proof the key still works.
+
+async function loadTranslations() {
+  el.translationsLoading.hidden = false;
+  el.translationsStatus.hidden = true;
+  el.translationsUsage.hidden = true;
+  el.translationsKeyForm.hidden = true;
+
+  try {
+    const data = await api("/admin/api/settings");
+    state.translations = { loaded: true, deepl: data.deepl };
+    renderTranslations();
+  } catch (error) {
+    el.translationsLoading.hidden = true;
+    showBanner(`Couldn't check the translation settings: ${error.message}`, false);
+  }
+}
+
+function renderTranslations() {
+  const deepl = state.translations.deepl ?? {};
+
+  el.translationsLoading.hidden = true;
+  el.translationsError.hidden = true;
+  el.translationsKeyInput.classList.remove("input-bad");
+
+  // Three states, and they are genuinely different problems: no key at all, a
+  // key DeepL refuses, and a working key. Collapsing the middle one into
+  // either of the others is how somebody spends an afternoon on the wrong fix.
+  let message;
+  if (!deepl.configured) {
+    message = "No key set, so events are saved without their translations.";
+  } else if (deepl.live === false) {
+    message = `The key ending …${deepl.last4} is not working: ${deepl.error}`;
+  } else {
+    const who = deepl.setBy ? ` Set by ${deepl.setBy}.` : "";
+    message = `Working. Using the ${deepl.free ? "free" : "paid"} key ending …${deepl.last4}.${who}`;
+  }
+  el.translationsStatus.textContent = message;
+  el.translationsStatus.classList.toggle("is-bad", deepl.configured && deepl.live === false);
+  el.translationsStatus.hidden = false;
+
+  if (deepl.usage) {
+    const { count, limit, percent } = deepl.usage;
+    el.translationsUsage.textContent =
+      `${count.toLocaleString()} of ${limit.toLocaleString()} characters used this month` +
+      (percent === null ? "" : ` — ${percent < 1 ? "under 1" : Math.round(percent)}%.`);
+    el.translationsUsage.hidden = false;
+  } else {
+    el.translationsUsage.hidden = true;
+  }
+
+  // `editable` is false until a maintainer has created the settings store, in
+  // which case the key can only come from the Worker secret and offering a box
+  // to type into would be a lie.
+  el.translationsKeyForm.hidden = !deepl.editable;
+  el.translationsRemoveBtn.hidden = deepl.source !== "kv";
+}
+
+el.translationsKeyForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  el.translationsError.hidden = true;
+  el.translationsKeyInput.classList.remove("input-bad");
+
+  const key = el.translationsKeyInput.value.trim();
+  if (key === "") return failTranslations("Paste the key you want to use.", "deeplKey");
+
+  await run(
+    el.translationsSaveBtn,
+    "Checking with DeepL…",
+    async () => {
+      const result = await api("/admin/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deeplKey: key }),
+      });
+      // Cleared immediately, and never kept in `state`: the page holds a
+      // credential for exactly as long as it takes to post it.
+      el.translationsKeyInput.value = "";
+      state.translations = { loaded: true, deepl: result.deepl };
+      renderTranslations();
+      showBanner(result.message, true);
+    },
+    failTranslations,
+  );
+});
+
+el.translationsRemoveBtn.addEventListener("click", async () => {
+  const ok = await confirmAction({
+    title: "Remove this key?",
+    body: "Translations will fall back to the key a maintainer set, if there is one.",
+    warning: "If there isn't, events will save without their translations until a new key is added here.",
+    action: "Remove",
+  });
+  if (!ok) return;
+
+  await run(
+    el.translationsRemoveBtn,
+    "Removing…",
+    async () => {
+      const result = await api("/admin/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ remove: true }),
+      });
+      state.translations = { loaded: true, deepl: result.deepl };
+      renderTranslations();
+      showBanner(result.message, true);
+    },
+    failTranslations,
+  );
+});
+
+/** Errors from this section, in this section — see failAccess for the reasoning. */
+function failTranslations(message, field) {
+  el.translationsError.textContent = message;
+  el.translationsError.hidden = false;
+
+  if (field === "deeplKey") {
+    el.translationsKeyInput.classList.add("input-bad");
+    el.translationsKeyInput.focus({ preventScroll: true });
   }
 }
 

@@ -866,3 +866,24 @@ h1, h2, h3 {
     transform: none;
   }
 }
+
+/* ---------- Translations ---------- */
+/* Reuses .access-lede, .access-form and .access-row; only the status lines are
+   new. `is-bad` is the "there is a key but DeepL refuses it" case, which has to
+   read differently from the ordinary "here is your key" line. */
+
+.translations-status {
+  margin: var(--space-4) 0 var(--space-1);
+  font-weight: 600;
+}
+.translations-status.is-bad {
+  color: var(--color-red);
+}
+.translations-usage {
+  margin: 0 0 var(--space-4);
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+#translations-remove-btn {
+  margin-top: var(--space-3);
+}
