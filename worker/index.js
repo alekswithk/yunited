@@ -56,6 +56,7 @@ import {
   imagePathFor,
   uniqueSlug,
 } from "./lib.js";
+import { withTranslationState } from "./translate.js";
 
 export default {
   /**
@@ -244,10 +245,13 @@ async function getState(request, env) {
   const entries = {};
   for (const [name, collection] of Object.entries(COLLECTIONS)) {
     const prefix = collection.dir.replace(/^content\//, "") + "/";
-    entries[name] = Object.entries(content)
-      .filter(([path]) => path.startsWith(prefix))
-      .map(([path, data]) => ({ file: path.slice(prefix.length), data }))
-      .sort((a, b) => a.file.localeCompare(b.file));
+    entries[name] = await withTranslationState(
+      name,
+      Object.entries(content)
+        .filter(([path]) => path.startsWith(prefix))
+        .map(([path, data]) => ({ file: path.slice(prefix.length), data }))
+        .sort((a, b) => a.file.localeCompare(b.file)),
+    );
   }
 
   return json({
@@ -536,7 +540,7 @@ async function postSave(request, env) {
     message: existing ? "Changes saved." : `${capitalize(collection.singular)} added.`,
     file,
     commit,
-    entries: collectionAfter(siblings, file, toFile(result.data, entry)),
+    entries: await withTranslationState(collectionName, collectionAfter(siblings, file, toFile(result.data, entry))),
   });
 }
 
@@ -584,7 +588,7 @@ async function postDelete(request, env) {
     ok: true,
     message: `${capitalize(collection.singular)} deleted.`,
     commit,
-    entries: collectionAfter(siblings, file, null),
+    entries: await withTranslationState(collectionName, collectionAfter(siblings, file, null)),
   });
 }
 

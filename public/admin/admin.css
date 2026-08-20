@@ -437,6 +437,15 @@ h1, h2, h3 {
 .pill-you {
   color: var(--color-azure);
 }
+/* Translation state. The good case is muted on purpose — it is confirmation,
+   not an achievement, and eight green badges down a list would drown the one
+   row that actually needs attention. */
+.pill-ok {
+  color: var(--color-ok);
+}
+.pill-warn {
+  color: var(--color-red);
+}
 
 /* ---------- Access list ---------- */
 /* Reuses .entries/.entry and .btn; only the things the content lists have no

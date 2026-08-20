@@ -315,6 +315,13 @@ function renderRow(c, item) {
     }
   }
 
+  // Where this entry's translations stand, worked out by the Worker from the
+  // text and the block beside it. Absent for collections that are never
+  // translated — and absent from an older response, which is why nothing here
+  // assumes the key exists.
+  const badge = TRANSLATION_PILLS[item.translation?.state];
+  if (badge) meta.append(pill(badge.label, badge.className));
+
   row.append(text);
 
   const actions = document.createElement("div");
@@ -593,6 +600,21 @@ function renderAccess() {
     }),
   );
 }
+
+// One badge per translation state. "none" is deliberately absent: an entry
+// with no title and no description has nothing to translate, and a badge
+// saying so would be noise on the one row that needs a title instead.
+//
+// "translated" gets a badge too, quiet rather than loud. It is the only place
+// the board can see that translation is working at all — the alternative is a
+// panel that looks identical whether four languages are being filled in or
+// nothing has happened since July.
+const TRANSLATION_PILLS = {
+  translated: { label: "translated", className: "pill-ok" },
+  partial: { label: "translations incomplete", className: "pill-warn" },
+  stale: { label: "needs re-translating", className: "pill-warn" },
+  missing: { label: "not translated yet", className: "pill-warn" },
+};
 
 function pill(label, className) {
   const span = document.createElement("span");
