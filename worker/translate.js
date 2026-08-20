@@ -10,8 +10,21 @@
 // an entry into something the panel can draw a badge from, and (from the next
 // stage on) resolving a DeepL key and calling the thing.
 
-import { TRANSLATABLE, translationState } from "../src/lib/translate/content.js";
-import { usage } from "../src/lib/translate/deepl.js";
+import {
+  DICTS,
+  TRANSLATABLE,
+  gate,
+  mergeTranslations,
+  planFor,
+  translationState,
+} from "../src/lib/translate/content.js";
+import {
+  detectSourceLang,
+  formatUsage,
+  translateSetComplete,
+  usage,
+} from "../src/lib/translate/deepl.js";
+import { formatFindings } from "../src/lib/translate/validate.js";
 
 // --- the DeepL key ------------------------------------------------------------
 //
@@ -199,4 +212,163 @@ export async function withTranslationState(collection, entries) {
 export async function stateOf(data, fields = TRANSLATABLE.events) {
   const { state, missing, sourceLang } = await translationState(data, fields);
   return { state, missing, sourceLang };
+}
+
+// --- translating one entry ----------------------------------------------------
+//
+// NEVER THROWS. Every failure comes back as a status, because the caller is a
+// board member's save and translation is not allowed to fail one: an event that
+// saves untranslated is a smaller problem than an event that would not save.
+// The outer catch in worker/index.js turns a throw into a 502 and abandons the
+// commit, which is exactly the wrong answer here.
+//
+// Three nets catch what one attempt misses: this, the Translate button, and the
+// nightly sweep. So "give up quietly and say so" is a complete strategy rather
+// than a shrug.
+
+/** How long the whole translation phase may take before it is abandoned. */
+export const SAVE_BUDGET_MS = 8000;
+
+const skip = (reason, message) => ({ status: "skipped", reason, message, i18n: undefined });
+const fail = (reason, message) => ({ status: "failed", reason, message, i18n: undefined });
+
+/**
+ * Fill in an entry's translations, and merge them with what is already there.
+ *
+ * @param {object} options
+ * @param {Record<string, any>} options.entry     the entry as it will be committed
+ * @param {Record<string, any>|null} [options.existing]  its `i18n` block on file
+ * @param {Record<string, any>} [options.submitted]      hand edits from the panel
+ * @param {boolean} [options.force]               re-translate even if current
+ * @returns {Promise<{status: string, reason?: string, message: string, i18n?: object, changed?: object[], usage?: object}>}
+ */
+export async function translateEntry({
+  entry,
+  existing = null,
+  submitted = {},
+  env,
+  force = false,
+  fields = TRANSLATABLE.events,
+  label = "entry",
+  budgetMs = SAVE_BUDGET_MS,
+  fetchImpl,
+  log = console,
+}) {
+  const plan = await planFor(entry, { fields, force });
+
+  // A hand edit on its own is not a translation job: the board typed a better
+  // Croatian title for text that has not changed, so there is nothing to ask
+  // DeepL and nothing to spend. Merge it and go.
+  if (plan.targets.length === 0 || plan.state === "none") {
+    const merged = mergeTranslations({ existing, submitted, hash: plan.hash, fields });
+    return {
+      ...skip(plan.state === "none" ? "no-text" : "up-to-date", "Translations are already up to date."),
+      i18n: merged,
+    };
+  }
+
+  const resolved = await resolveKey(env);
+  if (!resolved) return { ...skip("no-key", NO_DEEPL_KEY), i18n: mergeTranslations({ existing, submitted, hash: plan.hash, fields }) };
+
+  const controller = new AbortController();
+  const alarm = setTimeout(() => controller.abort(), budgetMs);
+
+  try {
+    const shared = { apiKey: resolved.key, fetchImpl, signal: controller.signal };
+
+    // One call, and it pays for itself: the board writes in whatever language
+    // suits them, and translating Croatian text while asserting it is English
+    // produces fluent nonsense. null means "let DeepL decide per request".
+    const detected = await detectSourceLang(
+      plan.nonEmpty.map((field) => String(entry[field])),
+      { ...shared, allowed: DICTS },
+    );
+
+    // Every target dictionary at once. Each is internally sequential over its
+    // fields, so this holds concurrency at one request per language — four —
+    // rather than eight, and finishes in about two round trips.
+    const wanted = plan.targets.filter((dict) => dict !== detected);
+    const results = await Promise.all(
+      wanted.map(async (dict) => {
+        const items = plan.nonEmpty.map((field) => ({
+          key: field,
+          source: String(entry[field]),
+          // DeepL's context is not translated and not billed. Giving each field
+          // the other one means a title and its description come back as the
+          // same event rather than two unrelated strings.
+          note: plan.nonEmpty
+            .filter((other) => other !== field)
+            .map((other) => `The event's ${other}: ${JSON.stringify(String(entry[other]))}`)
+            .join(" "),
+        }));
+
+        const { values, usage: used } = await translateSetComplete({
+          ...shared,
+          items,
+          code: dict,
+          sourceLang: detected,
+          onNote: (message) => log.warn?.(`[translate] ${label}: ${message}`),
+        });
+        return { dict, values, used };
+      }),
+    );
+
+    const machine = {};
+    let charsIn = 0;
+    let charsOut = 0;
+    for (const { dict, values, used } of results) {
+      machine[dict] = values;
+      charsIn += used.charsIn;
+      charsOut += used.charsOut;
+    }
+
+    // THE GATE, unchanged from the CLI and all-or-nothing per entry. A
+    // half-translated event is worse than an untranslated one, and the board
+    // cannot read the Serbian to notice.
+    const { findings, errors } = gate({ entry, i18n: machine, fields, label });
+    if (errors.length) {
+      log.error?.(formatFindings(findings, label));
+      return fail(
+        "validation",
+        "Saved, but the translations came back wrong and were not used. A maintainer can see why in the logs.",
+      );
+    }
+
+    const i18n = mergeTranslations({
+      existing,
+      machine,
+      submitted,
+      hash: plan.hash,
+      sourceLang: detected ?? "en",
+      fields,
+    });
+
+    log.log?.(
+      `[translate] ${label}: source=${detected ?? "unknown"}, filled ${wanted.join(",")} ` +
+        formatUsage({ charsIn, charsOut }),
+    );
+
+    return {
+      status: "translated",
+      message:
+        plan.state === "stale"
+          ? "The text changed, so the translations were filled in again."
+          : "Translated into German, Croatian, Bosnian and Serbian.",
+      i18n,
+      usage: { charsIn, charsOut },
+      sourceLang: detected ?? "en",
+      filled: wanted,
+    };
+  } catch (error) {
+    log.error?.(`[translate] ${label}: ${error?.message ?? error}`);
+    const timedOut = error?.name === "AbortError";
+    return fail(
+      timedOut ? "timeout" : error?.status === 429 ? "quota" : "upstream",
+      timedOut
+        ? "Saved, but DeepL was too slow just now, so the translations are not filled in yet."
+        : `Saved, but the translations could not be filled in: ${describeDeeplError(error)}`,
+    );
+  } finally {
+    clearTimeout(alarm);
+  }
 }

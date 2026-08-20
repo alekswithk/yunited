@@ -60,10 +60,13 @@ import {
   clearKey,
   describeDeeplError,
   keyStatus,
+  NO_DEEPL_KEY,
   putKey,
   resolveKey,
+  translateEntry,
   withTranslationState,
 } from "./translate.js";
+import { gate } from "../src/lib/translate/content.js";
 
 export default {
   /**
@@ -185,6 +188,7 @@ async function handle(request, env, url) {
     "GET state": { handler: getState, needs: "github" },
     "POST save": { handler: postSave, needs: "github" },
     "POST delete": { handler: postDelete, needs: "github" },
+    "POST translate": { handler: postTranslate, needs: "github" },
     "GET access": { handler: getAccess, needs: "cloudflare" },
     "POST access": { handler: postAccess, needs: "cloudflare" },
     // "none" because this pair is how a deployment with nothing configured
@@ -576,6 +580,54 @@ async function postSave(request, env) {
     return json({ ok: false, error: firstProblem(collection, result), field: firstField(result) }, 400);
   }
 
+  // 5b. Translations, BEFORE the commit, so an event and its four languages
+  //     land in one commit and trigger one rebuild — where the old workflow
+  //     made two of each and left the board watching the site change twice.
+  //
+  //     After the schema check on purpose: no DeepL quota is spent on an entry
+  //     that cannot be saved anyway.
+  const submitted = readSubmittedTranslations(form, collection);
+
+  // The board's own typing is gated first, and refused as a field error rather
+  // than silently dropped. Cyrillic in the Serbian box is a mistake worth
+  // naming — the alternative is discarding what they typed with no explanation,
+  // or shipping it and failing check:dist on somebody else's machine.
+  const handProblem = collection.translations
+    ? firstTranslationProblem(entry, submitted, collection)
+    : null;
+  if (handProblem) return json({ ok: false, error: handProblem.error, field: handProblem.field }, 400);
+
+  const translation = collection.translations
+    ? await translateEntry({
+        entry,
+        existing: carried.i18n ?? null,
+        submitted,
+        env,
+        label: file,
+        fields: collection.translations.fields,
+      })
+    : null;
+
+  if (translation?.i18n !== undefined) {
+    // Assign to `entry`, not to result.data: toFile() emits only the keys the
+    // submitted object carries, so this is what makes a first-ever translation
+    // reach the file at all.
+    entry.i18n = translation.i18n;
+
+    // Re-validate. The i18n block is the one part of the file the board cannot
+    // read in a diff, so it is checked by the real schema before it is written
+    // rather than trusted because this Worker produced it.
+    const revalidated = collection.schema.safeParse(entry);
+    if (revalidated.success) {
+      result.data.i18n = revalidated.data.i18n;
+    } else {
+      console.error("[translate] produced an i18n block the schema rejects:", revalidated.error);
+      entry.i18n = carried.i18n;
+      translation.status = "failed";
+      translation.message = "Saved, but the translations were not usable and were left as they were.";
+    }
+  }
+
   // 6. Commit. JSON.stringify with two-space indent and a trailing newline, to
   //    match every file already in content/ — a save should show up in `git
   //    diff` as the fields that changed and nothing else.
@@ -599,6 +651,157 @@ async function postSave(request, env) {
     file,
     commit,
     entries: await withTranslationState(collectionName, collectionAfter(siblings, file, toFile(result.data, entry))),
+    // What happened to the translations, as its own sentence. The save
+    // succeeded either way — `ok` above is never false because DeepL was slow —
+    // so this is appended to the banner rather than replacing it, and the panel
+    // refreshes its Translations page from `i18n`.
+    translation: translation && {
+      status: translation.status,
+      reason: translation.reason,
+      message: translation.message,
+      i18n: translation.i18n ?? null,
+    },
+  });
+}
+
+/**
+ * The hand-edited translations the panel posted, as `{hr: {title: "…"}}`.
+ *
+ * Flat `i18n.<locale>.<field>` form keys, generated in the browser from the
+ * collection's own `translations` descriptor — so the locale list and the field
+ * list still exist in exactly one place, the Worker's registry.
+ *
+ * sourceLang and sourceHash are NOT read from the form even if they appear
+ * there. They are the Worker's bookkeeping: a page that could set the hash
+ * could tell this Worker that stale translations are current.
+ */
+function readSubmittedTranslations(form, collection) {
+  const spec = collection.translations;
+  if (!spec) return {};
+
+  const out = {};
+  for (const { code } of spec.locales) {
+    for (const field of spec.fields) {
+      const raw = form.get(`i18n.${code}.${field}`);
+      if (raw === null) continue;
+      const value = String(raw).trim();
+      if (value === "") continue;
+      out[code] = { ...out[code], [field]: value };
+    }
+  }
+  return out;
+}
+
+/**
+ * The first thing wrong with what the board typed into the Translations page,
+ * or null.
+ *
+ * The same gate the machine output goes through — a Serbian title in Cyrillic
+ * is wrong whoever wrote it, and the site asserts Latin Serbian in check:dist.
+ * The difference is what happens next: machine output is dropped silently and
+ * retried later, whereas a person's typing gets named back to them, at the
+ * field they typed it in, so they can fix it.
+ */
+function firstTranslationProblem(entry, submitted, collection) {
+  const { errors } = gate({
+    entry,
+    i18n: submitted,
+    fields: collection.translations.fields,
+    label: "translations",
+  });
+  if (errors.length === 0) return null;
+
+  // "translations:hr.title" → the input's own name.
+  const [, locale, field] = /^translations:(\w+)\.(\w+)$/.exec(errors[0].key) ?? [];
+  const language = collection.translations.locales.find((l) => l.code === locale)?.label ?? locale;
+  return {
+    error: `${language}: ${errors[0].message}`,
+    field: locale && field ? `i18n.${locale}.${field}` : undefined,
+  };
+}
+
+// --- POST /admin/api/translate -----------------------------------------------
+// "Translate now": fill one entry's translations and commit them, without
+// touching anything the board typed.
+//
+// It commits rather than offering a preview to accept. Every other button on
+// this page saves straight to the site, and the review the board actually needs
+// happens afterwards anyway — the four translations are editable on the same
+// page, so a native speaker fixes what reads wrong and presses Save.
+//
+// Note the deliberate asymmetry with a save: there, a translation failure is
+// `ok: true` because the entry was still committed. Here translating IS the
+// action, so a failure is `ok: false` and lands in the form's error line where
+// the board is already looking.
+
+async function postTranslate(request, env) {
+  const { collection: collectionName, file, force = true } = await request.json();
+
+  const collection = COLLECTIONS[collectionName];
+  if (!collection?.translations) return json({ ok: false, error: "That section has no translations." }, 400);
+  if (!/^[a-z0-9-]+\.json$/.test(String(file ?? ""))) {
+    return json({ ok: false, error: "That entry's filename looks wrong — reload and try again." }, 400);
+  }
+
+  const gh = github(env);
+  const content = await gh.readContent();
+  const dirPrefix = collection.dir.replace(/^content\//, "") + "/";
+  const entry = content[`${dirPrefix}${file}`];
+  if (!entry) return json({ ok: false, error: "That entry no longer exists. Reload the page." }, 409);
+
+  const translation = await translateEntry({
+    entry,
+    existing: entry.i18n ?? null,
+    env,
+    force,
+    label: file,
+    fields: collection.translations.fields,
+    // Nobody is watching a save-shaped clock here: this button is an explicit
+    // request, so it gets longer than the save path's budget before giving up.
+    budgetMs: 20000,
+  });
+
+  if (translation.status === "failed") {
+    return json({ ok: false, error: translation.message.replace(/^Saved, but /, "") }, 502);
+  }
+  if (translation.reason === "no-key") return json({ ok: false, error: NO_DEEPL_KEY }, 503);
+  if (translation.status === "skipped" || translation.i18n === undefined) {
+    return json({ ok: true, status: "skipped", message: "These translations are already up to date." });
+  }
+
+  const candidate = { ...entry, i18n: translation.i18n };
+  const result = collection.schema.safeParse(candidate);
+  if (!result.success) {
+    console.error("[translate] produced an i18n block the schema rejects:", result.error);
+    return json({ ok: false, error: "The translations came back unusable, so nothing was changed." }, 502);
+  }
+
+  const who = identity(request).email;
+  const siblings = Object.entries(content)
+    .filter(([path]) => path.startsWith(dirPrefix))
+    .map(([path, data]) => ({ file: path.slice(dirPrefix.length), data }));
+
+  const commit = await commitOrConflict(
+    gh,
+    [{ path: `${collection.dir}/${file}`, content: JSON.stringify(toFile(result.data, candidate), null, 2) + "\n" }],
+    [
+      `content: translate ${collection.singular} “${entry.title ?? file}”`,
+      "",
+      `Filled from /admin${who ? ` by ${who}` : ""}.`,
+    ].join("\n"),
+  );
+  if (commit instanceof Response) return commit;
+
+  return json({
+    ok: true,
+    status: "translated",
+    message: "Translations filled in.",
+    commit,
+    i18n: translation.i18n,
+    entries: await withTranslationState(
+      collectionName,
+      collectionAfter(siblings, file, toFile(result.data, candidate)),
+    ),
   });
 }
 

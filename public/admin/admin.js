@@ -68,6 +68,16 @@ const el = {
   translationsSaveBtn: $("translations-save-btn"),
   translationsRemoveBtn: $("translations-remove-btn"),
   translationsError: $("translations-error"),
+  editTabs: $("edit-tabs"),
+  tabContent: $("tab-content"),
+  tabTranslations: $("tab-translations"),
+  tabTranslationsCount: $("tab-translations-count"),
+  paneContent: $("pane-content"),
+  paneTranslations: $("pane-translations"),
+  translationsSource: $("translations-source"),
+  translationsFields: $("translations-fields"),
+  translationsEmpty: $("translations-empty"),
+  translateBtn: $("translate-btn"),
 };
 
 /** The two tabs that are not content collections. */
@@ -395,6 +405,9 @@ function openForm(item = null) {
   // Build the inputs from the API's field definitions.
   el.fields.replaceChildren(...c.fields.map((field) => renderField(field, item?.data)));
 
+  renderTranslationPane(c, item);
+  showPane("content");
+
   // Photo control.
   el.imageLabel.textContent = c.image.label + (c.image.required ? "" : " (optional)");
   el.imageHelp.textContent = c.image.help;
@@ -519,9 +532,32 @@ el.form.addEventListener("submit", async (event) => {
   }
   if (el.imageInput.files?.length) body.set("image", el.imageInput.files[0]);
 
-  await run(el.saveBtn, "Saving…", async () => {
+  // The Translations page, posted with the rest. Read straight off the inputs
+  // by their own names (i18n.hr.title), so the browser never holds a list of
+  // locales — see renderTranslationLocale.
+  for (const input of el.translationsFields.querySelectorAll("textarea")) {
+    body.set(input.name, input.value);
+  }
+
+  await run(el.saveBtn, c.translations ? "Saving and translating…" : "Saving…", async () => {
     const result = await api("/admin/api/save", { method: "POST", body });
-    showBanner(`${result.message} It will be live on yunited.ch in a minute or two.`, true);
+
+    // ONE banner, because a second call would simply overwrite the first.
+    // Which one depends on a distinction worth keeping: the entry always
+    // saved, and the translations separately did or did not.
+    const t = result.translation;
+    const quiet = !t || t.status === "translated" || t.reason === "up-to-date" || t.reason === "no-text";
+
+    if (quiet) {
+      const note = t?.status === "translated" ? ` ${t.message}` : "";
+      showBanner(`${result.message} It will be live on yunited.ch in a minute or two.${note}`, true);
+    } else {
+      // These messages already open with "Saved, but …" — except the no-key
+      // one, which is a standing condition rather than something that just
+      // went wrong, so it gets the save's own sentence in front of it.
+      showBanner(t.reason === "no-key" ? `${result.message} ${t.message}` : t.message, false);
+    }
+
     applyEntries(result);
     showList();
   });
@@ -727,6 +763,130 @@ function failAccess(message, field) {
     el.accessInput.focus({ preventScroll: true });
   }
 }
+
+// ---------------------------------------------------------------------------
+// One entry's translations
+//
+// A second page of the same form, not a second form. Save posts both panes at
+// once, so correcting the English and its Croatian in one sitting is one
+// commit and one rebuild — the thing this whole arrangement exists to collapse.
+
+/** Switch the edit view between its two panes. */
+function showPane(which) {
+  const translations = which === "translations";
+  el.paneContent.hidden = translations;
+  el.paneTranslations.hidden = !translations;
+  el.tabContent.toggleAttribute("aria-current", !translations);
+  el.tabTranslations.toggleAttribute("aria-current", translations);
+}
+
+el.tabContent.addEventListener("click", () => showPane("content"));
+el.tabTranslations.addEventListener("click", () => showPane("translations"));
+
+function renderTranslationPane(c, item) {
+  // Collections with nothing to translate get no switch at all, rather than a
+  // switch to an empty page.
+  el.editTabs.hidden = !c.translations;
+  if (!c.translations) {
+    el.translationsFields.replaceChildren();
+    return;
+  }
+
+  const i18n = item?.data?.i18n ?? null;
+  const isNew = !item;
+
+  el.tabTranslationsCount.textContent = i18n ? "" : " ·  none yet";
+  el.translationsEmpty.hidden = !isNew;
+  el.translateBtn.hidden = isNew;
+
+  // sourceLang is DeepL's guess and is easy to get plausibly wrong between
+  // Bosnian, Croatian and Serbian — so it is phrased as an observation, never
+  // as a fact the board should act on.
+  el.translationsSource.textContent = isNew
+    ? ""
+    : i18n?.sourceLang
+      ? `Looks like this was written in ${languageName(c, i18n.sourceLang)}. ` +
+        "Change the title or description on the Content page and these fill in again."
+      : "Not translated yet. Saving this page fills them in.";
+
+  el.translationsFields.replaceChildren(
+    ...c.translations.locales
+      // The language it was written in needs no translation of itself: the
+      // page in that language shows the authored text.
+      .filter((locale) => locale.code !== i18n?.sourceLang)
+      .map((locale) => renderTranslationLocale(c, locale, i18n?.[locale.code])),
+  );
+}
+
+function languageName(c, code) {
+  if (code === "en") return "English";
+  return c.translations.locales.find((l) => l.code === code)?.label ?? code;
+}
+
+/** One language's block of inputs, named so the Worker can read them back. */
+function renderTranslationLocale(c, locale, values) {
+  const group = document.createElement("fieldset");
+  group.className = "translation-group";
+
+  const legend = document.createElement("legend");
+  legend.className = "translation-legend";
+  legend.textContent = locale.label;
+  group.append(legend);
+
+  for (const field of c.translations.fields) {
+    const spec = c.fields.find((f) => f.name === field);
+    const wrap = document.createElement("div");
+    wrap.className = "field";
+
+    const id = `field-i18n-${locale.code}-${field}`;
+    const label = document.createElement("label");
+    label.className = "label";
+    label.htmlFor = id;
+    label.textContent = spec?.label ?? field;
+    wrap.append(label);
+
+    // A textarea for both, because a translated title can be noticeably longer
+    // than the English and a one-line input hides the end of it.
+    const input = document.createElement("textarea");
+    input.className = "textarea";
+    input.id = id;
+    input.name = `i18n.${locale.code}.${field}`;
+    input.rows = spec?.type === "textarea" ? 3 : 2;
+    input.value = values?.[field] ?? "";
+    wrap.append(input);
+    group.append(wrap);
+  }
+
+  return group;
+}
+
+/** Put the response's translations back in the boxes after a save or a fill. */
+function applyTranslations(i18n) {
+  const c = collection();
+  if (!c.translations) return;
+
+  if (state.editing) state.editing = { ...state.editing, data: { ...state.editing.data, i18n } };
+  renderTranslationPane(c, state.editing);
+}
+
+el.translateBtn.addEventListener("click", async () => {
+  const c = collection();
+  if (!state.editing) return;
+
+  await run(el.translateBtn, "Translating…", async () => {
+    const result = await api("/admin/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      // The button means "do it now", so it forces — otherwise pressing it on
+      // an entry the Worker considers current would do nothing at all, which
+      // reads as a broken button.
+      body: JSON.stringify({ collection: c.name, file: state.editing.file, force: true }),
+    });
+    applyTranslations(result.i18n);
+    if (result.entries) applyEntries(result);
+    showBanner(result.message, true);
+  });
+});
 
 // ---------------------------------------------------------------------------
 // Translations

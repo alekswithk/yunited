@@ -174,9 +174,17 @@ export function coerceField(raw, field) {
 export function buildEntry(fields, values, carried = {}) {
   /** @type {Record<string, unknown>} */
   const out = {};
+
+  // `id` leads, because that is where it sits in every file already; the form's
+  // own fields follow; anything else carried goes last. Which keys are carried
+  // is the collection's business (see `carry` in collections.js), not this
+  // function's — it used to name `i18n` here, which meant the registry decided
+  // whether a key was carried while this decided whether it was possible.
   if (carried.id !== undefined) out.id = carried.id;
   for (const field of fields) out[field.name] = values[field.name];
-  if (carried.i18n !== undefined) out.i18n = carried.i18n;
+  for (const [key, value] of Object.entries(carried)) {
+    if (key !== "id" && value !== undefined) out[key] = value;
+  }
   return out;
 }
 

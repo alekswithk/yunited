@@ -15,6 +15,7 @@ import {
   putKey,
   resolveKey,
   stateOf,
+  translateEntry,
   translatableFields,
   withTranslationState,
 } from "./translate.js";
@@ -227,4 +228,166 @@ test("with no settings store, the key can only come from the secret", async () =
 
   const status = await keyStatus({ DEEPL_API_KEY: FREE_KEY }, { fetchImpl: fakeDeepl().fetchImpl });
   assert.equal(status.editable, false, "the panel must not offer a box that cannot save");
+});
+
+// --- translating an entry -----------------------------------------------------
+
+/**
+ * DeepL's /v2/translate, scripted per target language.
+ *
+ * `translate` receives the source text and the target and returns the string to
+ * answer with; anything it throws becomes an HTTP failure. Every request is
+ * recorded, which is how the "spends no quota" cases are asserted — those are
+ * about calls NOT made.
+ */
+function fakeTranslator({ translate = (text, lang) => `${lang}:${text}`, detected = "EN", status = 200, hang = false } = {}) {
+  const calls = [];
+  const fetchImpl = async (_url, init) => {
+    const body = JSON.parse(init.body);
+    calls.push({ target: body.target_lang, source: body.source_lang, context: body.context, text: body.text[0] });
+
+    // Real fetch rejects at once on an already-aborted signal, and that matters
+    // here: detectSourceLang swallows its own AbortError, so the calls after a
+    // blown budget rely on exactly this to fail instead of hanging.
+    if (init.signal?.aborted) throw Object.assign(new Error("aborted"), { name: "AbortError" });
+
+    if (hang) {
+      // Never resolves on its own; only the abort signal ends it.
+      return new Promise((_resolve, reject) => {
+        init.signal?.addEventListener("abort", () =>
+          reject(Object.assign(new Error("aborted"), { name: "AbortError" })),
+        );
+      });
+    }
+    if (status !== 200) {
+      return { ok: false, status, statusText: "", text: async () => "{}", json: async () => ({}) };
+    }
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        translations: [{ text: translate(body.text[0], body.target_lang), detected_source_language: detected }],
+      }),
+    };
+  };
+  return { calls, fetchImpl };
+}
+
+const quiet = { log: () => {}, warn: () => {}, error: () => {} };
+const KEYED = { DEEPL_API_KEY: FREE_KEY };
+
+test("a new event comes back translated into all four languages", async () => {
+  const { fetchImpl, calls } = fakeTranslator({
+    translate: (text, lang) => `[${lang}] ${text}`,
+  });
+
+  const result = await translateEntry({ entry: event(), env: KEYED, fetchImpl, log: quiet, label: "karaoke.json" });
+
+  assert.equal(result.status, "translated");
+  assert.deepEqual(result.filled.sort(), ["bs", "de", "hr", "sr"]);
+  assert.equal(result.i18n.hr.title, "[HR] Karaoke Night");
+  assert.equal(result.i18n.sourceLang, "en");
+  assert.equal(result.i18n.sourceHash, await sourceHash(event()));
+
+  // One detection call plus one per language per field.
+  assert.equal(calls.filter((c) => c.target === "EN").length, 1);
+  assert.equal(calls.length, 1 + 4 * 2);
+
+  // The sibling field travels as context — untranslated, unbilled, and the
+  // reason a title and its description come back as the same event.
+  const hrTitle = calls.find((c) => c.target === "HR" && c.text.includes("Karaoke Night"));
+  assert.match(hrTitle.context, /The event's description/);
+});
+
+// The gate, all-or-nothing per entry. Serbian is published in Latin here and
+// check:dist asserts it on the built pages, so Cyrillic coming back is a defect
+// that must not reach the commit.
+test("Cyrillic in the Serbian output throws the whole entry away, not just Serbian", async () => {
+  const { fetchImpl } = fakeTranslator({
+    translate: (text, lang) => (lang === "SR" ? "Караоке вече" : `[${lang}] ${text}`),
+  });
+
+  const result = await translateEntry({ entry: event(), env: KEYED, fetchImpl, log: quiet });
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.reason, "validation");
+  assert.equal(result.i18n, undefined, "a half-translated event is worse than an untranslated one");
+  assert.match(result.message, /^Saved, but/, "the save still succeeded");
+});
+
+test("a slow DeepL is abandoned, not waited on", async () => {
+  const { fetchImpl } = fakeTranslator({ hang: true });
+
+  const started = Date.now();
+  const result = await translateEntry({ entry: event(), env: KEYED, fetchImpl, log: quiet, budgetMs: 50 });
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.reason, "timeout");
+  assert.ok(Date.now() - started < 2000, "the abort actually fired");
+  assert.equal(result.i18n, undefined);
+});
+
+test("being rate-limited says wait, not ask a maintainer", async () => {
+  const { fetchImpl } = fakeTranslator({ status: 429 });
+  const result = await translateEntry({ entry: event(), env: KEYED, fetchImpl, log: quiet });
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.reason, "quota");
+  assert.match(result.message, /Wait a minute/);
+});
+
+// The quota guard, and the thing a refactor breaks first.
+test("an up-to-date entry spends nothing", async () => {
+  const data = event();
+  const entry = { ...data, i18n: complete(await sourceHash(data)) };
+  const { fetchImpl, calls } = fakeTranslator();
+
+  const result = await translateEntry({ entry, existing: entry.i18n, env: KEYED, fetchImpl, log: quiet });
+
+  assert.equal(result.status, "skipped");
+  assert.equal(result.reason, "up-to-date");
+  assert.equal(calls.length, 0);
+
+  const forced = await translateEntry({ entry, existing: entry.i18n, env: KEYED, fetchImpl, log: quiet, force: true });
+  assert.equal(forced.status, "translated");
+  assert.ok(calls.length > 0);
+});
+
+test("a hand edit alone is merged without asking DeepL", async () => {
+  const data = event();
+  const existing = complete(await sourceHash(data));
+  const { fetchImpl, calls } = fakeTranslator();
+
+  const result = await translateEntry({
+    entry: { ...data, i18n: existing },
+    existing,
+    submitted: { hr: { title: "Karaoke noć" } },
+    env: KEYED,
+    fetchImpl,
+    log: quiet,
+  });
+
+  assert.equal(calls.length, 0, "correcting a translation is not a translation job");
+  assert.equal(result.i18n.hr.title, "Karaoke noć");
+  assert.equal(result.i18n.bs.title, existing.bs.title);
+});
+
+test("with no key an event still saves, and says why it is untranslated", async () => {
+  const result = await translateEntry({ entry: event(), env: {}, log: quiet });
+
+  assert.equal(result.status, "skipped");
+  assert.equal(result.reason, "no-key");
+  assert.match(result.message, /Translations tab/);
+});
+
+test("the language the board wrote in is not translated back into itself", async () => {
+  const { fetchImpl, calls } = fakeTranslator({ detected: "DE" });
+  const german = { title: "Karaoke-Abend", description: "Karaoke-Abend in der Déja Vu Bar." };
+
+  const result = await translateEntry({ entry: german, env: KEYED, fetchImpl, log: quiet });
+
+  assert.equal(result.status, "translated");
+  assert.equal(result.i18n.sourceLang, "de");
+  assert.equal(result.i18n.de, undefined, "the authored text already serves German");
+  assert.equal(calls.some((c) => c.target === "DE"), false);
 });

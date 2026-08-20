@@ -110,4 +110,15 @@ test("buildEntry: carried fields survive, and absent ones stay absent", () => {
   assert.deepEqual(Object.keys(entry).sort(), ["date", "i18n", "id", "image", "title"]);
   assert.deepEqual(entry.i18n, carried.i18n);
   assert.equal(entry.id, "karaoke-2026");
+
+  // `id` first, then the form's fields, then whatever else is carried. The
+  // helper used to name `i18n` explicitly, which meant adding a carried key
+  // needed an edit in two files — and forgetting the second one drops the key
+  // with no error anywhere.
+  const extra = buildEntry(fields, values, { id: "karaoke-2026", i18n: { a: 1 }, somethingNew: { b: 2 } });
+  assert.deepEqual(Object.keys(extra), ["id", "title", "date", "image", "i18n", "somethingNew"]);
+
+  // undefined is not a value: it means "not carried", and writing the key
+  // would put `"i18n": null` in a file that has no translations.
+  assert.equal("i18n" in buildEntry(fields, values, { i18n: undefined }), false);
 });

@@ -159,21 +159,48 @@
         <button class="back" id="back-btn" type="button">← Back to the list</button>
         <h1 class="form-title" id="form-title">Add event</h1>
 
+        <!-- Two pages for one entry: what you wrote, and the translations of it.
+             Both live INSIDE the form below, so Save commits the pair together —
+             one commit, one rebuild, even when a board member fixes the English
+             and its Croatian in the same sitting. The switch only toggles
+             `hidden`. Left out entirely for collections that are never
+             translated (board members, partners). -->
+        <div class="edit-tabs" id="edit-tabs" hidden>
+          <button class="tab" id="tab-content" type="button" aria-current="true">Content</button>
+          <button class="tab" id="tab-translations" type="button">
+            Translations<span id="tab-translations-count"></span>
+          </button>
+        </div>
+
         <form class="entry-form" id="entry-form" novalidate>
-          <!-- Fields are inserted here from the API's field definitions. -->
-          <div id="fields"></div>
+          <div id="pane-content">
+            <!-- Fields are inserted here from the API's field definitions. -->
+            <div id="fields"></div>
 
-          <div class="field">
-            <label class="label" for="image-input" id="image-label">Photo</label>
-            <p class="help" id="image-help"></p>
+            <div class="field">
+              <label class="label" for="image-input" id="image-label">Photo</label>
+              <p class="help" id="image-help"></p>
 
-            <div class="photo">
-              <img class="photo-preview" id="photo-preview" alt="" hidden />
-              <div class="photo-controls">
-                <input class="file" type="file" id="image-input" name="image" />
-                <p class="photo-note" id="photo-note"></p>
+              <div class="photo">
+                <img class="photo-preview" id="photo-preview" alt="" hidden />
+                <div class="photo-controls">
+                  <input class="file" type="file" id="image-input" name="image" />
+                  <p class="photo-note" id="photo-note"></p>
+                </div>
               </div>
             </div>
+          </div>
+
+          <div id="pane-translations" hidden>
+            <p class="help" id="translations-source"></p>
+            <p class="empty" id="translations-empty" hidden>
+              Save this first — the translations fill themselves in.
+            </p>
+            <!-- One block per language, generated from the collection's own
+                 `translations` descriptor so the locale list lives only in the
+                 Worker. -->
+            <div id="translations-fields"></div>
+            <button class="btn" id="translate-btn" type="button">Translate now</button>
           </div>
 
           <div class="form-actions">

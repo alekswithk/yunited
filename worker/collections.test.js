@@ -17,7 +17,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { COLLECTIONS, isImageRequired } from "./collections.js";
+import { COLLECTIONS, isImageRequired, publicShape } from "./collections.js";
+import { LANGUAGES } from "../src/lib/translate/glossary.js";
 import { coerceField } from "./lib.js";
 
 for (const [name, collection] of Object.entries(COLLECTIONS)) {
@@ -109,6 +110,32 @@ test("events carry their translations; members and partners have none to carry",
   assert.equal(COLLECTIONS.partners.carry.includes("i18n"), false);
   assert.equal("i18n" in COLLECTIONS.members.schema.shape, false);
   assert.equal("i18n" in COLLECTIONS.partners.schema.shape, false);
+});
+
+test("the translations descriptor names real fields and real dictionaries", () => {
+  // The panel renders the per-event Translations page from this. A typo here
+  // renders an input whose contents the schema then rejects at save time —
+  // exactly the drift that made Sveltia's second copy of the field list worth
+  // deleting, so it is asserted rather than trusted.
+  const spec = COLLECTIONS.events.translations;
+  const names = COLLECTIONS.events.fields.map((f) => f.name);
+
+  for (const field of spec.fields) {
+    assert.ok(names.includes(field), `translations name "${field}", which is not a field`);
+    assert.ok(field in COLLECTIONS.events.schema.shape, `"${field}" is not in the schema either`);
+  }
+
+  assert.ok(spec.locales.length > 0);
+  for (const { code, label } of spec.locales) {
+    assert.ok(LANGUAGES[code], `"${code}" is not a dictionary this site can produce`);
+    assert.equal(typeof label, "string");
+    assert.notEqual(label, "");
+  }
+
+  // Never for the collections that are deliberately never translated.
+  assert.equal(COLLECTIONS.members.translations, undefined);
+  assert.equal(COLLECTIONS.partners.translations, undefined);
+  assert.equal(publicShape().find((c) => c.name === "members").translations, null);
 });
 
 test("an event's photo is required and a member's is not", () => {
