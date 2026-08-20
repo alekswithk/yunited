@@ -29,7 +29,7 @@ const [lead, ...roster] = Array.isArray(members) ? members : [];
   <div class="motif-divider" role="presentation"></div>
 
   <section>
-    <div class="container reveal">
+    <div class="container">
       <p class="eyebrow">{t("members.boardEyebrow")}</p>
       <h2>{t("members.boardHeading")}</h2>
       <div id="member-grid">
@@ -50,7 +50,7 @@ const [lead, ...roster] = Array.isArray(members) ? members : [];
   </section>
 
   <section class="section-dark">
-    <div class="container reveal">
+    <div class="container">
       <h2>{t("members.involvedHeading")}</h2>
       <p class="section-intro">{t("members.involvedBody")}</p>
       <a class="btn btn-gold" href={localizePath("/contact", locale)}>{t("members.involvedCta")}</a>

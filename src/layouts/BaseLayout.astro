@@ -91,8 +91,10 @@ const showAlternates = alternates.length > 1 && !noindex;
   <Footer locale={loc.code} />
 
   <script>
-    // Shared behaviours from the old main.js: mobile menu toggle and
-    // reveal-on-scroll. The footer year is now rendered at build time.
+    // Shared behaviours from the old main.js: mobile menu toggle, the
+    // language switcher's outside-click, and the table-of-contents scroll spy.
+    // The footer year is rendered at build time; reveal-on-scroll is gone (see
+    // "Reveal-on-scroll: removed" in global.css).
 
     // --- Mobile menu toggle ---
     const navToggleButton = document.querySelector(".nav-toggle");
@@ -126,26 +128,6 @@ const showAlternates = alternates.length > 1 && !noindex;
           langSwitch.querySelector("summary")?.focus();
         }
       });
-    }
-
-    // --- Reveal sections as they scroll into view ---
-    const revealElements = document.querySelectorAll(".reveal");
-
-    if ("IntersectionObserver" in window && revealElements.length > 0) {
-      const revealObserver = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add("is-visible");
-              revealObserver.unobserve(entry.target);
-            }
-          });
-        },
-        { threshold: 0.12 }
-      );
-      revealElements.forEach((element) => revealObserver.observe(element));
-    } else {
-      revealElements.forEach((element) => element.classList.add("is-visible"));
     }
 
     // --- Table-of-contents scroll spy ---

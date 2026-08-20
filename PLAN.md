@@ -335,6 +335,26 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done.
 Items tagged **🧑 human-led** must NOT be auto-implemented by the weekly agent (§7) —
 they carry design decisions that need a person. The agent skips them.
 
+- [x] **Design pass: paper studio** — the site kept its editorial/broadsheet
+      direction and got the volume turned down. Seven moves, all in
+      `src/styles/global.css` unless noted: the 2px ink border became two
+      hairline weights (`--rule` 14%, `--rule-strong` 24%); the hard offset
+      shadow, previously on every button, card hover, language menu and form
+      focus, now belongs to `.btn-gold` alone (`--shadow-hard-ink` on paper,
+      `--shadow-hard-paper` on ink surfaces, because an ink shadow on an ink
+      ground is invisible); gold became the only interactive colour, with red
+      and azure demoted to punctuation (the kilim motif, a 2px tick on
+      `.card-date`, a panel's top rule); `h3` went 1.2rem/600 → 1.5rem/700 to
+      fill the hole in the type scale where card titles sit; section padding
+      became three values chosen by structure rather than one; four of the six
+      animations were retired (`.reveal`, its per-child stagger, the
+      `.eyebrow::after` rule-draw and `puzzle-in`), leaving the hero entrance
+      and the motif drift; and a photo-less card became paper-soft with the
+      kilim strip instead of a saturated block. Removing `.reveal` also deleted
+      the IntersectionObserver from `BaseLayout.astro`, the `scripting: enabled`
+      gate, and the class from eighteen elements across the pages and
+      `EventCard.astro`. Chosen from rendered samples rather than described.
+
 - [x] **CI check on PRs** — shipped in #19 (`.github/workflows/ci.yml`).
 - [x] **CSP hardening** — **`'unsafe-inline'` is now gone from both `script-src` and
       `style-src`** on the public site. The 16 inline `style="…"` attributes across 6
