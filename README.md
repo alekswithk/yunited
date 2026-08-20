@@ -39,10 +39,16 @@ A few things the site does for you, so they don't surprise you:
   date empty for a "TBA" event — it shows at the top of Upcoming.
 - **Membership prices, page copy, etc.** live in the code, not the admin panel.
   Ask a developer, or [open an issue](../../issues).
-- **Events are translated automatically.** When you save an event, its title and
-  description are machine-translated for the German, Bosnian, Croatian and
-  Serbian sites within a few minutes. Board members' names, roles and bios are
-  deliberately *not* translated — they appear as you typed them everywhere.
+- **Events are translated as you save them.** Pressing Save fills in the German,
+  Bosnian, Croatian and Serbian title and description in the same go, and each
+  event's row says whether that worked. Every event has a **Translations** page
+  next to its Content page where you can read those four and correct any of them
+  by hand — a correction stays until you change the English text itself. Board
+  members' names, roles and bios are deliberately *not* translated: they appear
+  as you typed them everywhere.
+- **If translations stop happening**, open the **Translations** tab. It says
+  whether the club's DeepL key is working, and anyone on the board can paste in a
+  new free one — no developer, no Cloudflare account.
 
 If you'd rather edit the JSON files directly, they're one-file-per-entry under
 `content/events/` and `content/members/` — the field shapes are described below.
@@ -176,18 +182,25 @@ git push        # to main → Cloudflare rebuilds and redeploys in ~1 minute
 
 Three things live **outside** the repo and are worth knowing:
 
+- **Handing the site over?** [`docs/HANDOVER.md`](docs/HANDOVER.md) lists every
+  account and credential it depends on, and what breaks without each.
 - **The build command** (`npm run build`) is configured in the Cloudflare Workers
   Builds dashboard, not in any file here. If the Cloudflare project is ever
   recreated, set it there.
 - **`GITHUB_TOKEN`** is an encrypted Worker secret, set with
   `npx wrangler secret put GITHUB_TOKEN`. It is what lets `/admin` commit. See
   [`worker/README.md`](worker/README.md).
-- **`DEEPL_API_KEY`** is a GitHub Actions secret, used only by the auto-translate
-  workflow (`.github/workflows/translate-content.yml`) — never by the site build.
+- **`DEEPL_API_KEY`** is an encrypted Worker secret, set with
+  `npx wrangler secret put DEEPL_API_KEY`. `/admin` translates each event as it is
+  saved, and a nightly cron sweep fills anything missed. The board can override it
+  from the Translations tab without a deploy — see
+  [`worker/README.md`](worker/README.md). Never read by the site build, which
+  stays hermetic.
 
-Who may reach `/admin` is managed in the **Cloudflare Zero Trust dashboard**
-(Access → Applications → the `yunited.ch/admin` app → Policies), by adding or
-removing email addresses. No code change, no deploy, no GitHub account.
+Who may reach `/admin` is managed by the board itself, in the panel's **Access**
+tab (it rewrites the `yunited-board` Access group). The break-glass path, if
+nobody can get in at all, is the Cloudflare Zero Trust dashboard — see
+[`docs/ADMIN.md`](docs/ADMIN.md). No code change, no deploy, no GitHub account.
 
 `public/_headers` carries the Content-Security-Policy and cache rules and is
 copied verbatim into `dist/`. The public site's CSP is strict — `script-src`

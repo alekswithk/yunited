@@ -136,6 +136,9 @@ worker/                  SERVER LAYER — the only code that runs at request tim
   access.js                reads + verifies the Cloudflare Access JWT (no login code)
   board-access.js          the email allow-list: who may open /admin (membership,
                            NOT authentication — Access still does that)
+  translate.js             the DeepL key (KV over secret), the per-entry state the panel
+                           badges, and translateEntry() — which never throws, because a
+                           translation failure must never fail a board member's save
   lib.js                   slugify, coerceField, buildEntry, image paths
   {collections,lib,board-access}.test.js  `npm test` — form↔schema parity, carry,
                            coercion, lockout rails, non-destructive group writes
@@ -150,16 +153,24 @@ scripts/check-dist.mjs     npm `check:dist`: post-build CSP, brand, Serbian-is-L
                            /admin first-party + media checks
 scripts/mirror-media.mjs   npm `prebuild`: mirrors src/images -> public/images so /admin
                            can show the originals (gitignored; no page links there)
-scripts/translate.mjs      npm `translate`: offline Claude fill of i18n dictionaries (not in build)
-scripts/translate-content.mjs  npm `translate:content`: fills the i18n block in content/**.json
-scripts/lib/glossary.mjs   THE translation policy: protected names, one pinned term per
-                           concept per language, variant/morphology rules, address form
-scripts/lib/claude.mjs     one request per language, whole dictionary at once (the fix)
-scripts/lib/validate.mjs   the gate — nothing is written until it passes
-scripts/lib/validate.test.js  `npm test`; cases are strings that actually shipped
-scripts/lib/flat.mjs       flat <-> nested dictionary conversion, in one place
-.github/workflows/         ci.yml (test+build+check+check:dist on PRs); translate-content.yml
-                           (auto-translate content on push to main — needs ANTHROPIC_API_KEY)
+scripts/translate.mjs      npm `translate`: offline DeepL fill of i18n dictionaries (not in build)
+scripts/translate-content.mjs  npm `translate:content`: the CLI equivalent of what /admin
+                           does on save — for bulk work, not the board's path
+scripts/lib/require-api-key.mjs  the one Node-only bit: DEEPL_API_KEY from the environment
+src/lib/translate/         ISOMORPHIC — imported by BOTH the CLIs and the Worker, so no
+                           node: imports, no fs, no process (see CLAUDE.md)
+  glossary.js                THE translation policy: protected names, one pinned term per
+                             concept per language, variant/morphology rules, address form
+  deepl.js                   one request per string + `context`; free/pro endpoint split
+  validate.js                the gate — nothing is written until it passes
+  content.js                 ONE answer to "does this need translating?": TRANSLATABLE,
+                             sourceHash (Web Crypto), translationState, planFor,
+                             mergeTranslations, gate
+  flat.js                    flat <-> nested dictionary conversion, in one place
+  {validate,deepl,content}.test.js  `npm test`; cases are strings that actually shipped,
+                             plus a golden test that every committed sourceHash still matches
+.github/workflows/         ci.yml (test+build+check+check:dist on PRs). translate-content.yml
+                           is GONE — /admin translates on save; see §4
 astro.config.mjs           site, trailingSlash, build.format:'file', sitemap integration,
                            and the two settings that keep the CSP inline-free
                            (inlineStylesheets:'never', vite assetsInlineLimit:0)
@@ -253,6 +264,24 @@ Manual/account steps (code is in place).
 - [x] ~~Deploy `sveltia-cms-auth` worker + GitHub OAuth app + secrets~~ — obsolete;
       Sveltia and its auth worker were removed. Access + one Worker secret replaced them.
 - [x] **Google Search Console**: sitemap switched to `https://yunited.ch/sitemap-index.xml`.
+
+- [ ] **Two out-of-band steps before translation works in production** — 🧑
+      maintainer, both one-off, neither blocking a deploy.
+      1. `npx wrangler secret put DEEPL_API_KEY` — the key already in the
+         maintainer's local `.env` is a free-tier key and will do. Until it is
+         set, events save untranslated and `/admin` says so plainly; nothing
+         breaks.
+      2. `npx wrangler kv namespace create ADMIN_SETTINGS` (plus `--preview`),
+         then add the `SETTINGS` binding to `wrangler.jsonc`. This is what lets
+         the **board** replace the key themselves from the Translations tab
+         instead of needing a maintainer — i.e. it is the actual succession fix.
+         Without it the tab still reports status; it just cannot offer a box to
+         paste into. Steps and the exact JSON are in
+         [`worker/README.md`](worker/README.md).
+
+      Also worth doing while there: issue the DeepL key from **yunited@shsg.ch**
+      rather than a personal address, so a handover is a password change. See
+      [`docs/HANDOVER.md`](docs/HANDOVER.md).
 
 - [ ] **Add the 26/27 events when the dates are set** — 🧑 board. As of 2026-07-28
       every dated event is in the past (the newest is 2026-05-13) and "Upcoming"
@@ -482,11 +511,41 @@ they carry design decisions that need a person. The agent skips them.
     `/_astro` file, and the page's one script is still `src`'d. This is exactly the
     regression that guard exists for.
 
-- [~] **Translation runs on DeepL's free tier, not a paid Anthropic key**
-      *(medium — this is the succession item, and the priority translation
-      task).* **IN PROGRESS, 2026-08-17: stages 1/3/4/5 below are done; stage 6
-      (a live run with a real `DEEPL_API_KEY`) is the one thing left, and it
-      needs a human — see that stage for exactly what to run.** **Board
+- [x] **Translation runs on DeepL's free tier, not a paid Anthropic key —
+      DONE, and it moved into the Worker.** *(The succession item.)* Shipped in
+      two parts: PR #59 swapped the engine, and the follow-up moved the whole
+      thing out of GitHub Actions and into `/admin` — because the engine was only
+      half the problem. The machinery still lived behind a repo secret, in a
+      workflow whose failures showed up only in GitHub's Actions tab, which is a
+      surface no board member has an account for. That is why it failed unnoticed
+      from 2026-07-30.
+
+      **What the board has now:** an event is translated as it is saved, in the
+      same commit (one rebuild, not two); each event's row badges its translation
+      state; every event has a **Translations** page where the four languages can
+      be read and corrected by hand, and a correction survives until the English
+      text changes; a **Translate now** button; a **Translations tab** reporting
+      whether the club's DeepL key still works, with live usage, where anyone on
+      the board can paste a replacement key; and a nightly cron sweep in the same
+      Worker that fills whatever a save missed.
+      `.github/workflows/translate-content.yml` is deleted; the CLIs stay for a
+      maintainer's bulk work.
+
+      **The rules live in one place** — `src/lib/translate/content.js`, shared by
+      the Worker and the CLI, because two copies of "does this need translating?"
+      do not fail loudly, they re-translate over hand corrections. A latent bug
+      was fixed on the way: an entry authored in anything but English could never
+      be up to date and re-translated on every run — harmless at a yearly CLI run,
+      a nightly rewrite of the board's corrections once a cron exists.
+
+      **Verified:** hash parity checked inside workerd against all nine committed
+      events, not just under Node; the panel checked in a browser at desktop
+      width; `npm test` 129/129. **Not verified:** the panel at the 33rem
+      breakpoint — screenshots and window resizing both failed through the
+      browser extension, so it wants a look on a phone before anyone calls it
+      finished. **Two out-of-band steps remain — see §3.**
+
+      *The original entry follows, kept for its reasoning.* **Board
       decision, 2026-08-06.** The pipeline must not depend on a
       metered API account belonging to whoever is currently president. Anthropic's
       API is billed per token to a personal card; at the end of a presidency that

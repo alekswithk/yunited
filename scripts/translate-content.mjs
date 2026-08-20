@@ -5,8 +5,14 @@
 //   npm run translate:content -- --dry-run # report only, write nothing
 //   npm run translate:content -- --force   # re-translate everything
 //
-// Run by hand, or automatically by .github/workflows/translate-content.yml when
-// a board member saves through /admin (every save is a commit).
+// FOR A MAINTAINER, BY HAND. The board's own saves no longer come through here:
+// /admin translates an event as it is saved, in the same commit, and a nightly
+// sweep in the same Worker fills anything that slipped through (worker/
+// translate.js). This is the CLI equivalent, for bulk work — re-translating
+// everything after a glossary change, or filling in entries committed by hand.
+//
+// It shares its rules with the Worker rather than restating them; see
+// src/lib/translate/content.js.
 //
 // HOW IT DECIDES WHAT TO DO
 //

@@ -69,16 +69,57 @@ own resized copies.
 
 ### How long until it's live
 
-- **1–2 minutes** for the change to appear on yunited.ch in English.
-- **Up to about 5 minutes** for the German, Bosnian, Croatian and Serbian
-  versions of an event's title and description. Those are machine-translated
-  automatically after you save, which triggers a second rebuild. You don't have
-  to do anything.
+**1–2 minutes**, in every language at once. An event's German, Bosnian, Croatian
+and Serbian title and description are filled in while you save, so there is one
+rebuild rather than two and nothing to wait around for.
 
 Board members' names, roles and bios are **never translated** — they appear
 exactly as typed on every language's page. That is deliberate: a bio is somebody
 describing themselves in their own words, and machine translation mangles it.
 (It once turned the bio "krastavac" into "Küstenfischer" on the German page.)
+
+---
+
+## Translations
+
+Each event's row says where its translations stand: **translated**, **not
+translated yet**, or **needs re-translating** (you changed the English text, so
+the old translations no longer match it).
+
+### Reading and fixing them
+
+Open an event and switch to its **Translations** page, next to **Content**. The
+four languages are there as ordinary boxes. If a rendering is wrong — and if you
+speak the language, you will spot things a machine cannot — type over it and
+press **Save**.
+
+**Your correction stays.** Nothing overwrites it for as long as the English text
+is unchanged. If you later edit the title or description, all four are filled in
+again from the new text, because they were translations of a sentence that no
+longer exists; the panel tells you when that happens.
+
+**Translate now** re-does all four from scratch. Use it when a save could not
+reach the translator, or when you would rather start again than edit.
+
+Only the **title** and **description** are translated. A **location** is a real
+place — "Déja Vu Bar, St. Gallen" — and translating it would send people to an
+address that does not exist.
+
+### If translations stop happening
+
+Open the **Translations** tab. It says one of three things:
+
+- **Working**, with how much of this month's free allowance is used. Nothing to do.
+- **The key is not working.** The club's DeepL account was closed, or the key was
+  regenerated. Make a new **DeepL API Free** account at deepl.com/pro-api, copy
+  the key from its Account tab, and paste it in. It is checked before it is
+  saved, so a mistyped one is refused rather than quietly breaking things.
+- **No key set.** Same fix.
+
+Ideally the DeepL account is on **yunited@shsg.ch** rather than anyone's personal
+address, so it survives a handover. Events still save normally with no key at
+all — they just appear in the language you wrote them in on every page until a
+key is back.
 
 ---
 
@@ -125,16 +166,22 @@ after the Cloudflare account:
 - **"Your session has expired"** — reload the page and sign in again.
 - **Nothing is ever half-saved.** A change either goes through completely or not
   at all, photo included.
-- **The change saved but the site still looks old after five minutes** — check
-  the repository's Actions tab, or ask a maintainer to look at the Cloudflare
-  build log. The most likely cause is an unrelated build failure.
+- **The change saved but the site still looks old after five minutes** — ask a
+  maintainer to look at the Cloudflare build log. The most likely cause is an
+  unrelated build failure.
+- **"Saved, but the translations could not be filled in"** — the entry is safely
+  saved; only its other languages are missing. Nothing is lost: the panel retries
+  overnight by itself, or you can press **Translate now** on the event. If it
+  keeps happening, check the **Translations** tab.
 
 ---
 
 ## For maintainers
 
-Setup, deployment, the `GITHUB_TOKEN` secret and the Worker's internals are all
-in **[`worker/README.md`](../worker/README.md)**.
+Setup, deployment, the secrets and the Worker's internals are all in
+**[`worker/README.md`](../worker/README.md)**. What the club owns, what breaks
+without it, and what to do on the day the site changes hands is in
+**[`HANDOVER.md`](HANDOVER.md)**.
 
 ### What replaced what
 

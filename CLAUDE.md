@@ -77,16 +77,31 @@ Pages live under `src/pages/[...locale]/` — a **rest parameter that matches ze
   name (`en`/`de`/`hr`/`bs`/`sr` — one per locale) plus `sourceLang`
   and a `sourceHash` of the source text. `localizeEntry(entry, dict)` in
   `src/lib/content.js` swaps the translated fields in at render time and falls back
-  field-by-field to the authored text. `scripts/translate-content.mjs`
-  (`npm run translate:content`) detects what language the board wrote in, fills the
-  rest, and re-translates an entry when its hash changes;
-  `.github/workflows/translate-content.yml` runs it automatically on every push to
-  `content/**` (i.e. every save from `/admin`). **Only an event's `title`/`description`
+  field-by-field to the authored text. **Only an event's `title`/`description`
   are translated** — its `location` is a venue name or street address and translating it
   would corrupt directions. The `i18n` block *must* stay listed in the events
   collection's `carry` array in `worker/collections.js`: an editor that commits back
   only the fields it knows about would otherwise strip the translations on every board
   save. `worker/collections.test.js` asserts it is there.
+- **Event translation happens in the Worker, as part of the board's save.**
+  `worker/translate.js` fills an entry's four languages inside the *same commit*
+  as the entry, so one save is one rebuild; `/admin` shows a per-event state
+  badge, a Translate button, and the four translations as editable fields, and a
+  daily cron sweep in the same Worker fills anything a save missed. It replaced
+  `.github/workflows/translate-content.yml`, which needed a repo secret and
+  reported its failures only in GitHub's Actions tab — a surface no board member
+  has an account for, which is why it failed unnoticed from 2026-07-30 until this
+  landed. `scripts/translate-content.mjs` (`npm run translate:content`) is still
+  there for a maintainer doing bulk work.
+  **Both callers share `src/lib/translate/content.js`** — `TRANSLATABLE`,
+  `sourceHash`, `translationState`, `planFor`, `mergeTranslations`, `gate`. Never
+  re-derive "does this need translating?" in a caller: two copies do not fail
+  loudly, they just re-translate over the board's hand corrections.
+  **A hand-corrected translation survives until the English text changes**, and is
+  discarded when it does, because it translates a sentence that no longer exists.
+  `sourceLang`/`sourceHash` are the Worker's bookkeeping and are never read from
+  the form. **A translation failure must never fail a save** — `translateEntry`
+  returns statuses instead of throwing, and the entry commits untranslated.
 - **`content/members/` is never translated, and has no `i18n` block at all.** A board
   member's name, role and bio render identically on every language's page. Roles are
   used in English at HSG, and a bio is a person describing themselves in their own
