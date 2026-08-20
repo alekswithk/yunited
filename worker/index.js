@@ -295,7 +295,7 @@ async function getState(request, env) {
 // See the long comment at the top of worker/translate.js for why it lives in
 // two places at once.
 
-async function getSettings(request, env) {
+async function getSettings(_request, env) {
   return json({ ok: true, deepl: await keyStatus(env) });
 }
 
