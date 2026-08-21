@@ -11,8 +11,11 @@
 // HOW IT DECIDES WHAT TO DO
 //
 // The board writes an entry in whatever language suits them. This script asks
-// Claude which language that was, then fills in the others. The source text is
-// fingerprinted into `i18n.sourceHash`; when someone edits a title or
+// DeepL which language that was — a translate call to DeepL returns
+// `detected_source_language` for free — then fills in the others, giving each
+// field the other as DeepL `context` (not translated, not billed) so a title
+// and its description translate as the same event rather than in isolation.
+// The source text is fingerprinted into `i18n.sourceHash`; when someone edits a title or
 // description the hash stops matching and that entry is translated again. An
 // entry whose hash still matches and whose translations are all present is
 // skipped, so re-running this costs nothing — and a hand-corrected translation
@@ -40,7 +43,7 @@ import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-import { detectSourceLang, formatUsage, requireApiKey, translateSetComplete } from "./lib/claude.mjs";
+import { detectSourceLang, formatUsage, requireApiKey, translateSetComplete } from "./lib/deepl.mjs";
 import { LANGUAGES } from "./lib/glossary.mjs";
 import { checkString, errorsOf, formatFindings } from "./lib/validate.mjs";
 
@@ -60,7 +63,7 @@ const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
 const force = args.includes("--force");
 
-const apiKey = dryRun ? (process.env.ANTHROPIC_API_KEY ?? "") : requireApiKey("translate:content");
+const apiKey = dryRun ? (process.env.DEEPL_API_KEY ?? "") : requireApiKey("translate:content");
 
 /** Fingerprint of the source text, so an edit invalidates stale translations. */
 function hashSource(entry, fields) {
@@ -134,8 +137,19 @@ for (const [collection, fields] of Object.entries(TRANSLATABLE)) {
       // text, so an English page shows the German original rather than nothing.
       if (!LANGUAGES[dict]) continue;
 
-      const items = nonEmpty.map((f) => ({ key: f, source: String(entry[f]) }));
-      const { values, usage } = await translateSetComplete({ items, code: dict, apiKey });
+      // DeepL's context isn't translated and doesn't count toward the quota —
+      // give each field the OTHER one as context, so a title and its
+      // description translate as the same event rather than two unrelated
+      // strings.
+      const items = nonEmpty.map((f) => ({
+        key: f,
+        source: String(entry[f]),
+        note: nonEmpty
+          .filter((other) => other !== f)
+          .map((other) => `The event's ${other}: ${JSON.stringify(String(entry[other]))}`)
+          .join(" "),
+      }));
+      const { values, usage } = await translateSetComplete({ items, code: dict, apiKey, sourceLang: sourceDict });
 
       // THE GATE, per field. On an error nothing is written for this entry —
       // a half-translated event is worse than an untranslated one.

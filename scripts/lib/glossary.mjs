@@ -362,62 +362,10 @@ export const FORBIDDEN_VARIANTS = {
   sr: ["ijekavian", "croatianOnly"],
 };
 
-/**
- * The system prompt. Stable across every target language in a run, so it sits
- * behind a cache_control breakpoint and is written once and read three times.
- *
- * Everything the model is told here is also asserted in validate.mjs. The
- * prompt is how the output gets it right; the validator is why we know it did.
- */
-export function systemPrompt() {
-  const terms = Object.entries(TERMS)
-    .map(([, t]) => {
-      const canon = Object.entries(t.canonical).map(([code, v]) => `${code}: "${v}"`).join("; ");
-      const parts = [`- "${t.en}" -> ${canon}`];
-      if (t.note) parts.push(`    ${t.note}`);
-      if (t.forbidden.length) parts.push(`    Never: ${t.forbidden.join(", ")}`);
-      return parts.join("\n");
-    })
-    .join("\n");
-
-  return `You translate the website of YUnited, the Balkan / ex-Yugoslav student club at the University of St. Gallen (HSG) in Switzerland. The club runs social and professional events for students of ex-Yugoslav background and anyone interested in the culture, and it runs a buddy system pairing new and exchange students with someone who has already settled in.
-
-You are translating a COMPLETE SET of strings at once, on purpose. Read all of them before you start. They appear together on the same pages, so terminology, register and address form must be decided once and applied uniformly. The previous pipeline translated each string in isolation and shipped a button whose in-flight label "Sending…" became the imperative "Send", and a link fragment that could not agree with the preposition in the fragment before it. Use the whole set as context.
-
-DO NOT TRANSLATE these, in any language. Reproduce them character for character:
-${PROTECTED.map((p) => `  ${p}`).join("\n")}
-
-These are names. "Meet & Greet" is the club's event, advertised under that name; "Svadba" is the title of a film; "Déja Vu Bar" is a real bar someone has to find. The German dictionary keeps all of them untouched — follow it.
-
-PINNED TERMINOLOGY. Use exactly the given word for each concept, every time it occurs:
-${terms}
-
-MORPHOLOGY:
-${MORPHOLOGY.map((m) => `  - ${m}`).join("\n")}
-
-ADDRESS FORM: ${ADDRESS_FORM.instruction}
-
-MARKUP AND PLACEHOLDERS:
-  - Some values contain HTML (<a href="...">, <strong>). Keep every tag, every attribute and every URL byte-identical. Do not add, remove, split or merge tags, and never put a word's case ending outside the tag that contains it.
-  - {title} and {name} are placeholders filled at render time. Reproduce them exactly; do not translate or reposition them into an ungrammatical slot.
-
-SPLIT SENTENCES: keys ending in Pre / Link / Post are ONE sentence split around a hyperlink; they are given to you with the joined English sentence. Translate the sentence as a whole, then split it so the three fragments concatenate (in that order, with no added spaces) into natural prose. The Pre fragment must not end with sentence-final punctuation, and the Link fragment must be a noun phrase in the case the preceding preposition governs — never a bare infinitive.
-
-QUALITY BAR: write as a native speaker writing original copy for a student club, not as a translator. Prefer the idiom over the calque. Match the register of the English: warm, plain, concrete. Do not pad, do not add sentences the source does not have, and do not drop qualifiers the source does have.
-
-Return every key you were given, and only those keys.`;
-}
-
-/**
- * The per-language instruction, appended after the cached system prompt so the
- * cached prefix stays byte-identical across languages in one run.
- */
-export function languagePrompt(code) {
-  const lang = LANGUAGES[code];
-  if (!lang) throw new Error(`Unknown target language: ${code}`);
-  return `Translate into ${lang.name} — ${lang.variety}.
-
-${lang.rules.map((r) => `  - ${r}`).join("\n")}
-
-Use the canonical term for "${code}" wherever the pinned terminology above lists one.`;
-}
+// systemPrompt()/languagePrompt() — the free-text instructions built from
+// TERMS/MORPHOLOGY/ADDRESS_FORM for Claude's system prompt — were removed with
+// scripts/lib/claude.mjs (the en->hr/bs/sr DeepL migration, PLAN.md §4). DeepL
+// cannot be handed a prose instruction, only PROTECTED terms (via tag_handling)
+// and per-string context; TERMS/MORPHOLOGY/ADDRESS_FORM stay as the recorded
+// policy and as what validate.mjs checks on the output, which is now the only
+// enforcement mechanism for pinned terminology.

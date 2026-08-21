@@ -14,6 +14,28 @@ when a step ships, tick it here in the same PR.
   [`worker/README.md`](worker/README.md). This file is the *tracker/index*; those
   are the *reference*.
 
+_2026-08-17 (weekly agent): picked §4's **"Translation runs on DeepL's free
+tier"** item — the first unchecked, non-human-led item in order (the partners
+item above it is `[~]`, not `[ ]`, and everything else in §4 was already done
+or 🧑 human-led). Implemented stages 1/3/4/5 of the item's own plan: restored
+`scripts/lib/deepl.mjs` from the commit before #50 deleted it, rewired
+`translate.mjs`/`translate-content.mjs` to call it instead of the deleted
+`claude.mjs`, updated `.github/workflows/translate-content.yml` and
+`.env.example`/`README.md`/`CLAUDE.md` from `ANTHROPIC_API_KEY` to
+`DEEPL_API_KEY`, and dropped `@anthropic-ai/sdk`. **Stage 6 (a live `--force`
+run diffed against the committed hr/bs/sr, and a real `/admin` save through
+the workflow) could not run**: this environment has no `DEEPL_API_KEY`, so the
+actual DeepL HTTP call is unexercised — everything network-independent was
+verified instead (`npm test` 94/94 — 12 new cases for `deepl.mjs`'s pure
+functions, `toSerbianLatin` unit-tested for the first time — `npm run build`
+41 pages, `check` 0/0/0, `check:dist`, and `npm run translate -- --dry-run` /
+`translate:content -- --dry-run`, both of which need no key and wrote
+nothing). Full details, and one finding worth a human's attention (running the
+unchanged `validate.mjs` gate against the *currently committed* `de.json`
+surfaces 15 pre-existing errors, `hr`/`bs`/`sr` are clean), are in the PR. Left
+open per §7 — touches `.github/workflows/**` and a dependency file, so it was
+never going to auto-merge regardless of how stage 6 turns out._
+
 _Last updated: 2026-08-06 (status review. 0 open issues, 0 `TODO`/`FIXME` in
 source, and all four verification commands green — `npm test` 82/82, `build`
 (41 pages), `check` at 0/0/0, `check:dist`. #37–#51 landed 2026-07-28 → 07-30:
@@ -480,9 +502,12 @@ they carry design decisions that need a person. The agent skips them.
     `/_astro` file, and the page's one script is still `src`'d. This is exactly the
     regression that guard exists for.
 
-- [ ] **Translation runs on DeepL's free tier, not a paid Anthropic key**
+- [~] **Translation runs on DeepL's free tier, not a paid Anthropic key**
       *(medium — this is the succession item, and the priority translation
-      task).* **Board decision, 2026-08-06.** The pipeline must not depend on a
+      task).* **IN PROGRESS, 2026-08-17: stages 1/3/4/5 below are done; stage 6
+      (a live run with a real `DEEPL_API_KEY`) is the one thing left, and it
+      needs a human — see that stage for exactly what to run.** **Board
+      decision, 2026-08-06.** The pipeline must not depend on a
       metered API account belonging to whoever is currently president. Anthropic's
       API is billed per token to a personal card; at the end of a presidency that
       key either walks out of the door with its owner — and automatic translation
@@ -594,26 +619,86 @@ they carry design decisions that need a person. The agent skips them.
      assumption this stage existed to test — "DE/HR/SR and no BS, true as of #50" —
      **had in fact changed underneath the plan**, in both directions: one answer
      made the job smaller, one made it riskier.
-  1. Restore `deepl.mjs` as above. Do **not** restore the old `translate.mjs` /
-     `translate-content.mjs` — they predate both the bs/hr split and the gate.
+  1. [x] **Done 2026-08-17.** Restored `deepl.mjs` from the commit before #50
+     deleted it (`git show 7306f15^:scripts/lib/deepl.mjs`) and adapted it: the
+     brand-protection list is now imported from `glossary.mjs`'s `PROTECTED`
+     rather than kept as a second copy (the old file predated `glossary.mjs`
+     and had its own), and `deeplBatch` — a many-texts-per-call helper — became
+     a single-string `deeplTranslate`, because stage 3 calls DeepL **per
+     string**, not in a batch (see stage 3). `toSerbianLatin`, `postProcess`
+     (the `ß`/quoted-name/Cyrillic cleanup) and `apiUrlFor`
+     (free-vs-pro endpoint by the `:fx` key suffix) carried over unchanged. Did
+     **not** restore the old `translate.mjs` / `translate-content.mjs` — they
+     predate both the bs/hr split and the gate — instead rewired the *current*
+     ones in place (stage 3).
   2. ~~Add `deriveBosnian(hrText)` beside `toSerbianLatin()`, driven by the same
      word list `LANGUAGES.bs.rules` states, with unit tests in the existing
      `scripts/lib/*.test.js` style.~~ **Struck — stage 0(b): `BS` is a real
      target, so add it to the target list and derive nothing.**
-  3. Rewire `translate.mjs` and `translate-content.mjs` to call DeepL per string
-     **with `context`**, keeping their current structure — the grouping, gating
-     and review-report flow all stay; only the engine call changes. Delete
-     `claude.mjs` at the end of the migration, not the start.
-  4. Keep `validate.mjs` in the write path **unchanged**. Run it against the
-     currently committed dictionaries first to confirm it passes on known-good
-     input, then against the DeepL output. *Nothing is written until it passes* is
-     the invariant that must survive this entire change.
-  5. `.github/workflows/translate-content.yml`: swap the env to `DEEPL_API_KEY`
-     (the secret is still set). Drop `@anthropic-ai/sdk` from devDependencies.
-     **Leave the two loop guards alone.**
-  6. Re-translate everything with `--force` on a branch and **diff against the
-     committed hr/bs/sr**, which are known-good Claude output. That diff is the
-     real acceptance test — read it, do not just check that the run was green.
+  3. [x] **Done 2026-08-17.** `translate.mjs` and `translate-content.mjs` now
+     import from `deepl.mjs` instead of the deleted `claude.mjs`; the grouping
+     (`splitSentenceGroups`), gating (`checkDictionary`/`checkString`) and
+     review-report flow are untouched. **One request per string, not per
+     dictionary** — checked against DeepL's own docs (`context` is a single
+     value for the whole request, not indexed per text, so a batched call
+     could not give each string its own context) — with `context` built from:
+     a hand-written `NOTES` entry (unchanged from the Claude version, e.g.
+     `contact.formSending`'s "this is a status, not a command"), or, for a key
+     inside a `Pre`/`Link`/`Post` group, the sentence joined back together; for
+     content, an event's title and description are given to each other as
+     context, so they translate as one event rather than two unrelated
+     strings. `claude.mjs` **is deleted** — the "at the end, not the start"
+     instruction meant during the rewiring, and it now has no caller: nothing
+     outside it imports `@anthropic-ai/sdk`, which is why stage 5 could drop
+     that dependency in the same PR. `glossary.mjs`'s `systemPrompt()`/
+     `languagePrompt()` — the free-text instructions DeepL cannot take — went
+     with it; `TERMS`/`MORPHOLOGY`/`ADDRESS_FORM` stay as the recorded policy
+     and as what `validate.mjs` still checks on the output.
+  4. [x] **Partly done 2026-08-17 — the unchanged half only.** `validate.mjs`
+     itself has **zero code changes**. Ran it (via a throwaway script, not
+     committed) against the *currently committed* `de`/`hr`/`bs`/`sr`
+     dictionaries and all nine events' `i18n` blocks: **`hr`, `bs` and `sr` —
+     the three locales this migration actually targets — are completely
+     clean, 0 findings.** `de` is not: **15 errors**, all pre-existing and
+     unrelated to this change — `de` is excluded from `DEFAULT_TARGETS` and
+     was never previously run through this gate (`checkDictionary`/
+     `checkString` didn't exist as a pre-write check until #50's Claude
+     pipeline, which also excludes `de` by default). Two shapes of finding:
+     (a) 13× `TERMS.buddySystem`'s forbidden stem `"buddy-"` matches German's
+     own accepted compound **"Buddy-System"** — the forbidden list isn't
+     scoped per language the way `canonical` is, so a legitimate German
+     loanword trips a rule written against Croatian/Bosnian/Serbian output;
+     worth a `validate.mjs` fix, but out of scope here (stage 4 says keep it
+     unchanged) and `src/i18n/**` is a protected path regardless. (b)
+     `movie-night-svadba-2026.json`'s German title reads "Filmabend – **Die
+     Hochzeit**" — `Svadba` is `PROTECTED` for exactly this reason (glossary.mjs:
+     "the film screened at Movie Night, not the common noun 'wedding'") and it
+     is genuinely translated away here. **Not fixed in this PR** — `de.json`
+     and `content/**` are hand-reviewed/board-owned, this PR is the engine
+     swap, and fixing content on the back of an automated gate result is a
+     different, human-reviewed change. Flagged for the board. The **"against
+     the DeepL output"** half of this stage did not run — no `DEEPL_API_KEY`
+     in the environment that did stages 1–5 — and is now folded into stage 6.
+  5. [x] **Done 2026-08-17.** `.github/workflows/translate-content.yml`'s `env:`
+     now reads `DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}` (the secret is
+     still set, per §3/§4's earlier confirmation). `@anthropic-ai/sdk` is
+     dropped from `devDependencies` (`npm uninstall @anthropic-ai/sdk
+     --save-dev`, `package-lock.json` updated). The two loop guards in the
+     workflow (`github.actor != 'github-actions[bot]'` and the
+     `[auto-translate]` commit-message check) are untouched.
+  6. **THE REMAINING STEP — needs a human with a real `DEEPL_API_KEY`; nothing
+     else on this page is blocking it.** Stages 1–5 are done and merged (or
+     open in this item's PR); `npm run translate -- --dry-run` already
+     confirms the rewired script runs end to end and touches nothing without a
+     key. What has never happened is a single real HTTP call to DeepL — no
+     `DEEPL_API_KEY` existed in the environment that did stages 1–5, so the
+     request shape (`deeplTranslate` in `scripts/lib/deepl.mjs`: `text`,
+     `target_lang`, `source_lang`, `tag_handling: "html"`, `ignore_tags:
+     ["x"]`, `context`) is implemented against DeepL's documented contract but
+     has not actually been exercised. Before trusting it: re-translate
+     everything with `--force` on a branch and **diff against the committed
+     hr/bs/sr**, which are known-good Claude output. That diff is the real
+     acceptance test — read it, do not just check that the run was green.
 
      **Do not merge that forced output wholesale.** Board decision, 2026-08-07:
      the currently committed hr/bs/sr copy is **judged good**, and from here on
@@ -628,11 +713,18 @@ they carry design decisions that need a person. The agent skips them.
      would silently overwrite exactly the corrections this decision creates.
      Keep it on a branch.
 
-      **Verification:** `npm test` (new derivation tests + existing validator
-      tests) · `npm run translate -- --dry-run` writes nothing · a full `--force`
-      run at 0 errors from `validate.mjs` · `npm run build && npm run check:dist`
-      (which asserts **no Cyrillic on Serbian pages**, so the sr Latin conversion
-      has to survive the swap) · the workflow green on a real `/admin` save.
+      **Verification — done 2026-08-17, everything not gated on a live key:**
+      `npm test` (94/94 — 12 new cases cover `deepl.mjs`'s pure functions,
+      including `toSerbianLatin`'s digraph casing, never unit-tested before
+      this even though it shipped and ran in production pre-#50) · `npm run
+      build` (41 pages) · `npm run check` (0/0/0) · `npm run check:dist` ·
+      `npm run translate -- --dry-run` and `npm run translate:content --
+      --dry-run`, both confirmed to write nothing without a key. **Still
+      needed, and it is exactly stage 6:** a full `--force` run at 0 errors
+      from `validate.mjs` against real DeepL output, `npm run build && npm run
+      check:dist` on the result (which asserts **no Cyrillic on Serbian
+      pages**, so the sr Latin conversion has to survive the swap in practice,
+      not just in the unit test) · the workflow green on a real `/admin` save.
 
       **Risk — the honest one is quality, not mechanics.** The mechanics are about
       a day. Whether string-by-string DeepL, plus context, plus a glossary, plus
@@ -667,7 +759,10 @@ they carry design decisions that need a person. The agent skips them.
       *Note for the weekly agent (§7): this item touches
       `.github/workflows/**` and dependency files, so it may be implemented but
       **never auto-merged** — open the PR and leave it for a human. Stage 0 must
-      be answered before any code is written.*
+      be answered before any code is written. **Done, 2026-08-17: stages 1–5
+      implemented and verified (see above); stage 6 needs a human with a real
+      `DEEPL_API_KEY` and the item stays `[~]` until it runs.** Left the PR
+      open per this note, not because CI failed.*
 
 - [ ] **Brand the Cloudflare Access login screen** — 🧑 human-led *(small,
       dashboard-only).* Right now the first thing a board member sees when they
