@@ -396,7 +396,23 @@ main { position: relative; }
   top: 0;
   z-index: 50;
   background: var(--color-paper);        /* solid — no blur */
-  border-bottom: var(--border-structural);
+}
+/* The header's closing rule is a pseudo-element rather than a `border-bottom`,
+   for one reason: it has to be able to draw itself across on load (see
+   "Signature motion"). A border cannot be animated without repainting, and
+   scaling a 1px pseudo horizontally is free.
+   At rest this is pixel-identical to the border it replaced — same 1px, same
+   --rule-strong. The only difference is that the header box is now 66px
+   instead of 67px, which nothing measures. */
+.site-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--rule-strong);
+  transform-origin: left;
 }
 .site-header .container {
   display: flex;
@@ -614,6 +630,36 @@ main { position: relative; }
 .hero h1 { color: var(--color-paper); max-width: 16ch; }
 .hero h1 .accent { color: var(--color-gold); font-style: italic; font-weight: 500; }
 
+/* The headline's reveal curtain — a block of the hero's own ground laid over
+   the type, which retracts downward on load so the headline is uncovered from
+   the top down, the way a line of type appears as it is printed.
+
+   A COVERING PSEUDO-ELEMENT, NOT AN overflow:hidden MASK. The obvious way to
+   do this is to wrap the text in a span and slide it inside a clipped box, but
+   that needs a wrapper in eight page templates, and `overflow: hidden` makes
+   the box a scroll container — the exact thing that silently re-parents a
+   `view()` timeline (see the note on .motif-divider). This needs no markup and
+   creates no scroll container.
+
+   It rests at scaleY(0) — retracted, showing the headline — so if the
+   animation never runs, for any reason, the headline is simply visible. The
+   curtain can only ever hide the text while it is actively playing. */
+.hero h1,
+.page-hero h1 { position: relative; }
+
+.hero h1::after,
+.page-hero h1::after {
+  content: "";
+  position: absolute;
+  /* Bleeds past the text box so it covers accents and descenders rather than
+     leaving a sliver of Đ or j showing above the curtain's edge. */
+  inset: -0.12em 0 -0.12em -0.04em;
+  background: var(--color-ink);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  pointer-events: none;
+}
+
 /* Subtle dual-script cultural accent line */
 .hero-script {
   font-family: var(--font-mono);
@@ -687,7 +733,16 @@ main { position: relative; }
   background: #fffdf8;
   border: var(--border);
   border-radius: var(--radius);
-  overflow: hidden;
+  /* `clip`, not `hidden` — same reason as .motif-divider, and it bit here too.
+     `hidden` makes a box a SCROLL CONTAINER, and `animation-timeline: view()`
+     measures its subject against the nearest ancestor scroll container. The
+     photo inside settles on a view() timeline; with `hidden` on this card and
+     on .card-image, that timeline resolved against a box the photo fills
+     exactly — a degenerate range (measured: cover -264 → 264) frozen at one
+     frame, holding the finished pose. The animation existed, the browser
+     supported it, and nothing ever moved. `clip` clips identically and creates
+     no scroll container. */
+  overflow: clip;
   transition: transform var(--dur-fast) var(--ease-snap), border-color var(--dur-fast) var(--ease-out);
   display: flex;
   flex-direction: column;
@@ -696,6 +751,11 @@ main { position: relative; }
   transform: translateY(-3px);
   border-color: var(--rule-strong);
 }
+/* The photo answers the hover too, inside its own frame. `.card-image` already
+   clips, so this cannot spill; and because the photo is `position: absolute;
+   inset: 0`, scaling it moves nothing else on the page. */
+.card-image img { transition: transform var(--dur-base) var(--ease-out); }
+.card:hover .card-image img { transform: scale(1.04); }
 
 /* Image area: real photo if provided, a waiting state otherwise.
    The waiting state used to be a flat saturated red block with a 2.4rem
@@ -711,7 +771,7 @@ main { position: relative; }
   position: relative;
   aspect-ratio: 16 / 9;
   min-height: 0;
-  overflow: hidden;
+  overflow: clip;   /* see the note on .card — `hidden` here killed photo-settle */
   background: var(--color-paper-soft);
   border-bottom: var(--border);
   display: flex;
@@ -761,6 +821,7 @@ main { position: relative; }
 .card-description { font-size: 1rem; color: var(--color-ink); }
 
 .card-link {
+  position: relative;
   margin-top: auto;
   font-family: var(--font-mono);
   font-weight: 700;
@@ -773,7 +834,24 @@ main { position: relative; }
   align-self: flex-start;
   padding-bottom: 1px;
 }
-.card-link:hover { border-bottom-color: var(--color-gold-dark); }
+/* The darker gold sweeps across the rule on hover instead of switching all at
+   once. A scaled overlay, not an animated border-color: transform composites,
+   colour does not. The resting rule underneath never moves, so the link looks
+   identical when nothing is hovering it. */
+.card-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  background: var(--color-gold-dark);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.card:hover .card-link::after,
+.card-link:hover::after { transform: scaleX(1); }
 
 /* ---------- Board masthead (members page) ----------
    The board has a real hierarchy — a president, a deputy, then the heads —
@@ -1054,43 +1132,119 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
   color: rgba(244, 236, 221, 0.6);
 }
 
-/* ---------- Reveal-on-scroll: removed ----------
+/* ---------- Reveal-on-scroll: the JS version, and why this is not it ----------
    There were six independent animations on this site: the hero rise, the
    section reveal, a per-child stagger inside it, the motif parallax, a rule
    that drew itself under every eyebrow, and a scatter-and-settle on the events
    grid. Six effects, each on its own timing, is not motion design — it is
    noise, and it was the largest part of why the site read as unfinished.
 
-   Two are left: the hero entrance and the motif drift. The reveal went with
-   the rest, and its removal also deletes the `scripting: enabled` gate, the
-   IntersectionObserver in BaseLayout and the `.reveal` class on eighteen
-   elements — content is now simply present when the page loads. */
+   The scripted reveal went with the rest, and its removal deleted the
+   `scripting: enabled` gate, the IntersectionObserver in BaseLayout and the
+   `.reveal` class on eighteen elements. NONE OF THAT COMES BACK. Cutting to
+   two moments, though, left the page inert everywhere below the hero, so a
+   third is now here — but built the way the motif drift is, not the way the
+   old reveal was:
+
+     old reveal            moment 3 below
+     ----------            --------------
+     IntersectionObserver  no JavaScript at all
+     .reveal on 18 nodes   selectors only; no component knows it exists
+     six private timings   the same rise-in keyframe as the hero
+     starts at opacity 0,  inside @supports, so a browser without scroll
+     invisible if JS fails timelines never hides anything in the first place
+
+   The rule that still holds is the one the cleanup was actually about: a small
+   number of moments, on shared timing. Adding a seventh effect on its own
+   curve is how this goes wrong again — not the fact that things move. */
 
 /* ---------- Signature motion ----------
    Three deliberate moments, all native CSS. Everything animates only opacity,
    transform or the individual translate/rotate/scale properties, so nothing
    here can trigger layout or paint the way animating height/top would. */
 
-/* 1. Hero entrance. Runs on load rather than on scroll — the hero is already in
-      view — so it is a plain keyframe with a per-line delay. */
+/* The one entrance pose on the site. Moments 1 and 3 both use it — the hero
+   plays it on a clock, the rest of the page plays it on your scroll position.
+   Hoisted out of the reduced-motion guard it used to sit in because two blocks
+   reference it now; a keyframe rule is inert until something does, so being
+   declared unconditionally costs nothing. */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* The card entrance. Deliberately not `rise-in`: a card is a bigger object than
+   a line of text and settles from further away, with a degree and a half of
+   rotation coming out as it lands. --ease-snap (which overshoots very slightly)
+   is what makes it read as something set down rather than something floating
+   into place.
+
+   THE ROTATION IS THE ONE THING HERE TO WATCH. A scatter-and-settle on this
+   grid is what the volume-down pass cut, and at a larger angle it is what made
+   the site read as unfinished. 1.5deg is a tenth of what that was. If cards
+   ever start looking untidy on arrival again, this number is the first suspect
+   — lower it before touching anything else.
+
+   THE INDIVIDUAL PROPERTIES ARE LOAD-BEARING, not a style choice. An animation
+   holds its final value at a higher cascade level than any normal declaration,
+   and `animation-fill-mode: both` on a scroll timeline means these are holding
+   *permanently* once you have scrolled past. So a `to { transform: none }` here
+   would silently outrank `.card:hover { transform: translateY(-3px) }` and kill
+   the hover lift on every card on the site. Animating translate/rotate/scale
+   instead leaves `transform` free for hover, and the two compose. */
+@keyframes card-in {
+  from { opacity: 0; translate: 0 26px; rotate: 1.5deg; scale: 0.97; }
+  to   { opacity: 1; translate: 0 0;    rotate: 0deg;   scale: 1; }
+}
+
+/* Two curtains and a rule, all of which rest in their finished state so a
+   browser that never runs them shows a complete page. */
+@keyframes curtain-up { from { transform: scaleY(1); } to { transform: scaleY(0); } }
+@keyframes draw-x     { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* A photograph resolves out of a slight over-scale as its card arrives. This is
+   the single move that does the most work on this page: it costs one composited
+   transform and it is what reads as depth rather than as an effect.
+
+   Same reason as card-in for using `scale` rather than `transform`: the hover
+   scale below is a `transform`, and these have to be able to coexist. */
+@keyframes photo-settle { from { scale: 1.07; } to { scale: 1; } }
+
+/* 1. The load sequence. One orchestrated moment, in the order a page is made:
+      the header rules up, the headline is uncovered, the standfirst and the
+      buttons follow it, and the motif strip draws in last.
+
+      This replaced four elements each doing the same 14px rise on a 80ms
+      metronome. Same duration, same restraint, but the beats now differ from
+      one another, which is the whole difference between a page that fades in
+      and a page that looks composed. */
 @media (prefers-reduced-motion: no-preference) {
-  @keyframes rise-in {
-    from { opacity: 0; transform: translateY(14px); }
-    to   { opacity: 1; transform: none; }
+  .site-header::after {
+    animation: draw-x 0.55s var(--ease-out) both;
+  }
+
+  .hero h1::after,
+  .page-hero h1::after {
+    animation: curtain-up 0.72s var(--ease-out) 0.16s both;
   }
 
   .hero .hero-script,
-  .hero h1,
   .hero p.lede,
   .hero .hero-actions,
   .page-hero .hero-script,
-  .page-hero h1,
   .page-hero p {
     animation: rise-in var(--dur-slow) var(--ease-out) both;
   }
-  .hero h1, .page-hero h1 { animation-delay: 0.08s; }
-  .hero p.lede, .page-hero p { animation-delay: 0.16s; }
-  .hero .hero-actions { animation-delay: 0.24s; }
+  .hero p.lede, .page-hero p  { animation-delay: 0.42s; }
+  .hero .hero-actions         { animation-delay: 0.52s; }
+
+  /* Every divider draws, not just the one under the hero. The ones further
+     down finish long before you reach them — `both` holds them open — so this
+     costs nothing and saves a special case. */
+  .motif-divider {
+    transform-origin: left;
+    animation: draw-x 0.6s var(--ease-out) 0.6s both;
+  }
 }
 
 /* 2. The motif divider slides as it crosses the viewport — a parallax tied to
@@ -1118,6 +1272,125 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
       animation-timing-function: linear;
       animation-fill-mode: both;
       animation-timeline: view();
+    }
+  }
+}
+
+/* 3. Entrance on scroll — section heads, then the cards under them.
+      Same mechanism as the motif drift directly above: the timeline IS your
+      scroll position, so there is no JavaScript, no IntersectionObserver and
+      nothing to schedule. The browser runs opacity and transform off the main
+      thread, so a page of twenty cards costs the same as a page of two.
+
+      THE @supports GUARD IS ALSO THE FALLBACK. In a browser without scroll
+      timelines (Firefox, at time of writing) none of this is parsed, so the
+      content is simply present exactly as it was before — never a flash, never
+      a page left at opacity 0. That is the whole reason this is done in CSS:
+      the failure mode of the scripted version was invisible content, and this
+      one cannot have it.
+
+      COVER, NOT ENTRY, and this is the easy thing to get wrong. An `entry`
+      range is as long as the element is tall, so a one-line .eyebrow would
+      finish its entrance in the ~20px of scroll it occupies — a snap — while a
+      lead-story card would take 400px. `cover` is viewport + element, which the
+      viewport dominates, so every element here settles over a comparable
+      ~180–240px however tall it is.
+
+      The stagger is in the ranges, not in animation-delay: a delay is a
+      duration, and a scroll timeline has no clock for it to mean anything on.
+      Offsetting range-start is the scroll-driven equivalent.
+
+      LONGHANDS, NEVER THE `animation:` SHORTHAND — see the note on the motif
+      drift above. `animation-range-start`/`-end` are constituents of that
+      shorthand too, so folding these into one declaration re-opens the same
+      bug, in which a browser that supports only the longhands throws the whole
+      rule away while @supports still passes. `npm run check:dist` now asserts
+      the built CSS contains no such fold. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* The section head, read top to bottom. `>` twice is load-bearing: it picks
+       up only a section's OWN head, never the .eyebrow nested inside an
+       .info-panel on /exchange — that one belongs to its panel and rises with
+       it. The hero and page-hero are excluded because moment 1 already owns
+       them. */
+    section:not(.hero):not(.page-hero) > .container > .eyebrow,
+    section:not(.hero):not(.page-hero) > .container > h2,
+    section:not(.hero):not(.page-hero) > .container > .section-intro,
+    .card,
+    .info-panel,
+    .partner-item {
+      animation-name: rise-in;
+      animation-timing-function: var(--ease-out);
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range-start: cover 0%;
+      animation-range-end: cover 22%;
+    }
+
+    section:not(.hero):not(.page-hero) > .container > h2 {
+      animation-range-start: cover 3%;
+      animation-range-end: cover 25%;
+    }
+    section:not(.hero):not(.page-hero) > .container > .section-intro {
+      animation-range-start: cover 6%;
+      animation-range-end: cover 28%;
+    }
+    .card,
+    .info-panel,
+    .partner-item {
+      animation-range-start: cover 2%;
+      animation-range-end: cover 26%;
+    }
+    /* Cards land; panels and logos rise. A .card carries a photograph and a
+       headline and is the heaviest thing on the page, so it gets the heavier
+       entrance — an .info-panel is a block of text and would look silly
+       tilting. */
+    .card {
+      animation-name: card-in;
+      animation-timing-function: var(--ease-snap);
+    }
+
+    /* The photograph settles over roughly twice the card's own range, so it is
+       still resolving after the card itself has come to rest. That offset is
+       the point: two things moving at the same rate read as one flat object. */
+    .card-image img {
+      animation-name: photo-settle;
+      animation-timing-function: var(--ease-out);
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range-start: cover 0%;
+      animation-range-end: cover 45%;
+    }
+
+    /* Row stagger: the SECOND card of a side-by-side pair starts a little
+       later, so a row reads left to right instead of landing as one slab.
+       Which card that is depends on the grid, so each names its own.
+
+       BOTH ARE WIDTH-GUARDED, because the effect only means anything while
+       there IS a row. Once a grid is a single column the "second card of the
+       pair" is just the next card down the page — already separated by its own
+       height, already arriving in order — and offsetting every other one of
+       them is an inconsistency in the cadence rather than a stagger. The base
+       range is the right behaviour there, so these simply do not apply. */
+
+    /* Two 280px tracks plus the gap need ~584px of container; 640px is the
+       first viewport where .card-grid is reliably two-up. */
+    @media (min-width: 640px) {
+      .card-grid > .card:nth-child(even) {
+        animation-range-start: cover 6%;
+        animation-range-end: cover 30%;
+      }
+    }
+
+    /* 901px is the other side of the magazine grid's own collapse rule
+       (`@media (max-width: 900px)`, further down) — above it the 6-column
+       cycle is in force and 5n+3 / 5n+5 really are right-hand cards. */
+    @media (min-width: 901px) {
+      .magazine-grid > .card:nth-child(5n + 3),
+      .magazine-grid > .card:nth-child(5n + 5) {
+        animation-range-start: cover 6%;
+        animation-range-end: cover 30%;
+      }
     }
   }
 }
@@ -1292,6 +1565,15 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
     animation: none !important;
     transition-duration: 0.01ms !important;
   }
+  /* Everything that plays an entrance rests in its FINISHED state, so killing
+     the animations above reveals a complete page rather than a half-drawn one.
+     These three are the ones whose resting value is not the default: the two
+     rules rest drawn, and the headline curtain rests retracted. Verified by
+     turning every animation off and checking nothing is left folded away. */
+  .site-header::after,
+  .motif-divider { transform: none; }
+  .hero h1::after,
+  .page-hero h1::after { transform: scaleY(0); }
 }
 
 /* ---------- Page hero (smaller banner for inner pages) ---------- */

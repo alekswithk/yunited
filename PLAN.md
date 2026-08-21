@@ -419,6 +419,49 @@ they carry design decisions that need a person. The agent skips them.
       gate, and the class from eighteen elements across the pages and
       `EventCard.astro`. Chosen from rendered samples rather than described.
 
+- [x] **Entrance motion, restored scroll-driven** — the paper-studio pass above cut
+      to two moments and left the page inert everywhere below the hero. Chosen
+      from three live specimens (Quiet / Composed / Full press) scrolling in
+      lockstep; the board picked **Composed with Full press's card entrance**.
+      All of it is in `src/styles/global.css`.
+
+      **The load is one orchestrated sequence**, in the order a page is made:
+      the header rule draws itself across (0.55s), the hero headline is
+      uncovered by a curtain retracting downward (0.16s), the standfirst and
+      buttons follow (0.42s / 0.52s), the motif strip draws in last (0.6s).
+      That replaced four elements doing the same 14px rise on an 80ms
+      metronome — same duration and restraint, but the beats now differ from
+      each other, which is the whole difference between a page that fades in
+      and one that looks composed. **On scroll**, section heads rise and cards
+      land with `card-in` (26px, 1.5° of rotation coming out, `--ease-snap`)
+      while their photographs settle out of a 1.07 over-scale across roughly
+      twice the card's range, so the photo is still resolving after the card
+      has come to rest.
+
+      **This is not the `.reveal` that was deleted, and must not become it
+      again:** `animation-timeline: view()`, the same mechanism as the motif
+      drift — no JavaScript, no IntersectionObserver, no `scripting: enabled`
+      gate, no class on any component. The `@supports` guard doubles as the
+      fallback: a browser without scroll timelines (Firefox today) never parses
+      the rules, so content is simply present and can never be stranded at
+      `opacity: 0`.
+
+      Four things here are load-bearing and easy to undo by accident:
+      **(1)** ranges are `cover`, not `entry` — an `entry` range is as long as
+      the element is tall, so a one-line eyebrow would finish in ~20px of scroll
+      while a lead card took 400px. **(2)** `card-in` and `photo-settle` animate
+      the *individual* `translate`/`rotate`/`scale` properties, not `transform`;
+      an animation holds its final value above any normal declaration, so a
+      `to { transform: none }` would have silently outranked
+      `.card:hover { transform: translateY(-3px) }` and killed the hover lift
+      site-wide. **(3)** `.card` and `.card-image` are `overflow: clip`, not
+      `hidden` — `hidden` makes a box a scroll container, which re-parented the
+      photo's `view()` timeline to its own frame and left `photo-settle` frozen
+      at one frame (measured: a degenerate cover range of -264 → 264). **(4)**
+      longhands only; `check:dist` fails on a folded `animation:` shorthand (#45).
+      The **1.5° card rotation** is the one number to watch — a bigger version
+      of it is what made the grid read as unfinished before.
+
 - [x] **CI check on PRs** — shipped in #19 (`.github/workflows/ci.yml`).
 - [x] **CSP hardening** — **`'unsafe-inline'` is now gone from both `script-src` and
       `style-src`** on the public site. The 16 inline `style="…"` attributes across 6
