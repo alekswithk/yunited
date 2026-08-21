@@ -70,6 +70,30 @@ function byTime(a, b, dir) {
   return dir * ta.localeCompare(tb);
 }
 
+// One schema.org Event block per dated event, for Google's Event rich results.
+// Pure and framework-free, like the rest of this module: the caller (events.astro)
+// supplies the already-localized title/description and the page url, and this
+// just shapes them. Returns null for a TBA-dated event — schema.org requires a
+// startDate, so there is nothing valid to emit.
+/**
+ * @param {{ title: string, description: string, date?: string | null, time?: string | null, location?: string | null }} event
+ * @param {{ url: string }} options
+ * @returns {object | null}
+ */
+export function eventJsonLd(event, { url }) {
+  if (!hasDate(event)) return null;
+  const time = timeKey(event);
+  return {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: event.title,
+    startDate: time ? `${event.date}T${time}` : event.date,
+    description: event.description,
+    url,
+    ...(event.location ? { location: { "@type": "Place", name: event.location } } : {}),
+  };
+}
+
 /**
  * @template {{ date?: string | null, time?: string | null }} T
  * @param {readonly T[]} allEvents
