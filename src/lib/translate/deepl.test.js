@@ -1,4 +1,4 @@
-// Pure-function tests for scripts/lib/deepl.mjs — the parts that don't touch
+// Pure-function tests for src/lib/translate/deepl.js — the parts that don't touch
 // the network, per CLAUDE.md's testing rule. No API key needed; no request is
 // made. toSerbianLatin in particular had never been unit-tested before this:
 // it previously lived in a deleted module and its only proof was the committed
@@ -15,7 +15,7 @@ import {
   protect,
   toSerbianLatin,
   unprotect,
-} from "./deepl.mjs";
+} from "./deepl.js";
 
 test("protect wraps a protected term and unprotect removes the wrapper", () => {
   const wrapped = protect("Join YUnited at HSG");
@@ -25,8 +25,8 @@ test("protect wraps a protected term and unprotect removes the wrapper", () => {
 
 test("protect prefers the longest match, so a substring term doesn't shadow it", () => {
   // "St. Gallen" would be masked by a shorter overlapping term if the list
-  // weren't sorted longest-first — glossary.mjs guarantees the sort, this
-  // guards the ordering assumption deepl.mjs's regex depends on.
+  // weren't sorted longest-first — glossary.js guarantees the sort, this
+  // guards the ordering assumption deepl.js's regex depends on.
   assert.equal(protect("uniclubs.ch"), "<x>uniclubs.ch</x>");
 });
 

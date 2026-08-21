@@ -85,11 +85,12 @@ retry rather than silently discarding the first one's commit.
 
 | file | what it is |
 | --- | --- |
-| `index.js` | The routes (`/admin/api/state`, `/save`, `/delete`, `/access`) and the save/delete logic. Start here. |
+| `index.js` | The routes (`/admin/api/state`, `/save`, `/delete`, `/access`, `/translate`, `/settings`), the save/delete logic, and the nightly `scheduled` sweep. Start here. |
 | `collections.js` | **The registry** — which fields exist, their labels, help text, and where photos are filed. The panel's form is generated from this, so it is the only place to add or change a field. |
 | `github.js` | The GitHub client. Reads the content tree; makes one atomic commit. |
 | `access.js` | Reads the Cloudflare Access identity, and optionally verifies its signed token. |
 | `board-access.js` | The Cloudflare client for the **email allow-list** — who may open `/admin` at all. Read it before touching anything about access. |
+| `translate.js` | The DeepL key (KV over secret), the per-entry state the panel badges, and `translateEntry()` — which **never throws**, because a translation failure must never fail a board member's save. The rules it applies live in `src/lib/translate/content.js`, shared with the CLI. |
 | `lib.js` | Pure helpers: slugs, the academic-year image folder, blank-value coercion. |
 | `*.test.js` | `npm test` — the logic no build can check. |
 
@@ -307,6 +308,102 @@ delete the secret and manage the list in the dashboard. Nothing else breaks.
 
 To rotate: issue a new token, `wrangler secret put CF_API_TOKEN` again, delete
 the old one. No deploy needed.
+
+### `DEEPL_API_KEY` — the third secret, and the one the board can replace
+
+What fills in an event's German, Croatian, Bosnian and Serbian title and
+description when the board presses Save. Set it the same way as the others:
+
+```bash
+npx wrangler secret put DEEPL_API_KEY
+```
+
+A **DeepL API Free** key is enough and always will be — 1,000,000 characters a
+month against roughly 400 for one event. A key ending `:fx` is a free-tier key
+and `apiUrlFor()` sends it to `api-free.deepl.com` on its own; nothing needs
+configuring for that.
+
+**Unlike the other two, this one is not only yours.** A value in the
+`ADMIN_SETTINGS` KV namespace overrides the secret, and the Translations tab in
+`/admin` writes that value — so a board with no Cloudflare account can replace a
+dead key themselves. The secret stays underneath as the fallback: removing the
+board's key in the panel returns the deployment to whatever is set here.
+
+That ordering is deliberate and worth keeping. The failure this guards against
+is not a bug, it is a graduation: whoever created the DeepL account leaves, the
+key eventually stops working, and the people left have no way to fix it and
+nobody to ask. See the comment at the top of `worker/translate.js`.
+
+**Failure modes are explicit, not silent.** No key at all → events still save,
+untranslated, and the banner and the Translations tab both say so; translation
+is never allowed to fail a save. A key DeepL rejects → the tab says *the key is
+set but not working*, which is a different problem from *no key* and has a
+different fix. Quota exhausted (456) → says so, and names when it resets.
+
+#### The nightly sweep
+
+`wrangler.jsonc` has a cron trigger (`17 4 * * *`) and the Worker exports a
+`scheduled` handler for it. Once a day it looks for events whose translations
+are missing, stale or half-filled, fixes up to five of them, and commits the lot
+in one commit marked `[auto-translate]`.
+
+It is the net, not the mechanism — an entry is normally translated as it is
+saved. It exists for the save that hit a DeepL outage, and for entries a
+maintainer commits straight to the repo. It never alarms: no key or no token is
+a log line and a clean exit, because nobody is watching a scheduled run. A
+concurrent save makes the fast-forward-only ref update fail, and that is logged
+and **not** retried — the sweep is idempotent and runs again tomorrow.
+
+**Testing it locally needs one temporary edit, and the documented recipe does
+not work here as-is.** `wrangler dev --test-scheduled` serves `/__scheduled`,
+but this Worker sits behind static assets with `run_worker_first` limited to
+`/admin/api/*`, so that path is answered by `dist/404.html` and the handler
+never runs. To exercise it, add `"/__scheduled*"` to `run_worker_first`, run:
+
+```bash
+npx wrangler dev --test-scheduled --port 8792
+curl "http://127.0.0.1:8792/__scheduled?cron=17+4+*+*+*"
+```
+
+…read the `[translate]` lines, then **put `run_worker_first` back**. Shipping
+that entry would put a public, unauthenticated path on the Worker.
+
+#### Creating the settings store (once, out of band)
+
+Until this exists, the panel shows the Translations tab read-only: the status is
+reported, but there is no box to paste a new key into, because there would be
+nowhere to put it.
+
+```bash
+npx wrangler kv namespace create ADMIN_SETTINGS
+```
+
+That prints an id, and recent wrangler versions offer to add the binding to
+`wrangler.jsonc` themselves — check what it wrote, since it may also reformat the
+whole file. It should read:
+
+```jsonc
+"kv_namespaces": [
+  { "binding": "ADMIN_SETTINGS", "id": "<id>", "remote": true }
+]
+```
+
+Then deploy. **The binding name must be `ADMIN_SETTINGS`** — that is what the
+Worker reads, and what `wrangler kv namespace create ADMIN_SETTINGS` suggests, so
+following its output gives a working config. The name is generic on purpose: it
+is the store for anything the board should be able to change without a
+maintainer, and the next such value should not need a second namespace.
+
+`remote: true` makes `wrangler dev` read the real namespace rather than an empty
+local simulation. A `preview_id` from `--preview` works too; pick one, or the
+Translations tab will look unconfigured locally while working in production.
+
+It holds one key, `deepl.apiKey`, whose value is
+`{"key": "…", "setAt": "…", "setBy": "…"}`. **A DeepL key in KV is a
+credential**: it is readable by anyone who can run `wrangler kv key get` against
+this account, which is the same set of people who can already read every other
+secret's effects. It is never returned to the browser — the panel only ever sees
+`configured`, the last four characters, who set it and this month's usage.
 
 ### Plain variables in `wrangler.jsonc`
 

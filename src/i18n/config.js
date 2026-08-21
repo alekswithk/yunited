@@ -31,8 +31,8 @@ export const locales = [
   // it showed: the buddy system was described as a "mating" system, "Outgoing
   // HSG students" became "freshmen", and a submit button's in-flight label
   // "Sending…" came back as the imperative "Send". They are now translated with
-  // full-document context against a pinned glossary (scripts/lib/glossary.mjs),
-  // and the output is gated on scripts/lib/validate.mjs before it can land.
+  // full-document context against a pinned glossary (src/lib/translate/glossary.js),
+  // and the output is gated on src/lib/translate/validate.js before it can land.
   { code: "bs", dict: "bs", label: "Bosanski", htmlLang: "bs", dateLocale: "bs-Latn-BA", ogLocale: "bs_BA", complete: true },
   { code: "hr", dict: "hr", label: "Hrvatski", htmlLang: "hr", dateLocale: "hr-HR", ogLocale: "hr_HR", complete: true },
   { code: "sr", dict: "sr", label: "Srpski", htmlLang: "sr-Latn", dateLocale: "sr-Latn-RS", ogLocale: "sr_RS", complete: true },

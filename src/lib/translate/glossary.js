@@ -1,6 +1,6 @@
 // The single source of translation policy for this site.
 //
-// This file replaces the old `PROTECT` list in deepl.mjs and is shared by both
+// This file replaces the old `PROTECT` list in deepl.js and is shared by both
 // translation scripts — the same one-copy rationale that file already argued:
 // a term pinned in one place and not the other is how "YUnited" quietly becomes
 // "Vereinigt" in event descriptions only.
@@ -25,7 +25,7 @@
 // things that went wrong.
 //
 // Everything here is machine-checkable on purpose: the same constants build the
-// model's system prompt AND drive scripts/lib/validate.mjs. A rule that can only
+// model's system prompt AND drive src/lib/translate/validate.js. A rule that can only
 // be expressed as prose in the prompt is a rule nothing enforces.
 
 /**
@@ -270,13 +270,13 @@ export const TERMS = {
     en: "student club",
     // Prompt-only: "student" and "club" appear in most strings on the site, so
     // there is no stem that scopes this narrowly enough to check mechanically.
-    // An empty `detect` means validate.mjs skips it and only the prompt carries it.
+    // An empty `detect` means validate.js skips it and only the prompt carries it.
     detect: [],
     canonical: { hr: "studentski klub", bs: "studentski klub", sr: "studentski klub" },
     // Never shipped for YUnited itself, but it shipped once before and the
     // board flagged it: the club is not a company. (Note "tvrtka"/"kompanija"
     // ARE correct where the English says "companies" about third parties, so
-    // this is checked against club-referring keys only — see validate.mjs.)
+    // this is checked against club-referring keys only — see validate.js.)
     forbidden: [],
     note: "YUnited is an association/club, never a tvrtka/firma/kompanija (company).",
   },
@@ -367,5 +367,5 @@ export const FORBIDDEN_VARIANTS = {
 // scripts/lib/claude.mjs (the en->hr/bs/sr DeepL migration, PLAN.md §4). DeepL
 // cannot be handed a prose instruction, only PROTECTED terms (via tag_handling)
 // and per-string context; TERMS/MORPHOLOGY/ADDRESS_FORM stay as the recorded
-// policy and as what validate.mjs checks on the output, which is now the only
+// policy and as what validate.js checks on the output, which is now the only
 // enforcement mechanism for pinned terminology.

@@ -25,10 +25,10 @@
 // part of a Pre/Link/Post split sentence — the sentence joined back together.
 // Context is not translated and does not count toward the character quota, but
 // it is one string per request, so it cannot pin terminology or address form
-// across the whole set the way the Claude prompt did; scripts/lib/validate.mjs
+// across the whole set the way the Claude prompt did; src/lib/translate/validate.js
 // is what still catches that, unchanged by this swap.
 //
-// NOTHING IS WRITTEN UNTIL THE GATE PASSES. scripts/lib/validate.mjs checks the
+// NOTHING IS WRITTEN UNTIL THE GATE PASSES. src/lib/translate/validate.js checks the
 // output before any file is touched; on an error the run aborts and the
 // dictionaries are left exactly as they were. That gate exists because these
 // defects are invisible to every other command in the repo: `npm test`,
@@ -39,10 +39,11 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-import { formatUsage, requireApiKey, translateSetComplete } from "./lib/deepl.mjs";
-import { LANGUAGES } from "./lib/glossary.mjs";
-import { flatten, splitSentenceGroups, unflatten } from "./lib/flat.mjs";
-import { checkDictionary, errorsOf, formatFindings } from "./lib/validate.mjs";
+import { formatUsage, translateSetComplete } from "../src/lib/translate/deepl.js";
+import { requireApiKey } from "./lib/require-api-key.mjs";
+import { LANGUAGES } from "../src/lib/translate/glossary.js";
+import { flatten, splitSentenceGroups, unflatten } from "../src/lib/translate/flat.js";
+import { checkDictionary, errorsOf, formatFindings } from "../src/lib/translate/validate.js";
 
 const I18N_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "i18n");
 

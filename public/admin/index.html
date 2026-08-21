@@ -71,9 +71,10 @@
       <section class="view" id="view-list">
         <nav class="tabs" id="tabs" aria-label="Sections"></nav>
 
-        <!-- One of these two shows at a time, under the same tab bar: the content
-             collections, or the access list. They are siblings rather than
-             separate views so switching tabs never hides the tabs. -->
+        <!-- One of these three shows at a time, under the same tab bar: the
+             content collections, the access list, or the translation settings.
+             They are siblings rather than separate views so switching tabs
+             never hides the tabs. -->
         <div id="list-body">
           <div class="list-head">
             <h1 class="list-title" id="list-title">Events</h1>
@@ -117,6 +118,40 @@
             <p class="form-error" id="access-error" role="alert" hidden></p>
           </form>
         </div>
+
+        <!-- ============ TRANSLATIONS ============ -->
+        <div id="translations-body" hidden>
+          <div class="list-head">
+            <h1 class="list-title">Translations</h1>
+          </div>
+
+          <p class="access-lede">
+            Every event you save is translated into German, Croatian, Bosnian and
+            Serbian automatically. That needs a DeepL key, which the club owns —
+            it is not tied to anyone's personal account. A free key covers this
+            club many times over: one event costs about 400 characters of the
+            million that come with the free tier each month.
+          </p>
+
+          <p class="loading" id="translations-loading">Checking with DeepL…</p>
+          <p class="translations-status" id="translations-status" hidden></p>
+          <p class="translations-usage" id="translations-usage" hidden></p>
+
+          <form class="access-form" id="translations-key-form" novalidate hidden>
+            <label class="label" for="translations-key-input">Replace the key</label>
+            <div class="access-row">
+              <input class="input" type="password" id="translations-key-input" name="deeplKey"
+                     placeholder="paste a DeepL API key" autocomplete="off" />
+              <button class="btn btn-primary" id="translations-save-btn" type="submit">Save key</button>
+            </div>
+            <p class="help">
+              Get one by making a DeepL API Free account at deepl.com/pro-api and
+              copying the key from the Account tab. Nothing else here changes.
+            </p>
+            <button class="btn" id="translations-remove-btn" type="button" hidden>Remove this key</button>
+            <p class="form-error" id="translations-error" role="alert" hidden></p>
+          </form>
+        </div>
       </section>
 
       <!-- ============ EDIT VIEW ============ -->
@@ -124,21 +159,48 @@
         <button class="back" id="back-btn" type="button">← Back to the list</button>
         <h1 class="form-title" id="form-title">Add event</h1>
 
+        <!-- Two pages for one entry: what you wrote, and the translations of it.
+             Both live INSIDE the form below, so Save commits the pair together —
+             one commit, one rebuild, even when a board member fixes the English
+             and its Croatian in the same sitting. The switch only toggles
+             `hidden`. Left out entirely for collections that are never
+             translated (board members, partners). -->
+        <div class="edit-tabs" id="edit-tabs" hidden>
+          <button class="tab" id="tab-content" type="button" aria-current="true">Content</button>
+          <button class="tab" id="tab-translations" type="button">
+            Translations<span id="tab-translations-count"></span>
+          </button>
+        </div>
+
         <form class="entry-form" id="entry-form" novalidate>
-          <!-- Fields are inserted here from the API's field definitions. -->
-          <div id="fields"></div>
+          <div id="pane-content">
+            <!-- Fields are inserted here from the API's field definitions. -->
+            <div id="fields"></div>
 
-          <div class="field">
-            <label class="label" for="image-input" id="image-label">Photo</label>
-            <p class="help" id="image-help"></p>
+            <div class="field">
+              <label class="label" for="image-input" id="image-label">Photo</label>
+              <p class="help" id="image-help"></p>
 
-            <div class="photo">
-              <img class="photo-preview" id="photo-preview" alt="" hidden />
-              <div class="photo-controls">
-                <input class="file" type="file" id="image-input" name="image" />
-                <p class="photo-note" id="photo-note"></p>
+              <div class="photo">
+                <img class="photo-preview" id="photo-preview" alt="" hidden />
+                <div class="photo-controls">
+                  <input class="file" type="file" id="image-input" name="image" />
+                  <p class="photo-note" id="photo-note"></p>
+                </div>
               </div>
             </div>
+          </div>
+
+          <div id="pane-translations" hidden>
+            <p class="help" id="translations-source"></p>
+            <p class="empty" id="translations-empty" hidden>
+              Save this first — the translations fill themselves in.
+            </p>
+            <!-- One block per language, generated from the collection's own
+                 `translations` descriptor so the locale list lives only in the
+                 Worker. -->
+            <div id="translations-fields"></div>
+            <button class="btn" id="translate-btn" type="button">Translate now</button>
           </div>
 
           <div class="form-actions">
@@ -287,13 +349,26 @@
           rebuild of the website automatically. Reckon on:
         </p>
         <ul>
-          <li><strong>1–2 minutes</strong> for the change to be live on yunited.ch in English.</li>
-          <li><strong>Up to about 5 minutes</strong> for the German, Bosnian, Croatian and Serbian versions of an event's title and description — those are translated automatically after you save, which triggers a second rebuild. You don't have to do anything.</li>
+          <li><strong>1–2 minutes</strong>, in every language at once. An event's German, Bosnian, Croatian and Serbian title and description are filled in while you save, so there is one rebuild rather than two.</li>
         </ul>
         <p>
           If the page still looks old after that, refresh it properly
           (<kbd>Shift</kbd> + reload).
         </p>
+
+        <h3>Translations</h3>
+        <p>
+          Each event's row says where its translations stand — <em>translated</em>,
+          <em>not translated yet</em>, or <em>needs re-translating</em> (you changed
+          the English, so the old ones no longer match it).
+        </p>
+        <ul>
+          <li><strong>To read or fix them</strong>, open the event and switch to its <strong>Translations</strong> page. The four languages are ordinary boxes: if one reads wrong, type over it and press Save. Several of you speak these languages better than any machine does.</li>
+          <li><strong>A correction stays</strong> for as long as the English text is unchanged. Edit the title or description later and all four are filled in again — they were translations of a sentence that no longer exists.</li>
+          <li><strong>Translate now</strong> re-does all four from scratch, for when a save could not reach the translator.</li>
+          <li><strong>Only the title and description</strong> are translated. A location is a real place, and translating it would send people to an address that does not exist.</li>
+          <li><strong>If translations stop happening</strong>, look at the <strong>Translations</strong> tab. It says whether the club's DeepL key still works, and anyone here can paste in a new free one — no developer needed. Events save normally meanwhile; they just stay in the language you wrote them in.</li>
+        </ul>
 
         <h3>If something goes wrong</h3>
         <ul>

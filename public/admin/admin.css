@@ -437,6 +437,15 @@ h1, h2, h3 {
 .pill-you {
   color: var(--color-azure);
 }
+/* Translation state. The good case is muted on purpose — it is confirmation,
+   not an achievement, and eight green badges down a list would drown the one
+   row that actually needs attention. */
+.pill-ok {
+  color: var(--color-ok);
+}
+.pill-warn {
+  color: var(--color-red);
+}
 
 /* ---------- Access list ---------- */
 /* Reuses .entries/.entry and .btn; only the things the content lists have no
@@ -856,4 +865,58 @@ h1, h2, h3 {
   .help-toggle:hover {
     transform: none;
   }
+}
+
+/* ---------- Translations ---------- */
+/* Reuses .access-lede, .access-form and .access-row; only the status lines are
+   new. `is-bad` is the "there is a key but DeepL refuses it" case, which has to
+   read differently from the ordinary "here is your key" line. */
+
+.translations-status {
+  margin: var(--space-4) 0 var(--space-1);
+  font-weight: 600;
+}
+.translations-status.is-bad {
+  color: var(--color-red);
+}
+.translations-usage {
+  margin: 0 0 var(--space-4);
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+#translations-remove-btn {
+  margin-top: var(--space-3);
+}
+
+/* ---------- One entry's two pages ---------- */
+/* Reuses .tab from the section tabs above — same affordance, same look, so the
+   switch inside an entry reads as the same kind of thing as the switch between
+   sections. Only the bar around it differs: this one sits under a title rather
+   than at the top of the view. */
+
+.edit-tabs {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  border-bottom: var(--border);
+  margin: var(--space-4) 0;
+}
+
+.translation-group {
+  border: var(--border);
+  padding: var(--space-3);
+  margin: 0 0 var(--space-4);
+}
+
+.translation-legend {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0 var(--space-2);
+}
+
+/* The last field in a language block has the block's own padding under it. */
+.translation-group .field:last-child {
+  margin-bottom: 0;
 }

@@ -59,10 +59,30 @@ const el = {
   accessInput: $("access-input"),
   accessAddBtn: $("access-add-btn"),
   accessError: $("access-error"),
+  translationsBody: $("translations-body"),
+  translationsLoading: $("translations-loading"),
+  translationsStatus: $("translations-status"),
+  translationsUsage: $("translations-usage"),
+  translationsKeyForm: $("translations-key-form"),
+  translationsKeyInput: $("translations-key-input"),
+  translationsSaveBtn: $("translations-save-btn"),
+  translationsRemoveBtn: $("translations-remove-btn"),
+  translationsError: $("translations-error"),
+  editTabs: $("edit-tabs"),
+  tabContent: $("tab-content"),
+  tabTranslations: $("tab-translations"),
+  tabTranslationsCount: $("tab-translations-count"),
+  paneContent: $("pane-content"),
+  paneTranslations: $("pane-translations"),
+  translationsSource: $("translations-source"),
+  translationsFields: $("translations-fields"),
+  translationsEmpty: $("translations-empty"),
+  translateBtn: $("translate-btn"),
 };
 
-/** The Access tab is not a content collection; it is the only other section. */
+/** The two tabs that are not content collections. */
 const ACCESS = "access";
+const TRANSLATIONS = "translations";
 
 /** Everything the page knows. Replaced wholesale by every reload of state. */
 const state = {
@@ -81,6 +101,8 @@ const state = {
    * page was looking at a current list — see postAccess in worker/index.js.
    */
   access: { loaded: false, emails: [], you: null },
+  /** The DeepL key's status, once the Translations tab has been opened. */
+  translations: { loaded: false, deepl: null },
 };
 
 // ---------------------------------------------------------------------------
@@ -142,6 +164,9 @@ function renderTabs() {
   // set there is no tab at all rather than a tab that errors when pressed.
   const tabs = state.collections.map((c) => ({ name: c.name, label: c.label }));
   if (state.sections.access?.enabled) tabs.push({ name: ACCESS, label: "Access" });
+  // Always present, unlike Access. This tab is where a key gets set, so hiding
+  // it when none is set would hide the fix along with the problem.
+  if (state.sections.translations?.enabled) tabs.push({ name: TRANSLATIONS, label: "Translations" });
 
   for (const { name, label } of tabs) {
     const tab = document.createElement("button");
@@ -163,13 +188,22 @@ function renderTabs() {
 
 /** Show whichever section `state.active` names, loading it if it needs loading. */
 function openSection() {
-  const access = state.active === ACCESS;
-  el.listBody.hidden = access;
-  el.accessBody.hidden = !access;
+  const active = state.active;
+  el.listBody.hidden = active === ACCESS || active === TRANSLATIONS;
+  el.accessBody.hidden = active !== ACCESS;
+  el.translationsBody.hidden = active !== TRANSLATIONS;
 
-  if (!access) renderList();
-  else if (!state.access.loaded) loadAccess();
-  else renderAccess();
+  if (active === ACCESS) {
+    if (!state.access.loaded) loadAccess();
+    else renderAccess();
+  } else if (active === TRANSLATIONS) {
+    // Loaded on open, never on boot: this one asks DeepL whether the key still
+    // works, and the Events tab must not wait on deepl.com to draw itself.
+    if (!state.translations.loaded) loadTranslations();
+    else renderTranslations();
+  } else {
+    renderList();
+  }
 
   showList();
 }
@@ -315,6 +349,13 @@ function renderRow(c, item) {
     }
   }
 
+  // Where this entry's translations stand, worked out by the Worker from the
+  // text and the block beside it. Absent for collections that are never
+  // translated — and absent from an older response, which is why nothing here
+  // assumes the key exists.
+  const badge = TRANSLATION_PILLS[item.translation?.state];
+  if (badge) meta.append(pill(badge.label, badge.className));
+
   row.append(text);
 
   const actions = document.createElement("div");
@@ -363,6 +404,9 @@ function openForm(item = null) {
 
   // Build the inputs from the API's field definitions.
   el.fields.replaceChildren(...c.fields.map((field) => renderField(field, item?.data)));
+
+  renderTranslationPane(c, item);
+  showPane("content");
 
   // Photo control.
   el.imageLabel.textContent = c.image.label + (c.image.required ? "" : " (optional)");
@@ -488,9 +532,32 @@ el.form.addEventListener("submit", async (event) => {
   }
   if (el.imageInput.files?.length) body.set("image", el.imageInput.files[0]);
 
-  await run(el.saveBtn, "Saving…", async () => {
+  // The Translations page, posted with the rest. Read straight off the inputs
+  // by their own names (i18n.hr.title), so the browser never holds a list of
+  // locales — see renderTranslationLocale.
+  for (const input of el.translationsFields.querySelectorAll("textarea")) {
+    body.set(input.name, input.value);
+  }
+
+  await run(el.saveBtn, c.translations ? "Saving and translating…" : "Saving…", async () => {
     const result = await api("/admin/api/save", { method: "POST", body });
-    showBanner(`${result.message} It will be live on yunited.ch in a minute or two.`, true);
+
+    // ONE banner, because a second call would simply overwrite the first.
+    // Which one depends on a distinction worth keeping: the entry always
+    // saved, and the translations separately did or did not.
+    const t = result.translation;
+    const quiet = !t || t.status === "translated" || t.reason === "up-to-date" || t.reason === "no-text";
+
+    if (quiet) {
+      const note = t?.status === "translated" ? ` ${t.message}` : "";
+      showBanner(`${result.message} It will be live on yunited.ch in a minute or two.${note}`, true);
+    } else {
+      // These messages already open with "Saved, but …" — except the no-key
+      // one, which is a standing condition rather than something that just
+      // went wrong, so it gets the save's own sentence in front of it.
+      showBanner(t.reason === "no-key" ? `${result.message} ${t.message}` : t.message, false);
+    }
+
     applyEntries(result);
     showList();
   });
@@ -594,6 +661,21 @@ function renderAccess() {
   );
 }
 
+// One badge per translation state. "none" is deliberately absent: an entry
+// with no title and no description has nothing to translate, and a badge
+// saying so would be noise on the one row that needs a title instead.
+//
+// "translated" gets a badge too, quiet rather than loud. It is the only place
+// the board can see that translation is working at all — the alternative is a
+// panel that looks identical whether four languages are being filled in or
+// nothing has happened since July.
+const TRANSLATION_PILLS = {
+  translated: { label: "translated", className: "pill-ok" },
+  partial: { label: "translations incomplete", className: "pill-warn" },
+  stale: { label: "needs re-translating", className: "pill-warn" },
+  missing: { label: "not translated yet", className: "pill-warn" },
+};
+
 function pill(label, className) {
   const span = document.createElement("span");
   span.className = `pill ${className}`;
@@ -679,6 +761,259 @@ function failAccess(message, field) {
   if (field === "access-input") {
     el.accessInput.classList.add("input-bad");
     el.accessInput.focus({ preventScroll: true });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// One entry's translations
+//
+// A second page of the same form, not a second form. Save posts both panes at
+// once, so correcting the English and its Croatian in one sitting is one
+// commit and one rebuild — the thing this whole arrangement exists to collapse.
+
+/** Switch the edit view between its two panes. */
+function showPane(which) {
+  const translations = which === "translations";
+  el.paneContent.hidden = translations;
+  el.paneTranslations.hidden = !translations;
+  el.tabContent.toggleAttribute("aria-current", !translations);
+  el.tabTranslations.toggleAttribute("aria-current", translations);
+}
+
+el.tabContent.addEventListener("click", () => showPane("content"));
+el.tabTranslations.addEventListener("click", () => showPane("translations"));
+
+function renderTranslationPane(c, item) {
+  // Collections with nothing to translate get no switch at all, rather than a
+  // switch to an empty page.
+  el.editTabs.hidden = !c.translations;
+  if (!c.translations) {
+    el.translationsFields.replaceChildren();
+    return;
+  }
+
+  const i18n = item?.data?.i18n ?? null;
+  const isNew = !item;
+
+  el.tabTranslationsCount.textContent = i18n ? "" : " ·  none yet";
+  el.translationsEmpty.hidden = !isNew;
+  el.translateBtn.hidden = isNew;
+
+  // sourceLang is DeepL's guess and is easy to get plausibly wrong between
+  // Bosnian, Croatian and Serbian — so it is phrased as an observation, never
+  // as a fact the board should act on.
+  el.translationsSource.textContent = isNew
+    ? ""
+    : i18n?.sourceLang
+      ? `Looks like this was written in ${languageName(c, i18n.sourceLang)}. ` +
+        "Change the title or description on the Content page and these fill in again."
+      : "Not translated yet. Saving this page fills them in.";
+
+  el.translationsFields.replaceChildren(
+    ...c.translations.locales
+      // The language it was written in needs no translation of itself: the
+      // page in that language shows the authored text.
+      .filter((locale) => locale.code !== i18n?.sourceLang)
+      .map((locale) => renderTranslationLocale(c, locale, i18n?.[locale.code])),
+  );
+}
+
+function languageName(c, code) {
+  if (code === "en") return "English";
+  return c.translations.locales.find((l) => l.code === code)?.label ?? code;
+}
+
+/** One language's block of inputs, named so the Worker can read them back. */
+function renderTranslationLocale(c, locale, values) {
+  const group = document.createElement("fieldset");
+  group.className = "translation-group";
+
+  const legend = document.createElement("legend");
+  legend.className = "translation-legend";
+  legend.textContent = locale.label;
+  group.append(legend);
+
+  for (const field of c.translations.fields) {
+    const spec = c.fields.find((f) => f.name === field);
+    const wrap = document.createElement("div");
+    wrap.className = "field";
+
+    const id = `field-i18n-${locale.code}-${field}`;
+    const label = document.createElement("label");
+    label.className = "label";
+    label.htmlFor = id;
+    label.textContent = spec?.label ?? field;
+    wrap.append(label);
+
+    // A textarea for both, because a translated title can be noticeably longer
+    // than the English and a one-line input hides the end of it.
+    const input = document.createElement("textarea");
+    input.className = "textarea";
+    input.id = id;
+    input.name = `i18n.${locale.code}.${field}`;
+    input.rows = spec?.type === "textarea" ? 3 : 2;
+    input.value = values?.[field] ?? "";
+    wrap.append(input);
+    group.append(wrap);
+  }
+
+  return group;
+}
+
+/** Put the response's translations back in the boxes after a save or a fill. */
+function applyTranslations(i18n) {
+  const c = collection();
+  if (!c.translations) return;
+
+  if (state.editing) state.editing = { ...state.editing, data: { ...state.editing.data, i18n } };
+  renderTranslationPane(c, state.editing);
+}
+
+el.translateBtn.addEventListener("click", async () => {
+  const c = collection();
+  if (!state.editing) return;
+
+  await run(el.translateBtn, "Translating…", async () => {
+    const result = await api("/admin/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      // The button means "do it now", so it forces — otherwise pressing it on
+      // an entry the Worker considers current would do nothing at all, which
+      // reads as a broken button.
+      body: JSON.stringify({ collection: c.name, file: state.editing.file, force: true }),
+    });
+    applyTranslations(result.i18n);
+    if (result.entries) applyEntries(result);
+    showBanner(result.message, true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Translations
+//
+// Not content either: this is the DeepL key every event's translations depend
+// on. The key itself never reaches this page — the Worker sends back whether
+// there is one, the last four characters so it can be told apart from another,
+// and this month's usage, which doubles as proof the key still works.
+
+async function loadTranslations() {
+  el.translationsLoading.hidden = false;
+  el.translationsStatus.hidden = true;
+  el.translationsUsage.hidden = true;
+  el.translationsKeyForm.hidden = true;
+
+  try {
+    const data = await api("/admin/api/settings");
+    state.translations = { loaded: true, deepl: data.deepl };
+    renderTranslations();
+  } catch (error) {
+    el.translationsLoading.hidden = true;
+    showBanner(`Couldn't check the translation settings: ${error.message}`, false);
+  }
+}
+
+function renderTranslations() {
+  const deepl = state.translations.deepl ?? {};
+
+  el.translationsLoading.hidden = true;
+  el.translationsError.hidden = true;
+  el.translationsKeyInput.classList.remove("input-bad");
+
+  // Three states, and they are genuinely different problems: no key at all, a
+  // key DeepL refuses, and a working key. Collapsing the middle one into
+  // either of the others is how somebody spends an afternoon on the wrong fix.
+  let message;
+  if (!deepl.configured) {
+    message = "No key set, so events are saved without their translations.";
+  } else if (deepl.live === false) {
+    message = `The key ending …${deepl.last4} is not working: ${deepl.error}`;
+  } else {
+    const who = deepl.setBy ? ` Set by ${deepl.setBy}.` : "";
+    message = `Working. Using the ${deepl.free ? "free" : "paid"} key ending …${deepl.last4}.${who}`;
+  }
+  el.translationsStatus.textContent = message;
+  el.translationsStatus.classList.toggle("is-bad", deepl.configured && deepl.live === false);
+  el.translationsStatus.hidden = false;
+
+  if (deepl.usage) {
+    const { count, limit, percent } = deepl.usage;
+    el.translationsUsage.textContent =
+      `${count.toLocaleString()} of ${limit.toLocaleString()} characters used this month` +
+      (percent === null ? "" : ` — ${percent < 1 ? "under 1" : Math.round(percent)}%.`);
+    el.translationsUsage.hidden = false;
+  } else {
+    el.translationsUsage.hidden = true;
+  }
+
+  // `editable` is false until a maintainer has created the settings store, in
+  // which case the key can only come from the Worker secret and offering a box
+  // to type into would be a lie.
+  el.translationsKeyForm.hidden = !deepl.editable;
+  el.translationsRemoveBtn.hidden = deepl.source !== "kv";
+}
+
+el.translationsKeyForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  el.translationsError.hidden = true;
+  el.translationsKeyInput.classList.remove("input-bad");
+
+  const key = el.translationsKeyInput.value.trim();
+  if (key === "") return failTranslations("Paste the key you want to use.", "deeplKey");
+
+  await run(
+    el.translationsSaveBtn,
+    "Checking with DeepL…",
+    async () => {
+      const result = await api("/admin/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deeplKey: key }),
+      });
+      // Cleared immediately, and never kept in `state`: the page holds a
+      // credential for exactly as long as it takes to post it.
+      el.translationsKeyInput.value = "";
+      state.translations = { loaded: true, deepl: result.deepl };
+      renderTranslations();
+      showBanner(result.message, true);
+    },
+    failTranslations,
+  );
+});
+
+el.translationsRemoveBtn.addEventListener("click", async () => {
+  const ok = await confirmAction({
+    title: "Remove this key?",
+    body: "Translations will fall back to the key a maintainer set, if there is one.",
+    warning: "If there isn't, events will save without their translations until a new key is added here.",
+    action: "Remove",
+  });
+  if (!ok) return;
+
+  await run(
+    el.translationsRemoveBtn,
+    "Removing…",
+    async () => {
+      const result = await api("/admin/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ remove: true }),
+      });
+      state.translations = { loaded: true, deepl: result.deepl };
+      renderTranslations();
+      showBanner(result.message, true);
+    },
+    failTranslations,
+  );
+});
+
+/** Errors from this section, in this section — see failAccess for the reasoning. */
+function failTranslations(message, field) {
+  el.translationsError.textContent = message;
+  el.translationsError.hidden = false;
+
+  if (field === "deeplKey") {
+    el.translationsKeyInput.classList.add("input-bad");
+    el.translationsKeyInput.focus({ preventScroll: true });
   }
 }
 

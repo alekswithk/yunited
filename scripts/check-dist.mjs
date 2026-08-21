@@ -87,7 +87,7 @@ const checks = [
     //
     // sr.json has been mixed before — 34 Latin keys against 126 Cyrillic ones —
     // and the translation pipeline now asserts Latin output at the source
-    // (scripts/lib/validate.mjs). This is the same invariant checked on the
+    // (src/lib/translate/validate.js). This is the same invariant checked on the
     // BUILT page, which is the only place it can catch Cyrillic arriving from
     // somewhere other than the dictionary: an event's i18n block, a hard-coded
     // string in a component, a hand edit.

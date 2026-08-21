@@ -22,6 +22,8 @@
 //               "" and reject null. Read the note on coerceField in lib.js.
 //   help        one line of plain-language guidance, shown under the input
 import { eventSchema, memberSchema, partnerSchema } from "../src/lib/schema.js";
+import { TARGETS, TRANSLATABLE } from "../src/lib/translate/content.js";
+import { LANGUAGES } from "../src/lib/translate/glossary.js";
 import { IMAGE_EXTENSIONS, academicYear, eventSlug, slugify } from "./lib.js";
 
 /** @typedef {{ name: string, label: string, type: string, required: boolean, emptyValue: ""|null, help?: string, placeholder?: string, min?: number }} Field */
@@ -47,9 +49,28 @@ export const COLLECTIONS = {
     // were created with — see `slugFor` in index.js for why.
     slugFor: (data, now) => eventSlug(data.title, data.date, now),
 
-    // Written by scripts/translate-content.mjs and by nothing else. Carried
-    // through every save untouched; dropping it would strip every translation.
+    // Machine-written, and carried through every save: an editor that commits
+    // back only the fields it knows about would strip every translation.
+    //
+    // NO LONGER "written by the CLI and by nothing else" — /admin fills it on
+    // save now, and the Translations page lets the board correct a rendering by
+    // hand. What is still true, and load-bearing, is that the FORM never
+    // authors sourceLang or sourceHash: those are the Worker's bookkeeping, and
+    // a submitted one is ignored.
     carry: ["id", "i18n"],
+
+    // The per-event Translations page. Declared here, in the same registry as
+    // the fields, so the panel renders it from what the Worker sent rather than
+    // from a second list of locales in the browser — the drift that made
+    // Sveltia's config.yml worth deleting.
+    //
+    // `fields` must name real fields and `locales` real dictionaries;
+    // collections.test.js asserts both, because a typo here would render an
+    // input whose contents the schema then rejects at save time.
+    translations: {
+      fields: TRANSLATABLE.events,
+      locales: TARGETS.map((code) => ({ code, label: LANGUAGES[code].name })),
+    },
 
     // How the board can order the list. The first entry is the default.
     //
@@ -284,6 +305,9 @@ export function publicShape() {
     singular: c.singular,
     fields: c.fields,
     sorts: c.sorts,
+    // Absent for collections that are never translated, which is what the page
+    // keys off to leave the Content/Translations switch out entirely.
+    translations: c.translations ?? null,
     image: {
       field: c.imageField,
       label: c.imageLabel,

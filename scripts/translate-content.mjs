@@ -5,8 +5,14 @@
 //   npm run translate:content -- --dry-run # report only, write nothing
 //   npm run translate:content -- --force   # re-translate everything
 //
-// Run by hand, or automatically by .github/workflows/translate-content.yml when
-// a board member saves through /admin (every save is a commit).
+// FOR A MAINTAINER, BY HAND. The board's own saves no longer come through here:
+// /admin translates an event as it is saved, in the same commit, and a nightly
+// sweep in the same Worker fills anything that slipped through (worker/
+// translate.js). This is the CLI equivalent, for bulk work — re-translating
+// everything after a glossary change, or filling in entries committed by hand.
+//
+// It shares its rules with the Worker rather than restating them; see
+// src/lib/translate/content.js.
 //
 // HOW IT DECIDES WHAT TO DO
 //
@@ -38,39 +44,29 @@
 //
 // The build never runs this. It stays hermetic: no network, no secrets.
 
-import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-import { detectSourceLang, formatUsage, requireApiKey, translateSetComplete } from "./lib/deepl.mjs";
-import { LANGUAGES } from "./lib/glossary.mjs";
-import { checkString, errorsOf, formatFindings } from "./lib/validate.mjs";
+import { detectSourceLang, formatUsage, translateSetComplete } from "../src/lib/translate/deepl.js";
+import { requireApiKey } from "./lib/require-api-key.mjs";
+import { DICTS, TRANSLATABLE, gate, mergeTranslations, planFor } from "../src/lib/translate/content.js";
+import { formatFindings } from "../src/lib/translate/validate.js";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-// Which fields may be translated, per collection. Members and partners are
-// absent on purpose — see WHAT IT WILL NOT TOUCH above.
-const TRANSLATABLE = {
-  events: ["title", "description"],
-};
-
-// Dictionary names. Mirrors src/i18n/config.js `dict` values — bs and hr have
-// their own dictionaries now, so an entry carries five blocks rather than four.
-const DICTS = ["en", ...Object.keys(LANGUAGES)];
+// WHAT NEEDS TRANSLATING is not decided here. TRANSLATABLE, the source hash,
+// the up-to-date rule and the merge rules all live in
+// src/lib/translate/content.js, because /admin's Worker translates the same
+// entries on the same rules when the board presses Save. Two copies of "is
+// this current?" would not fail loudly — the panel would just re-translate
+// what this script thinks is finished, over hand corrections.
 
 const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
 const force = args.includes("--force");
 
 const apiKey = dryRun ? (process.env.DEEPL_API_KEY ?? "") : requireApiKey("translate:content");
-
-/** Fingerprint of the source text, so an edit invalidates stale translations. */
-function hashSource(entry, fields) {
-  const h = createHash("sha256");
-  for (const f of fields) h.update(String(entry[f] ?? ""), "utf8");
-  return h.digest("hex").slice(0, 16);
-}
 
 const readEntry = (file) => JSON.parse(readFileSync(file, "utf8"));
 
@@ -96,24 +92,10 @@ for (const [collection, fields] of Object.entries(TRANSLATABLE)) {
     const file = join(dir, name);
     const entry = readEntry(file);
 
-    const hasText = fields.some((f) => String(entry[f] ?? "").trim() !== "");
-    if (!hasText) { skipped++; continue; }
-
-    const hash = hashSource(entry, fields);
     const existing = entry.i18n ?? null;
-    const upToDate =
-      existing &&
-      existing.sourceHash === hash &&
-      DICTS.every(
-        (d) =>
-          d === existing.sourceLang ||
-          (existing[d] &&
-            fields.every((f) => String(entry[f] ?? "").trim() === "" || existing[d][f])),
-      );
+    const { state, hash, nonEmpty, targets } = await planFor(entry, { fields, force });
 
-    if (upToDate && !force) { skipped++; continue; }
-
-    const nonEmpty = fields.filter((f) => String(entry[f] ?? "").trim() !== "");
+    if (targets.length === 0) { skipped++; continue; }
 
     if (dryRun) {
       console.log(`${collection}/${name}: would translate ${nonEmpty.join(", ")}`);
@@ -121,21 +103,23 @@ for (const [collection, fields] of Object.entries(TRANSLATABLE)) {
       continue;
     }
 
-    const sourceDict = await detectSourceLang(
+    // null when DeepL couldn't tell (or answered with a language this site has
+    // no dictionary for). Recorded as "en", but passed on as null so each
+    // request lets DeepL detect for itself rather than being told a guess.
+    const detected = await detectSourceLang(
       nonEmpty.map((f) => String(entry[f])),
       { apiKey, allowed: DICTS },
     );
+    const sourceDict = detected ?? "en";
 
-    const i18n = { sourceLang: sourceDict, sourceHash: hash };
+    const machine = {};
     let entryFailed = false;
 
-    for (const dict of DICTS) {
-      if (dict === sourceDict) continue; // the authored text already serves this one
-      // `en` is in DICTS so that an entry written in German records that English
-      // needs filling, but it has no LANGUAGES profile — it is the source
-      // dictionary, not a target. `localizeEntry` falls back to the authored
-      // text, so an English page shows the German original rather than nothing.
-      if (!LANGUAGES[dict]) continue;
+    for (const dict of targets) {
+      // The authored text already serves the language it was written in.
+      // `planFor` cannot know that language — it is detected above, one call
+      // per entry — so this is where the source dictionary drops out.
+      if (dict === sourceDict) continue;
 
       // DeepL's context isn't translated and doesn't count toward the quota —
       // give each field the OTHER one as context, so a title and its
@@ -149,27 +133,22 @@ for (const [collection, fields] of Object.entries(TRANSLATABLE)) {
           .map((other) => `The event's ${other}: ${JSON.stringify(String(entry[other]))}`)
           .join(" "),
       }));
-      const { values, usage } = await translateSetComplete({ items, code: dict, apiKey, sourceLang: sourceDict });
+      const { values, usage } = await translateSetComplete({ items, code: dict, apiKey, sourceLang: detected });
 
-      // THE GATE, per field. On an error nothing is written for this entry —
+      // THE GATE, per entry. On an error nothing is written for this entry —
       // a half-translated event is worse than an untranslated one.
-      const findings = items.flatMap((i) =>
-        checkString(i.source, values[i.key], `${name}:${dict}.${i.key}`, dict),
-      );
-      const errors = errorsOf(findings);
+      const { findings, errors } = gate({ entry, i18n: { [dict]: values }, fields, label: name });
       if (errors.length) {
         console.error(formatFindings(findings, `${collection}/${name} [${dict}]`));
         entryFailed = true;
         break;
       }
 
-      const out = {};
       for (const f of nonEmpty) {
-        out[f] = values[f];
         const before = existing?.[dict]?.[f];
         if (before !== values[f]) report.push({ file: name, dict, field: f, before, after: values[f] });
       }
-      i18n[dict] = out;
+      machine[dict] = values;
       console.log(`  ${name} [${dict}] ${formatUsage(usage)}`);
     }
 
@@ -179,9 +158,12 @@ for (const [collection, fields] of Object.entries(TRANSLATABLE)) {
       continue;
     }
 
-    entry.i18n = i18n;
+    // Same merge the Worker performs on a board member's save: a stale entry
+    // drops its old block, a current one keeps every translation this run did
+    // not produce. `state` is only reported, never re-derived here.
+    entry.i18n = mergeTranslations({ existing, machine, hash, sourceLang: sourceDict, fields });
     writeEntry(file, entry);
-    console.log(`${collection}/${name}: source=${sourceDict}, translated ${nonEmpty.join(", ")}`);
+    console.log(`${collection}/${name}: ${state}, source=${sourceDict}, translated ${nonEmpty.join(", ")}`);
     changed++;
   }
 }
