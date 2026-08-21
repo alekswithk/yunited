@@ -127,9 +127,9 @@ test("stateOf reports the missing dictionaries by name", async () => {
 test("KV wins over the secret, and the secret is the fallback", async () => {
   const stored = JSON.stringify({ key: "kv-key-0000000000000000", setAt: "2026-08-20", setBy: "ana@hsg.ch" });
 
-  assert.equal((await resolveKey({ SETTINGS: fakeKv({ "deepl.apiKey": stored }), DEEPL_API_KEY: "secret-key-000000000" })).source, "kv");
-  assert.equal((await resolveKey({ SETTINGS: fakeKv(), DEEPL_API_KEY: "secret-key-000000000" })).source, "secret");
-  assert.equal(await resolveKey({ SETTINGS: fakeKv() }), null);
+  assert.equal((await resolveKey({ ADMIN_SETTINGS: fakeKv({ "deepl.apiKey": stored }), DEEPL_API_KEY: "secret-key-000000000" })).source, "kv");
+  assert.equal((await resolveKey({ ADMIN_SETTINGS: fakeKv(), DEEPL_API_KEY: "secret-key-000000000" })).source, "secret");
+  assert.equal(await resolveKey({ ADMIN_SETTINGS: fakeKv() }), null);
 
   // No namespace bound yet — the secret must still answer, or a deployment
   // that has not had the store created loses translation entirely.
@@ -139,7 +139,7 @@ test("KV wins over the secret, and the secret is the fallback", async () => {
 
 test("the key never leaves the Worker", async () => {
   const { fetchImpl } = fakeDeepl();
-  const status = await keyStatus({ SETTINGS: fakeKv(), DEEPL_API_KEY: FREE_KEY }, { fetchImpl });
+  const status = await keyStatus({ ADMIN_SETTINGS: fakeKv(), DEEPL_API_KEY: FREE_KEY }, { fetchImpl });
 
   const serialized = JSON.stringify(status);
   assert.ok(!serialized.includes(FREE_KEY), "the whole key must never be serialized");
@@ -157,20 +157,20 @@ test("fingerprint identifies the key, not the tier", () => {
 
 test("a key DeepL rejects reads differently from no key at all", async () => {
   const { fetchImpl } = fakeDeepl({ status: 403, body: {} });
-  const rejected = await keyStatus({ SETTINGS: fakeKv(), DEEPL_API_KEY: FREE_KEY }, { fetchImpl });
+  const rejected = await keyStatus({ ADMIN_SETTINGS: fakeKv(), DEEPL_API_KEY: FREE_KEY }, { fetchImpl });
 
   assert.equal(rejected.configured, true);
   assert.equal(rejected.live, false);
   assert.match(rejected.error, /rejected that key/);
 
-  const none = await keyStatus({ SETTINGS: fakeKv() });
+  const none = await keyStatus({ ADMIN_SETTINGS: fakeKv() });
   assert.equal(none.configured, false);
   assert.equal(none.live, undefined);
 });
 
 test("usage comes back as counted characters, not tokens", async () => {
   const { fetchImpl, calls } = fakeDeepl();
-  const status = await keyStatus({ SETTINGS: fakeKv(), DEEPL_API_KEY: FREE_KEY }, { fetchImpl });
+  const status = await keyStatus({ ADMIN_SETTINGS: fakeKv(), DEEPL_API_KEY: FREE_KEY }, { fetchImpl });
 
   assert.equal(status.usage.count, 25014);
   assert.equal(status.usage.limit, 1000000);
@@ -183,41 +183,41 @@ test("usage comes back as counted characters, not tokens", async () => {
 // work would silently switch translation OFF — the exact opposite of what the
 // person pressing Save was trying to do.
 test("a key DeepL refuses is never stored", async () => {
-  const SETTINGS = fakeKv();
+  const kv = fakeKv();
   const { fetchImpl } = fakeDeepl({ status: 403, body: {} });
 
   await assert.rejects(
-    () => putKey({ SETTINGS }, "12345678-90ab-cdef-1234-567890abcdef:fx", "ana@hsg.ch", { fetchImpl }),
+    () => putKey({ ADMIN_SETTINGS: kv }, "12345678-90ab-cdef-1234-567890abcdef:fx", "ana@hsg.ch", { fetchImpl }),
     (error) => error.status === 403,
   );
-  assert.equal(SETTINGS.store.size, 0, "nothing was written");
+  assert.equal(kv.store.size, 0, "nothing was written");
 });
 
 test("a working key is stored with who set it and when", async () => {
-  const SETTINGS = fakeKv();
+  const kv = fakeKv();
   const { fetchImpl } = fakeDeepl();
 
-  const result = await putKey({ SETTINGS }, FREE_KEY, "ana@hsg.ch", { fetchImpl });
+  const result = await putKey({ ADMIN_SETTINGS: kv }, FREE_KEY, "ana@hsg.ch", { fetchImpl });
   assert.equal(result.last4, "cdef");
 
-  const stored = JSON.parse(SETTINGS.store.get("deepl.apiKey"));
+  const stored = JSON.parse(kv.store.get("deepl.apiKey"));
   assert.equal(stored.key, FREE_KEY);
   assert.equal(stored.setBy, "ana@hsg.ch");
   assert.ok(Date.parse(stored.setAt), "setAt is a real timestamp");
 
-  await clearKey({ SETTINGS }, "ana@hsg.ch");
-  assert.equal(SETTINGS.store.size, 0);
+  await clearKey({ ADMIN_SETTINGS: kv }, "ana@hsg.ch");
+  assert.equal(kv.store.size, 0);
 });
 
 test("obvious nonsense is refused without spending a request", async () => {
-  const SETTINGS = fakeKv();
+  const kv = fakeKv();
   const { fetchImpl, calls } = fakeDeepl();
 
   for (const bad of ["", "   ", "too-short", "has spaces in the middle of it here"]) {
-    await assert.rejects(() => putKey({ SETTINGS }, bad, "ana@hsg.ch", { fetchImpl }));
+    await assert.rejects(() => putKey({ ADMIN_SETTINGS: kv }, bad, "ana@hsg.ch", { fetchImpl }));
   }
   assert.equal(calls.length, 0);
-  assert.equal(SETTINGS.store.size, 0);
+  assert.equal(kv.store.size, 0);
 });
 
 test("with no settings store, the key can only come from the secret", async () => {

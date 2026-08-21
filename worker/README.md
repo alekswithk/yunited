@@ -85,11 +85,12 @@ retry rather than silently discarding the first one's commit.
 
 | file | what it is |
 | --- | --- |
-| `index.js` | The routes (`/admin/api/state`, `/save`, `/delete`, `/access`) and the save/delete logic. Start here. |
+| `index.js` | The routes (`/admin/api/state`, `/save`, `/delete`, `/access`, `/translate`, `/settings`), the save/delete logic, and the nightly `scheduled` sweep. Start here. |
 | `collections.js` | **The registry** — which fields exist, their labels, help text, and where photos are filed. The panel's form is generated from this, so it is the only place to add or change a field. |
 | `github.js` | The GitHub client. Reads the content tree; makes one atomic commit. |
 | `access.js` | Reads the Cloudflare Access identity, and optionally verifies its signed token. |
 | `board-access.js` | The Cloudflare client for the **email allow-list** — who may open `/admin` at all. Read it before touching anything about access. |
+| `translate.js` | The DeepL key (KV over secret), the per-entry state the panel badges, and `translateEntry()` — which **never throws**, because a translation failure must never fail a board member's save. The rules it applies live in `src/lib/translate/content.js`, shared with the CLI. |
 | `lib.js` | Pure helpers: slugs, the academic-year image folder, blank-value coercion. |
 | `*.test.js` | `npm test` — the logic no build can check. |
 
@@ -375,20 +376,27 @@ nowhere to put it.
 
 ```bash
 npx wrangler kv namespace create ADMIN_SETTINGS
-npx wrangler kv namespace create ADMIN_SETTINGS --preview   # for `wrangler dev`
 ```
 
-Each prints an id. Add them to `wrangler.jsonc`:
+That prints an id, and recent wrangler versions offer to add the binding to
+`wrangler.jsonc` themselves — check what it wrote, since it may also reformat the
+whole file. It should read:
 
 ```jsonc
 "kv_namespaces": [
-  { "binding": "SETTINGS", "id": "<id>", "preview_id": "<preview id>" }
+  { "binding": "ADMIN_SETTINGS", "id": "<id>", "remote": true }
 ]
 ```
 
-Then deploy. The binding is called `SETTINGS` rather than `DEEPL` on purpose —
-it is the store for anything the board should be able to change without a
+Then deploy. **The binding name must be `ADMIN_SETTINGS`** — that is what the
+Worker reads, and what `wrangler kv namespace create ADMIN_SETTINGS` suggests, so
+following its output gives a working config. The name is generic on purpose: it
+is the store for anything the board should be able to change without a
 maintainer, and the next such value should not need a second namespace.
+
+`remote: true` makes `wrangler dev` read the real namespace rather than an empty
+local simulation. A `preview_id` from `--preview` works too; pick one, or the
+Translations tab will look unconfigured locally while working in production.
 
 It holds one key, `deepl.apiKey`, whose value is
 `{"key": "…", "setAt": "…", "setBy": "…"}`. **A DeepL key in KV is a

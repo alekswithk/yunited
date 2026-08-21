@@ -41,6 +41,26 @@
     "nodejs_compat"
   ],
 
+  // Where the board's own DeepL key lives, when they set one from /admin's
+  // Translations tab. A value here overrides the DEEPL_API_KEY secret; with
+  // nothing set, the secret answers and the tab reports status without offering
+  // a box to paste into.
+  //
+  // That is the succession fix, not a convenience: a Worker secret can only be
+  // replaced by someone with the Cloudflare account, and the people running this
+  // club change every year. See the comment at the top of worker/translate.js.
+  //
+  // `remote: true` rather than a preview_id, so `wrangler dev` reads the real
+  // namespace instead of an empty local simulation — this holds one value that
+  // is tedious to recreate by hand.
+  "kv_namespaces": [
+    {
+      "binding": "ADMIN_SETTINGS",
+      "id": "ad0d3dcdf58b44928b30362db57101a3",
+      "remote": true
+    }
+  ],
+
   // The safety net under translation, not the mechanism. An event is translated
   // as it is saved (worker/translate.js), which is where it normally happens;
   // this catches the entry whose save-time attempt hit a DeepL outage, or that

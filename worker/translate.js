@@ -58,9 +58,9 @@ async function readStored(env) {
   // The binding is absent until a maintainer creates the namespace (see
   // worker/README.md). Absent is not broken: the secret still answers, and the
   // panel says the board cannot replace the key here yet.
-  if (!env.SETTINGS) return null;
+  if (!env.ADMIN_SETTINGS) return null;
   try {
-    return await env.SETTINGS.get(KEY_NAME, { type: "json", cacheTtl: 60 });
+    return await env.ADMIN_SETTINGS.get(KEY_NAME, { type: "json", cacheTtl: 60 });
   } catch (error) {
     console.error("[translate] settings store unreadable:", error);
     return null;
@@ -91,11 +91,11 @@ export async function resolveKey(env) {
  */
 export async function keyStatus(env, { fetchImpl, signal } = {}) {
   const resolved = await resolveKey(env);
-  if (!resolved) return { configured: false, editable: Boolean(env.SETTINGS) };
+  if (!resolved) return { configured: false, editable: Boolean(env.ADMIN_SETTINGS) };
 
   const base = {
     configured: true,
-    editable: Boolean(env.SETTINGS),
+    editable: Boolean(env.ADMIN_SETTINGS),
     source: resolved.source,
     last4: fingerprint(resolved.key),
     free: resolved.key.endsWith(":fx"),
@@ -120,7 +120,7 @@ export async function keyStatus(env, { fetchImpl, signal } = {}) {
  */
 export async function putKey(env, key, actor, { fetchImpl } = {}) {
   const candidate = String(key ?? "").trim();
-  if (!env.SETTINGS) {
+  if (!env.ADMIN_SETTINGS) {
     throw Object.assign(new Error("no settings store"), { userMessage: NO_SETTINGS_STORE });
   }
   if (candidate.length < 20 || /\s/.test(candidate)) {
@@ -135,7 +135,7 @@ export async function putKey(env, key, actor, { fetchImpl } = {}) {
   const { count, limit } = await usage({ apiKey: candidate, fetchImpl });
 
   const value = { key: candidate, setAt: new Date().toISOString(), setBy: actor ?? null };
-  await env.SETTINGS.put(KEY_NAME, JSON.stringify(value));
+  await env.ADMIN_SETTINGS.put(KEY_NAME, JSON.stringify(value));
 
   // The only per-person record of this change. Cloudflare's own logs name the
   // Worker, never the board member — same reasoning as the access list.
@@ -146,10 +146,10 @@ export async function putKey(env, key, actor, { fetchImpl } = {}) {
 
 /** Drop the board's key and fall back to whatever the maintainer set. */
 export async function clearKey(env, actor) {
-  if (!env.SETTINGS) {
+  if (!env.ADMIN_SETTINGS) {
     throw Object.assign(new Error("no settings store"), { userMessage: NO_SETTINGS_STORE });
   }
-  await env.SETTINGS.delete(KEY_NAME);
+  await env.ADMIN_SETTINGS.delete(KEY_NAME);
   console.log(`[admin] DeepL key cleared by ${actor ?? "unknown"} — falling back to the Worker secret`);
 }
 
