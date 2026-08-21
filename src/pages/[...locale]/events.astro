@@ -1,23 +1,44 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import EventCard from "../../components/EventCard.astro";
-import { events } from "../../lib/content.js";
-import { splitEvents } from "../../lib/events.js";
-import { localePaths } from "../../i18n/config.js";
+import { events, localizeEntry } from "../../lib/content.js";
+import { splitEvents, hasDate, eventJsonLd } from "../../lib/events.js";
+import { localePaths, localizePath, getLocale } from "../../i18n/config.js";
 import { useTranslations } from "../../i18n/utils.js";
 
 export const getStaticPaths = localePaths;
 
 const { locale } = Astro.params;
 const t = useTranslations(locale);
+const loc = getLocale(locale);
 
 const { upcoming, past } = splitEvents(events);
 
 const title = t("meta.events.title");
 const description = t("meta.events.description");
+
+// Structured data for Google's Event rich results: one block per dated
+// upcoming event, localized the same way EventCard renders it. TBA-dated
+// events are skipped inside eventJsonLd (schema.org requires a startDate),
+// and every event points at this page — there is no per-event page to link to.
+const eventsPageUrl = new URL(localizePath("/events", loc.code), Astro.site).href;
+const eventSchemas = upcoming
+  .filter(hasDate)
+  .map((event) => eventJsonLd(localizeEntry(event, loc.dict), { url: eventsPageUrl }))
+  .filter((schema) => schema !== null);
+
+// Unlike the Organization JSON-LD on the homepage (developer-authored dictionary
+// text only), title/description here come from the board's own event copy —
+// free text typed in /admin. Escaping "<" stops a stray "</script>" in a
+// description from closing the tag early; JSON itself never needs a literal "<".
+const toJsonLdScript = (schema: object) => JSON.stringify(schema).replace(/</g, "\\u003c");
 ---
 
 <BaseLayout locale={locale} title={title} description={description} path="/events">
+  {eventSchemas.map((schema) => (
+    <script type="application/ld+json" is:inline set:html={toJsonLdScript(schema)} slot="head" />
+  ))}
+
   <section class="page-hero">
     <div class="container">
       <p class="hero-script">Događaji · Догађаји · Events</p>
