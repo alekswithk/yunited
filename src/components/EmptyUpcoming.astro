@@ -1,0 +1,30 @@
+---
+// The Upcoming section's empty state, shared by the homepage teaser and the
+// events page — same underlying fact ("nothing is scheduled yet"), so one
+// component rather than two copies that would drift. Takes the lead slot in
+// whichever grid it's dropped into: `.empty-lead` sets grid-column: 1 / -1 for
+// both .card-grid and .magazine-grid (see global.css).
+//
+// Instagram and uniclubs are hardcoded rather than dictionary values — they
+// are the club's actual accounts, not copy, and the two links already appear
+// as literal URLs elsewhere (join.astro, footer.pages Pre/Link/Post keys).
+import { useTranslations } from "../i18n/utils.js";
+import { defaultLocale } from "../i18n/config.js";
+
+interface Props {
+  locale?: string;
+}
+
+const { locale = defaultLocale } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<div class="empty-lead">
+  <p class="eyebrow">{t("events.emptyUpcomingEyebrow")}</p>
+  <h3>{t("events.emptyUpcomingHeading")}</h3>
+  <p>{t("events.emptyUpcomingBody")}</p>
+  <div class="empty-actions">
+    <a class="btn btn-gold" href="https://www.instagram.com/yunited.unisg" target="_blank" rel="noopener">{t("events.emptyUpcomingInstagram")}</a>
+    <a class="btn btn-outline" href="https://uniclubs.ch/hsg/clubs/yunited" target="_blank" rel="noopener">{t("events.emptyUpcomingUniclubs")}</a>
+  </div>
+</div>

@@ -250,6 +250,14 @@ h1, h2, h3 {
   overflow-wrap: break-word;
   -webkit-hyphens: auto;  /* Safari only dropped the prefix in 17 */
   hyphens: auto;
+  /* Already used on .roster-role; extending it here is where the ragging
+     actually is. It only changes anything when a heading wraps at all — which
+     on desktop is close to never — so its real effect is on phones and in
+     hr/bs, where headings are both narrower and, translated, longer. Measured
+     on /hr/about at 390px: one h2 drops from three lines to two, and a
+     one-word orphan on an h3's last line disappears. No effect where a heading
+     already fits one line. */
+  text-wrap: balance;
 }
 
 h1 { font-size: clamp(2.6rem, 7vw, 5rem); font-weight: 900; }
@@ -1034,6 +1042,44 @@ main { position: relative; }
   max-width: 62ch;
 }
 
+/* The Upcoming section's empty state — the one that matters, since a whole
+   off-season falls into it, not just a moment between board saves. Takes the
+   grid's lead slot instead of a muted note, and carries the same kilim strip
+   a photo-less card already uses along its bottom edge (see
+   .card-image:not(:has(img)) above), so an empty section still reads as part
+   of the page rather than as an error. `.empty-note` stays exactly as it was
+   for Past events — an empty history is the ordinary state for a young club
+   and doesn't need a call to action. */
+.empty-lead {
+  position: relative;
+  background: var(--color-paper-soft);
+  border: var(--border);
+  overflow: clip;   /* clip, not hidden — see the note on .motif-divider */
+  padding: var(--space-5) var(--space-4) calc(var(--space-5) + 16px);
+}
+.empty-lead::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 16px;
+  background-image: url("/assets/motif.svg");
+  background-repeat: repeat-x;
+  background-size: 64px 16px;
+}
+.empty-lead h3 {
+  font-size: clamp(1.6rem, 3.2vw, 2.1rem);
+  margin-bottom: var(--space-2);
+}
+.empty-lead p { color: var(--color-muted); max-width: 52ch; }
+.empty-lead .empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
 /* ---------- Forms ---------- */
 .form-grid { display: grid; gap: var(--space-4); max-width: 560px; }
 
@@ -1318,7 +1364,8 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
     section:not(.hero):not(.page-hero) > .container > .section-intro,
     .card,
     .info-panel,
-    .partner-item {
+    .partner-item,
+    .empty-lead {
       animation-name: rise-in;
       animation-timing-function: var(--ease-out);
       animation-fill-mode: both;
@@ -1337,7 +1384,8 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
     }
     .card,
     .info-panel,
-    .partner-item {
+    .partner-item,
+    .empty-lead {
       animation-range-start: cover 2%;
       animation-range-end: cover 26%;
     }
@@ -1707,14 +1755,64 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
 .magazine-grid > .card:nth-child(5n + 1) h3 { font-size: clamp(1.9rem, 2.8vw, 2.5rem); font-weight: 900; }
 .magazine-grid > .card:nth-child(5n + 1) .card-description { font-size: 1.15rem; }
 
-/* Empty-state note spans the full width instead of one narrow column */
-.magazine-grid > .empty-note { grid-column: 1 / -1; }
+/* A list that ends mid-cycle strands its last card with empty columns beside
+   it: the 4-wide card alone (2 of 6 unused) or the first 3-wide card alone (3
+   of 6 unused). That happens exactly when the count is 2 or 4 more than a
+   multiple of 5 — every other count closes its row on its own (1 card fills 6;
+   3 cards fill 4+2; 5 fill 4+2+3+3). `:last-child` catches it without knowing
+   the count: the 4-wide and first 3-wide positions are the only two that can
+   ever be a row's sole occupant, and only when nothing follows them.
+   `nth-child(5n+2):last-child` is one component more specific than the plain
+   `nth-child(5n+2)` span-4 rule above, so it wins outright — no source-order
+   dependency to keep track of. */
+.magazine-grid > .card:nth-child(5n + 2):last-child,
+.magazine-grid > .card:nth-child(5n + 4):last-child {
+  grid-column: span 6;
+  flex-direction: row;
+}
+.magazine-grid > .card:nth-child(5n + 2):last-child .card-image,
+.magazine-grid > .card:nth-child(5n + 4):last-child .card-image {
+  flex: 0 0 42%;
+  aspect-ratio: auto;
+  min-height: 240px;
+  border-bottom: none;
+  border-right: var(--border);
+}
 
-/* Collapse to a safe single column on smaller screens */
+/* Empty-state note spans the full width instead of one narrow column */
+.magazine-grid > .empty-note,
+.magazine-grid > .empty-lead { grid-column: 1 / -1; }
+
+/* Collapse to a safe single column on smaller screens.
+
+   THIS USED TO BE THE WHOLE FIX, AND IT DIDN'T WORK. `.magazine-grid > .card`
+   is two classes' worth of specificity; the desktop row treatment above is
+   keyed off `:nth-child(...)`, which is three (four once `.card-image` joins
+   in) — so on every phone, cards 1 and 2 stayed in their desktop layout, a
+   137px sliver of photo beside a full-height text column, completely
+   unaffected by this block. Measured at 390/600/900/901px: identical at all
+   four, which is what a rule that never actually applies looks like.
+
+   The fix is naming the exact selectors being undone, so specificity TIES
+   rather than loses — a tie is won by whichever declaration comes later in the
+   file, which this block already does. `grid-column` keeps its `!important`
+   only because every `nth-child` span rule above also sets it and re-stating
+   five of them here would be pure noise; `!important` says the same thing in
+   one line and cannot lose a tie it isn't fighting for anything else. */
 @media (max-width: 900px) {
   .magazine-grid { grid-template-columns: 1fr; }
-  .magazine-grid > .card { grid-column: auto !important; flex-direction: column; }
-  .magazine-grid > .card .card-image {
+  .magazine-grid > .card { grid-column: auto !important; }
+  .magazine-grid > .card:nth-child(5n + 1),
+  .magazine-grid > .card:nth-child(5n + 2),
+  .magazine-grid > .card:nth-child(5n + 2):last-child,
+  .magazine-grid > .card:nth-child(5n + 4):last-child {
+    flex-direction: column;
+  }
+  .magazine-grid > .card .card-image,
+  .magazine-grid > .card:nth-child(5n + 1) .card-image,
+  .magazine-grid > .card:nth-child(5n + 2) .card-image,
+  .magazine-grid > .card:nth-child(5n + 2):last-child .card-image,
+  .magazine-grid > .card:nth-child(5n + 4):last-child .card-image {
     flex: none;
     aspect-ratio: 16 / 9;
     min-height: 0;

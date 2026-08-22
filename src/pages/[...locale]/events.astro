@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import EventCard from "../../components/EventCard.astro";
+import EmptyUpcoming from "../../components/EmptyUpcoming.astro";
 import { events, localizeEntry } from "../../lib/content.js";
 import { splitEvents, hasDate, eventJsonLd } from "../../lib/events.js";
 import { localePaths, localizePath, getLocale } from "../../i18n/config.js";
@@ -57,7 +58,7 @@ const toJsonLdScript = (schema: object) => JSON.stringify(schema).replace(/</g, 
         {upcoming.length > 0 ? (
           upcoming.map((event) => <EventCard event={event} isPast={false} locale={locale} />)
         ) : (
-          <p class="empty-note">{t("events.emptyUpcoming")}</p>
+          <EmptyUpcoming locale={locale} />
         )}
       </div>
     </div>
