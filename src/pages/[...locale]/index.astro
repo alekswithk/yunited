@@ -2,6 +2,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PageToc from "../../components/PageToc.astro";
 import EventCard from "../../components/EventCard.astro";
+import EmptyUpcoming from "../../components/EmptyUpcoming.astro";
 import { events } from "../../lib/content.js";
 import { splitEvents } from "../../lib/events.js";
 import { localePaths, localizePath } from "../../i18n/config.js";
@@ -80,7 +81,7 @@ const orgSchema = {
         {upcomingTeaser.length > 0 ? (
           upcomingTeaser.map((event) => <EventCard event={event} isPast={false} locale={locale} />)
         ) : (
-          <p class="empty-note">{t("events.emptyUpcoming")}</p>
+          <EmptyUpcoming locale={locale} />
         )}
       </div>
     </div>
