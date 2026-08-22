@@ -59,7 +59,7 @@
     },
     "join": {
       "title": "Join — YUnited",
-      "description": "Become a YUnited member via uniclubs.ch — CHF 20 per semester for access to all events."
+      "description": "Become a YUnited member via uniclubs.ch — CHF 15 per semester for access to all events."
     },
     "contact": {
       "title": "Contact — YUnited",
@@ -188,7 +188,7 @@
     "heroLede": "Membership is handled entirely on uniclubs.ch — the official HSG club platform. Sign up there in a couple of minutes; this website is just here to tell you why it's worth it.",
     "getEyebrow": "Membership",
     "getHeading": "What you get",
-    "semesterTitle": "Semester membership — CHF 20",
+    "semesterTitle": "Semester membership — CHF 15",
     "semesterBody": "Access to <strong>all YUnited events</strong> for the semester: brunches, barbecues, karaoke, casino nights, career events and more.",
     "freeTitle": "Free tier",
     "freeBody": "Not sure yet? The free option on uniclubs gives you access to the <strong>opening event</strong> so you can meet us first.",
