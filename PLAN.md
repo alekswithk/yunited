@@ -14,6 +14,43 @@ when a step ships, tick it here in the same PR.
   [`worker/README.md`](worker/README.md). This file is the *tracker/index*; those
   are the *reference*.
 
+_2026-08-23 (documentation sync — no code changed): brought `PLAN.md`,
+`README.md`, `CLAUDE.md`, `docs/HANDOVER.md` and `worker/README.md` back in line
+with `main` at `1e73454`, two PRs past where this pass started (`d19a236`):
+**#63** dropped the semester fee to CHF 15 — the change this note originally
+flagged as still-uncommitted landed under its own PR while this sync was in
+flight — and **#64** fixed the mobile events grid and added a real empty state.
+**All four verification commands green:** see the line below for the numbers
+from this pass. Six things the `d19a236` half of this pass established, still
+true. **(1) §3's two out-of-band steps are both DONE** — `npx wrangler secret
+list` returns `GITHUB_TOKEN`, `CF_API_TOKEN` **and `DEEPL_API_KEY`**, and the
+`ADMIN_SETTINGS` KV namespace exists (`ad0d3dcd…`) and is bound in
+`wrangler.jsonc`. Translation therefore works in production and the board can
+replace the key themselves; the item is ticked below. **(2) The store is
+empty** (`wrangler kv key list` → `[]`), which is correct — with no board-set
+key the secret answers, and the first paste into the Translations tab creates
+`deepl.apiKey`. **(3) The deployed Worker was current as of #62**: the newest
+deployment then was 2026-08-21 21:50 UTC, minutes after #62 merged; not
+re-checked against #63/#64. **(4) `npm audit` drifted again, 6 → 7** (4 high, 3
+moderate; `nanoid` is new) — see §5, where the finding is still the silence
+rather than the CVEs. **(5) The empty-calendar warning is still firing**,
+correctly: the newest dated event is 2026-05-13 and Upcoming is one TBA card —
+though `/events` and `/` no longer show that as a bare warning; #64's
+`EmptyUpcoming.astro` gives it a real lead-slot card. **(6) Six merged PRs had
+never been logged in §2** — #54, #59+#61, #60, #62, #63 and #64 — now added.
+
+**What is actually open, in one place.** §3 has **one** live item and it is a
+board decision: the 26/27 calendar. §4's next unchecked, non-🧑 item — i.e. the
+one the weekly agent picks up — is the **"add to calendar" (.ics) link**,
+followed by the skip-to-content link, the events RSS feed and the Formspree
+`preconnect`. §5 has the two "assertions nobody delivers to a person" items: the
+`npm audit` drift and a red CI run on `main` telling nobody. Two loose ends sit
+inside otherwise-closed items: **`/admin` has still never been looked at on a
+phone** (the 33rem breakpoint), and **#64's four `EmptyUpcoming` i18n keys have
+no hr/bs/sr/de translation yet** (no `ANTHROPIC_API_KEY`/`DEEPL_API_KEY` in that
+session) — they fall back to English until a maintainer runs `npm run
+translate`._
+
 _2026-08-17 (weekly agent): picked §4's **"Translation runs on DeepL's free
 tier"** item — the first unchecked, non-human-led item in order (the partners
 item above it is `[~]`, not `[ ]`, and everything else in §4 was already done
@@ -96,20 +133,18 @@ the CI step: two data points eight days apart, neither noticed by any command
 anyone runs. `fast-uri`, `postcss` and `js-yaml` have non-breaking fixes; ignore
 npm's suggestion to "fix" the wrangler chain by downgrading to 4.35.0. See §5._
 
-_**The live items are not code.** (1) **Automatic translation is switched off.**
-The workflow that localizes each `/admin` save requires `ANTHROPIC_API_KEY`,
-which is not set and — **as of 2026-08-06 — will not be**: the board does not
-want the site to depend on a metered API account belonging to whoever happens to
-be president. The replacement is DeepL's free tier; the procedure is §4's
-**"Translation runs on DeepL's free tier"** item, and it is now the priority
-translation task. Until it lands, a new event saves and publishes in its
-authored language with its translations unfilled, and the "Translate content"
-run fails on every content push (it last failed on 2026-07-30). (2) The 26/27
-calendar is empty — every dated event is in the past,
-so Upcoming shows one TBA card; the build warns about it and is warning right
-now. (3) ~~The `GITHUB_TOKEN` expires end of August 2026~~ — **replaced
-2026-08-06 with a non-expiring fine-grained PAT; no longer a deadline.** All in
-§3. New ideas are parked in §4.5.)_
+_**The live items are not code — and as of 2026-08-23 there is only one left.**
+(1) ~~Automatic translation is switched off~~ — **fixed.** It no longer runs in
+GitHub Actions on a metered Anthropic key; an event is translated by the Worker
+**inside the same commit as the board's save**, on DeepL's free tier, with a
+nightly cron sweep behind it and a Translations tab the board can paste a
+replacement key into. Both out-of-band steps are done and verified in production
+(§3). (2) **The 26/27 calendar is still empty** — the newest dated event is
+2026-05-13, so Upcoming shows one TBA card; the build warns about it and is
+warning right now. **This is the one live item**, and it is a board decision, not
+work anyone can do here. (3) ~~The `GITHUB_TOKEN` expires end of August 2026~~ —
+**replaced 2026-08-06 with a non-expiring fine-grained PAT; no longer a
+deadline.** All in §3. New ideas are parked in §4.5._
 
 ---
 
@@ -117,7 +152,7 @@ now. (3) ~~The `GITHUB_TOKEN` expires end of August 2026~~ — **replaced
 
 ```
 content/                 CONTENT LAYER — one JSON file per entry (board's edit surface)
-  events/<id>.json         9 events; filename = the event id
+  events/<id>.json         9 events (8 dated, 1 TBA); filename = the event id
   members/<role>.json      6 board members; each has an `order` (1 = lead card)
   partners/<name>.json     0 partners — empty on purpose; the logo strip on
                            /partners appears as soon as there is one
@@ -153,8 +188,10 @@ worker/                  SERVER LAYER — the only code that runs at request tim
                            badges, and translateEntry() — which never throws, because a
                            translation failure must never fail a board member's save
   lib.js                   slugify, coerceField, buildEntry, image paths
-  {collections,lib,board-access}.test.js  `npm test` — form↔schema parity, carry,
-                           coercion, lockout rails, non-destructive group writes
+  {collections,lib,board-access,translate}.test.js  `npm test` — form↔schema parity,
+                           carry, coercion, lockout rails, non-destructive group writes,
+                           and translate-on-save (never throws, Cyrillic rejection,
+                           timeout, hand-edit merge). github.js is the one untested file
   README.md                maintainer reference — read before touching worker/
 public/                    copied verbatim into dist/
   admin/                   the admin panel: index.html, admin.css, admin.js
@@ -182,8 +219,9 @@ src/lib/translate/         ISOMORPHIC — imported by BOTH the CLIs and the Work
   flat.js                    flat <-> nested dictionary conversion, in one place
   {validate,deepl,content}.test.js  `npm test`; cases are strings that actually shipped,
                              plus a golden test that every committed sourceHash still matches
-.github/workflows/         ci.yml (test+build+check+check:dist on PRs). translate-content.yml
-                           is GONE — /admin translates on save; see §4
+.github/workflows/         ci.yml — test+build+check+check:dist, on PRs to main AND
+                           pushes to main. translate-content.yml is GONE — /admin
+                           translates on save; see #59/#61 in §2
 astro.config.mjs           site, trailingSlash, build.format:'file', sitemap integration,
                            and the two settings that keep the CSP inline-free
                            (inlineStylesheets:'never', vite assetsInlineLimit:0)
@@ -227,13 +265,16 @@ extensionless; events are never marked "past" by hand; shared chrome lives once 
 | #47–#48 | **The folk-motif divider slides as it crosses the viewport** — transform-driven and tied to scroll position, clipped with `overflow: clip` so the strip actually travels. The tricolour band that briefly sat under the header is gone: three solid vertical bands of red/azure/gold read as the Romanian flag, the wrong association for this club |
 | #49 | **Admin lists are sortable**, and the motif's travel softened to a third of its original distance |
 | — | **Translation pipeline rebuilt; Bosnian split from Croatian** — the board judged the bs/hr/sr copy inadequate, and an audit of all 178 dictionary keys plus all 9 event files found the defects were systematic. Verified samples: the buddy system was described as a **`sustav prijateljskog parenja`** — a *mating* system — on the About page; "Outgoing HSG students" read `Budući studenti` (prospective) in bcs and `Brucoši` (freshmen) in sr, directly above the line "YUnited runs no formal programme for students abroad"; both locales shipped `semestar uSt. Gallenu` with the preposition fused to the city; `contact.formSending`, a submit button's in-flight label, read `Pošalji…` — the imperative "Send"; and Déja Vu Bar became `bar Deža Vju` on a card whose `location` field still said `Déja Vu Bar`. **The cause was architectural, not a bad vendor:** DeepL received each string alone, with no context and no glossary, so a fragment could not agree with the preposition before it and "Sending…" was indistinguishable from a command. Now one request per language carries the whole dictionary, against a pinned glossary (`scripts/lib/glossary.mjs`), and **nothing is written until `scripts/lib/validate.mjs` passes** — key sets, placeholders, tag structure and hrefs, protected names, forbidden renderings, script, regional variant, glued tokens, split-sentence joins; unit-tested and mutation-checked in `npm test`. Also: `bcs.json` served **both** bs and hr while being overwhelmingly Croatian with stray Bosnian forms (the same university appeared under two names in one file), so it is now a real `hr.json` + `bs.json`; the address form is unified on informal `ti`, matching the German that was already informal; and `check:dist` asserts no Cyrillic on Serbian pages. `deepl.mjs` deleted. **All 178 UI keys x 3 languages and all 9 events were re-translated**, and all of it passes the gate at 0 errors / 0 warnings; 60 of the 178 keys now genuinely differ between `bs` and `hr`, so the split earns its keep rather than shipping two files that pretend to differ |
-
 | — | **The board manages its own `/admin` allow-list** — a fourth tab reads and rewrites the Cloudflare Access rule group that decides who can open the panel, so adding a board member no longer needs the Zero Trust dashboard and therefore no longer needs the one person who has it. `worker/board-access.js` is the client; **it authenticates nobody** — Access still does that, and an added address still has to pass Access's own login. Two lockout rails are enforced server-side (`guardChange`): you cannot remove yourself, and you cannot empty the list. The Cloudflare API has no PATCH, no ETag and a `PUT` that replaces the whole group, so every write round-trips `name`/`exclude`/`require` and any non-email include rule (a unit test guards exactly that), and the panel sends the list it was showing so a concurrent edit is refused with a 409 instead of silently overwritten. The Worker logs the actor's verified email on every change — Cloudflare's own logs only ever name the shared API token. **Inert until the human steps in §3 are done** |
-
 | — | **TOC rail moved to the right gutter, sized from the gutter, and made compositing-independent** — the rail had been placed with `left: max(--space-4, (100vw - --max-width)/2 - 140px)`, which clamps to 24px the moment the gutter runs out; that is exactly where the `.container` text edge sits, so **between the 1100px breakpoint and ~1480px the 150px rail was drawn on top of the leftmost content** at `z-index: 20`. Position and width are now both derived from `--toc-gutter`, the whitespace beside the content column, so the rail's inner edge sits a constant `--toc-gap` from the text at every width and its outer edge never reaches the screen edge; it shrinks from 150px to a 6.5rem floor (sized off the longest label) instead of holding one width, and the breakpoint moves to **1400px**, below which the gutter genuinely cannot hold a labelled rail. The gutter is a percentage of `<main>` rather than `100vw`, which excludes a classic scrollbar — the old formula was ~7.5px off on Windows/Linux. Separately, `.page-toc ol` was `position: sticky` with `transform: translateY(-50%)`, so the box sticking was resolved against and the box painted disagreed by half a rail; **sticky resolves on the compositor thread when the layer is accelerated and on the main thread when it is not, so the rail's detach at the bottom of `<main>` differed with hardware acceleration on vs. off**. The transform is gone — the sticky box is now exactly `100vh` with the list flex-centred in it, landing on the same optical centre (`50vh + 3rem`) with the sticky box and the painted box identical. Do not reintroduce `will-change`/`translate3d`/`backface-visibility` here; each force-promotes a layer and brings the divergence back. Also: the full-height column no longer eats clicks (`pointer-events`), and the rail line is mirrored to the outer edge with labels right-aligned |
-
 | — | **The TOC rail was rendered in a browser for the first time, and then put back the way it was** *(follow-up to the row above, which shipped unrendered)*. #55's claims were code comments no command in this repo can check, and one was false: the comments sized the rail around a longest label of `"Buddy-System"` (12ch) when the real longest is `toc.buddy` in hr/bs/sr, **`"Sustav/Sistem prijatelja"` at 17ch**, on the very page that lists it. Measured in Chrome: Space Mono advances **612/1000 em**, so at `0.66rem` with `0.04em` tracking a character is 6.885px and that label is **117.0px**. But the more important finding was behavioural, and it is why the gutter-derived rail was reverted: #55 replaced the short sticky box (`top: calc(50vh + 3rem)` + `translateY(-50%)`, the box being the height of the rail) with a **full `100vh` box centred by flexbox**. Those look identical while the rail is held, and they land on the same optical centre — but a 100vh box **stops sticking a whole viewport earlier**, so for the last stretch of the page the rail rode up and hung clipped under the header showing three of its four entries. So the rail is now **the pre-#55 rail, mirrored to the right**: fixed 150px, the same `max(--space-4, (100vw - --max-width)/2 - 140px)` offset, the same short sticky box, rule on the outer edge with labels right-aligned. Confirmed in Chrome at the bottom of `/hr/about`: rail box back to 119px, held at a constant `top: 439`, easing up 160px at the end with **all four entries visible and clear of the footer**. The one number that had to change is the **breakpoint, 1100px → 1480px**: `max(--space-4, …)` clamps to 24px once the margin runs out, which is exactly where the `.container` text edge sits, so below 1480px the old rail was drawn over the content — on the left before, and it would do the same on the right. Above 1480px this is pixel-identical to the rail that was there; below it, the old one was broken. `--toc-width-max`/`--toc-gap` are gone with the formula that used them. **New rule in `CLAUDE.md`:** layout changes need a browser pass at the widths their breakpoints name, in a long-label locale, and a claim in a code comment is not verification |
 | — | **TOC: the highlight follows the reading position, and the rail is the same length on every page** — two faults, both seen in Chrome on `/hr/about` at 2548×1175. (1) The scroll spy was an `IntersectionObserver` on a 10%-tall band pinned 20% down the viewport, and the band **could not be reached at all by a section too close to the end of the document**: the last entry is only reachable while `document height − last section top > (1 − line) × viewport`, so *Vrijednosti* went unlit at every viewport taller than ~1154px and *Priča* stayed highlighted over a screen full of Values — the same on `/`, where *Tko smo mi* needed 2364px of scroll on a page with 2294px of it. It also fired late: 20% down is high enough that the full-width dark `#story` band had filled most of the screen before its entry lit. Now one rAF-throttled scroll pass (merged with the backdrop sync that already ran there, since both need the same rects) picks the last section whose top has crossed a reading line at **0.4 × viewport**, with `atBottom` closing the reachability case outright. Measured: the buddy→story switch lands on the predicted pixel (`buddy` at 1250, `story` at 1262, predicted 1256), and the bottom of both pages now highlights its own last entry. (2) The rail was as tall as its entries, and the two pages don't have the same number of them — four on `/about`, three on `/` — so the centred rails sat 15px out from each other at both ends. `min-height: 120px` on the `<ol>` with the entries sharing it: both pages measure **top 576 / bottom 696** held, **551 / 671** at the foot, and the rail still clears the footer (671 ≤ 747). `min-height`, not `height`, so a label that ever wraps grows the rail instead of overflowing it; nothing wraps today |
+| #54 | **`schema.org/Event` JSON-LD for dated upcoming events** — `events.astro` emits one `Event` block per dated upcoming event (`name`, `startDate`, `description`, `url`, and `location` when set), localized exactly the way its `EventCard` renders, following `index.astro`'s existing `Organization` block. The shaping is a pure function, `eventJsonLd()` in `src/lib/events.js`, with 5 `npm test` cases (null for TBA, date+time vs date-only `startDate`, location omitted when unset, a malformed time treated as no time). No new content field, no new dependency. Data-block `<script type="application/ld+json">`, exempt from `script-src` per the CSP convention. **Nothing renders on `main` today** — the live calendar has no dated upcoming event, which is the correct TBA-skip behaviour, so it was verified against the built HTML with a temporary dated fixture |
+| #59, #61 | **Translation migrated off Anthropic and moved into the Worker** — the succession fix, in two parts. #59 swapped the engine to **DeepL's free tier**: one request per string with the `context` parameter carrying whatever disambiguates it (a hand-written `NOTES` entry, or a split `Pre`/`Link`/`Post` sentence joined back together), because `context` is per-request and cannot be indexed per text. #61 then moved the whole mechanism out of GitHub Actions and into `/admin`, because the engine was only half the problem: the machinery still lived behind a repo secret in a workflow whose failures surfaced only in GitHub's Actions tab, a page no board member has an account for — which is why it failed unnoticed from 2026-07-30. **Now:** an event is translated **inside the same commit as the board's save** (one rebuild, not two); each event's row badges its state; every event has a **Translations** page whose four languages are editable, and a hand correction survives until the English text changes; there is a **Translate now** button; a **Translations tab** reports key health and live usage and lets any board member paste a replacement key; and a **nightly cron sweep** (`17 4 * * *`) fills whatever a save missed, fixing up to five entries in one `[auto-translate]` commit. `.github/workflows/translate-content.yml` is **deleted**; the CLIs stay for a maintainer's bulk work. **The rules live in one place** — `src/lib/translate/content.js`, imported by both the Worker and the CLIs, because two copies of "does this need translating?" do not fail loudly, they re-translate over the board's corrections. That directory is **isomorphic** (Node *and* workerd), which is a hard constraint: no `node:`, no `fs`, no `process`. A latent bug went with it — an entry authored in anything but English could never be up to date, harmless at a yearly CLI run and a nightly rewrite of hand corrections once a cron exists |
+| #60 | **Design pass: paper studio** — the editorial/broadsheet direction kept, the volume turned down. The 2px ink border became two hairline weights; the hard offset shadow, previously on every button, card hover, language menu and form focus, now belongs to `.btn-gold` alone (ink-on-paper and paper-on-ink variants, because an ink shadow on an ink ground is invisible); gold became the only interactive colour with red and azure demoted to punctuation; `h3` went 1.2rem/600 → 1.5rem/700 to fill the hole in the type scale where card titles sit; section padding became three values chosen by structure rather than one; and a photo-less card became paper-soft with the kilim strip instead of a saturated block. Four of six animations were retired, which also deleted the `IntersectionObserver` from `BaseLayout.astro`, the `scripting: enabled` gate and the `.reveal` class from eighteen elements. Chosen from rendered samples rather than described |
+| #62 | **One orchestrated load, and cards that land** — #60 cut the site to two moments and left everything below the hero inert; this is the third, chosen from three live specimens scrolling in lockstep (Composed, with Full press's card entrance). The load is now a **sequence rather than a metronome**: the header rule draws across, the hero headline is uncovered by a curtain retracting downward, the standfirst and buttons follow, the motif strip draws in last — same total duration as the four-element 14px rise it replaces, but the beats differ from each other. On scroll, section heads rise and cards land with 1.5° of rotation coming out while their photographs settle out of a 1.07 over-scale across roughly twice the card's range, so the photo is still resolving after the card has come to rest. **This is not the `.reveal` that was deleted:** `animation-timeline: view()`, the same mechanism as the motif drift — no JavaScript, no observer, no gate, no class on any component — and the `@supports` guard doubles as the fallback, so content can never be stranded at `opacity: 0`. Four things are load-bearing and easy to undo by accident: ranges are `cover` not `entry`; the animations touch the individual `translate`/`rotate`/`scale` properties, never `transform` (an animation holds its final value above any normal declaration, so `to { transform: none }` would have silently killed `.card:hover`'s lift site-wide); `.card`/`.card-image` are `overflow: clip`, not `hidden` (`hidden` makes a box a scroll container, which re-parents the photo's `view()` timeline and freezes it at one frame — the same failure the motif divider had); and longhands only, since `check:dist` fails on a folded `animation:` shorthand (#45). The **1.5° rotation is the number to watch** — a larger one is what made this grid read as unfinished before. Now summarized as a convention in `CLAUDE.md` |
+| #63 | **Semester membership fee lowered to CHF 15** — updated in all five dictionaries (`join.semesterTitle`, the card heading, and `meta.join.description`, the page title/social preview, which was the other place the amount was written out) |
+| #64 | **Fixed the mobile events grid, closed its row-gaps, gave it a real empty state** — three faults on `/events`, found while polishing a fourth. **The bug:** the 900px media query meant to collapse the magazine grid's horizontal lead/4-wide cards back to a stacked phone layout had never actually applied, since the grid shipped — the desktop rule is keyed off `:nth-child(...)`, three classes of specificity (four with `.card-image`), and the collapse's bare `.magazine-grid > .card` (two classes) lost outright; only `grid-column`, carrying `!important`, took effect, leaving a 137px sliver of photo beside a full-height text column on every phone. Fixed by naming the exact selectors being undone so specificity ties instead of losing. **The gaps:** the 6/4+2/3+3 row cycle only closes its own row at 1, 3, 5 and 6 events; at 2 or 4 (and every +5 after) the last card sat alone beside unused columns — a `:last-child` rule now lets it run the full row. **The headings:** `text-wrap: balance` on `h1`/`h2`/`h3`. **The empty state:** the grey "no upcoming events" note read like an error; replaced with `EmptyUpcoming.astro`, a lead-slot card shared by the homepage teaser and the events page, carrying the kilim strip and turning both mentions into real links. Its four new i18n keys (`emptyUpcomingEyebrow`/`Heading`/`Body`/`Instagram`/`Uniclubs`) have no hr/bs/sr/de translation yet and fall back to English — `npm run translate` fills them in |
 
 Earlier foundation (pre-#12): Astro migration + build-time image optimization.
 
@@ -253,22 +294,17 @@ Manual/account steps (code is in place).
       in §4 — **see "Translation runs on DeepL's free tier, not a paid Anthropic
       key"**, which is the actual procedure.
 
-      **What this means until that lands:** the "Translate content" workflow
-      fails on every push to `content/**` (last failure 2026-07-30, run
-      `30544840928`), so a `/admin` save publishes in its authored language on
-      all five locales with the other four unfilled. The pages still render
-      completely — `localizeEntry()` falls back field by field to the source
-      text — so this degrades the site rather than breaking it. If a specific
-      event must be localized before the migration is done, the manual escape
-      hatch still works with any key, from a laptop, without CI:
+      **Resolved — the whole degraded state described here is gone (2026-08-23).**
+      It read: the "Translate content" workflow fails on every push to
+      `content/**` (last failure 2026-07-30, run `30544840928`), so a `/admin`
+      save publishes in its authored language with the other four locales
+      unfilled. That workflow **no longer exists** — `/admin` translates each
+      event inside the same commit as the save, on DeepL, with a nightly cron
+      sweep behind it, and `DEEPL_API_KEY` is set as a Worker secret. See #59/#61
+      in §2 and the ticked out-of-band item below.
 
-      ```bash
-      ANTHROPIC_API_KEY=… npm run translate:content   # one-off, then commit
-      ```
-
-      `DEEPL_API_KEY` **stays** (repo secret + local `.env`) — it is the target
-      of the migration, not a leftover. The earlier instruction to delete it is
-      withdrawn.
+      `DEEPL_API_KEY` **stays** (Worker secret + local `.env` for the CLIs). The
+      earlier instruction to delete it is withdrawn.
 
       *Unchanged either way: the site build never calls a translation API and
       stays hermetic; no translation secret belongs in the Cloudflare build
@@ -278,27 +314,34 @@ Manual/account steps (code is in place).
       Sveltia and its auth worker were removed. Access + one Worker secret replaced them.
 - [x] **Google Search Console**: sitemap switched to `https://yunited.ch/sitemap-index.xml`.
 
-- [ ] **Two out-of-band steps before translation works in production** — 🧑
-      maintainer, both one-off, neither blocking a deploy.
-      1. `npx wrangler secret put DEEPL_API_KEY` — the key already in the
-         maintainer's local `.env` is a free-tier key and will do. Until it is
-         set, events save untranslated and `/admin` says so plainly; nothing
-         breaks.
-      2. `npx wrangler kv namespace create ADMIN_SETTINGS` (plus `--preview`),
-         then add the `SETTINGS` binding to `wrangler.jsonc`. This is what lets
-         the **board** replace the key themselves from the Translations tab
-         instead of needing a maintainer — i.e. it is the actual succession fix.
-         Without it the tab still reports status; it just cannot offer a box to
-         paste into. Steps and the exact JSON are in
-         [`worker/README.md`](worker/README.md).
+- [x] **Both out-of-band translation steps are done — verified 2026-08-23.**
+      Translation works in production, and the board can replace the key without
+      a maintainer.
+      1. **`DEEPL_API_KEY` is set.** `npx wrangler secret list` returns
+         `CF_API_TOKEN`, `DEEPL_API_KEY` and `GITHUB_TOKEN` — all three secrets
+         this project has.
+      2. **The settings store exists and is bound.** `wrangler kv namespace list`
+         shows `ADMIN_SETTINGS` (`ad0d3dcdf58b44928b30362db57101a3`), and
+         `wrangler.jsonc` binds it as `ADMIN_SETTINGS` with `remote: true` — the
+         binding name the Worker actually reads (fixed in `0fc6e43`; the earlier
+         text on this line said `SETTINGS`, which would have silently done
+         nothing). So the Translations tab offers a box to paste into, which is
+         the actual succession fix.
 
-      Also worth doing while there: issue the DeepL key from **yunited@shsg.ch**
-      rather than a personal address, so a handover is a password change. See
-      [`docs/HANDOVER.md`](docs/HANDOVER.md).
+      **The store is currently empty** (`wrangler kv key list` → `[]`), which is
+      the expected default: with no board-set key the `DEEPL_API_KEY` secret
+      answers, and the first paste into the Translations tab creates
+      `deepl.apiKey`. The deployed Worker is current — newest deployment
+      2026-08-21 21:50 UTC, minutes after #62 merged.
 
-- [ ] **Add the 26/27 events when the dates are set** — 🧑 board. As of 2026-07-28
-      every dated event is in the past (the newest is 2026-05-13) and "Upcoming"
-      shows only the TBA *Meet & Greet* card, so the site reads as dormant going
+      **Still worth doing, and it is now the only open thread here:** issue the
+      DeepL key from **yunited@shsg.ch** rather than a personal address, so a
+      handover is a password change. Same for `GITHUB_TOKEN` and `CF_API_TOKEN`.
+      See [`docs/HANDOVER.md`](docs/HANDOVER.md).
+
+- [ ] **Add the 26/27 events when the dates are set** — 🧑 board. **Still open,
+      re-verified 2026-08-23:** all 8 dated events are in the past (the newest is
+      2026-05-13) and "Upcoming" shows only the TBA *Meet & Greet* card, so the site reads as dormant going
       into the new academic year. Nothing is broken — this is just an empty
       calendar, and the board adds events in `/admin` when the term is planned. The
       build now **warns** whenever no upcoming event has a date, so this state
@@ -477,13 +520,14 @@ they carry design decisions that need a person. The agent skips them.
       system (`src/i18n/`), the language switcher, gated publishing (`complete:false`
       → noindex + out of sitemap/switcher), `hreflang` in each page's `<head>`, and
       **all page body copy authored in `en.json` and rendered via `t()`**. An offline
-      DeepL helper (`npm run translate`, `DEEPL_API_KEY`) tops up `de`/`bcs`/`sr`; all
-      four dictionaries carry all **177 keys**, including the brand string `YUnited`
-      in the same 34 keys in every one. The card chrome (CTAs, alt text, date
+      DeepL helper (`npm run translate`, `DEEPL_API_KEY`) tops up `hr`/`bs`/`sr`; all
+      five dictionaries carry all **178 keys** (verified 2026-08-23), including the
+      brand string `YUnited` in the same 34 keys in every one. The card chrome (CTAs, alt text, date
       formatting, TBA placeholders) is localized too, and the board's **event
       content** — `content/events/` titles and descriptions — carries its own `i18n`
-      block, filled by `npm run translate:content` and kept current automatically by
-      `.github/workflows/translate-content.yml` on every `/admin` save. **Board members
+      block, filled by the Worker inside the same commit as every `/admin` save, with a
+      nightly cron sweep behind it (see #59/#61 in §2); `npm run translate:content`
+      is the CLI equivalent, for a maintainer's bulk work. **Board members
       are deliberately excluded**: a name, role and bio read the same in every
       language.
   - [x] **Serbian is Latin, and stays Latin.** `sr.json` used to be mixed — 34 Latin
@@ -502,8 +546,9 @@ they carry design decisions that need a person. The agent skips them.
         page in someone's own language beats no page at all. Known damage is fixed
         (HSG had been placed in *Edinburgh* and *New York*, the board inbox called a
         "forum", and "Meet & Greet" rendered as *"Srećem i pozdravljam"* — "I meet and
-        I greet"). Hand corrections to an event's `i18n` block survive: the workflow
-        re-translates only when `sourceHash` changes.
+        I greet"). Hand corrections to an event's `i18n` block survive: it is
+        re-translated only when `sourceHash` changes — and since #61 the board
+        makes those corrections in `/admin` rather than in the JSON.
   - [x] **The copy is good as it stands, and further corrections are made by
         hand** (board judgement, 2026-08-07). The post-#50 hr/bs/sr dictionaries
         and all nine events' `i18n` blocks have been read and are considered
@@ -616,10 +661,13 @@ they carry design decisions that need a person. The agent skips them.
 
       **Verified:** hash parity checked inside workerd against all nine committed
       events, not just under Node; the panel checked in a browser at desktop
-      width; `npm test` 129/129. **Not verified:** the panel at the 33rem
+      width; `npm test` 129/129 then, **134/134** as of 2026-08-23. **The two
+      out-of-band steps are now done** — `DEEPL_API_KEY` is a live Worker secret
+      and the `ADMIN_SETTINGS` store exists and is bound, both verified
+      2026-08-23 (§3). **Still not verified:** the panel at the 33rem
       breakpoint — screenshots and window resizing both failed through the
       browser extension, so it wants a look on a phone before anyone calls it
-      finished. **Two out-of-band steps remain — see §3.**
+      finished. That is the one loose end left on this item.
 
       *The original entry follows, kept for its reasoning.* **Board
       decision, 2026-08-06.** The pipeline must not depend on a
@@ -871,13 +919,17 @@ they carry design decisions that need a person. The agent skips them.
       Then a handover is a password change instead of a re-issue, and nothing on
       this page quietly expires when a president graduates.
 
-      *Note for the weekly agent (§7): this item touches
-      `.github/workflows/**` and dependency files, so it may be implemented but
-      **never auto-merged** — open the PR and leave it for a human. Stage 0 must
-      be answered before any code is written. **Done, 2026-08-17: stages 1–5
-      implemented and verified (see above); stage 6 needs a human with a real
-      `DEEPL_API_KEY` and the item stays `[~]` until it runs.** Left the PR
-      open per this note, not because CI failed.*
+      *Note for the weekly agent (§7): **this item is closed — do not pick it
+      up.** It is `[x]`, not `[~]`; the stray `[~]` this note used to carry was
+      written on 2026-08-17 when stage 6 was still outstanding, and #59/#61
+      landed afterwards. Stages 1–5 shipped in #59; #61 moved the whole thing
+      into the Worker, where a real DeepL call now happens on every board save
+      with a live key (verified in production 2026-08-23, §3). Stage 6's
+      `--force` comparison run against the committed hr/bs/sr was **deliberately
+      never merged** and stays unnecessary: the board judged the committed copy
+      good and corrects it by hand, so a lateral rewrite buys nothing. Historical
+      note kept: this item touched `.github/workflows/**` and dependency files,
+      so it was never eligible for auto-merge.*
 
 - [ ] **Brand the Cloudflare Access login screen** — 🧑 human-led *(small,
       dashboard-only).* Right now the first thing a board member sees when they
@@ -1013,28 +1065,33 @@ implement *from* it.
 ## 5. Known cleanup / tech debt 🧹
 
 - [ ] **`npm audit` regressed, and nothing in CI would have said so**
-      (found 2026-08-06; **drifted again 2026-08-07**) *(small).* Now **6
-      vulnerabilities — 3 high, 3 moderate**, one week after #40 left the tree at
-      0. Every one is dev tooling that never reaches a visitor or the deployed
-      Worker (`undici`/`miniflare` under `wrangler`, so `npm run admin:dev` only;
-      `postcss` under `astro`/`vite`, at build time over CSS authored in this
-      repo; `fast-uri` under `@astrojs/check`, so `npm run check` only; and
-      **`js-yaml`**, `GHSA-5p4m-2wfm-xmqj`, new on 2026-08-07), which is why this
-      sits in §5 rather than §3.
+      (found 2026-08-06; drifted 2026-08-07, **and again by 2026-08-23**)
+      *(small).* Now **7 vulnerabilities — 4 high, 3 moderate**, against 0 when
+      #40 landed on 2026-07-28. Every one is dev tooling that never reaches a
+      visitor or the deployed Worker, which is why this sits in §5 rather than
+      §3:
 
-      **It moved 5 → 6 in a single day**, which is the strongest available
-      argument for the CI step below: the count changed twice in eight days and
-      no command anyone runs said so either time. `js-yaml` has a non-breaking
-      fix.
+      | package | reaches | severity |
+      |---|---|---|
+      | `undici` → `miniflare` → `wrangler` | `npm run admin:dev` only | high |
+      | `fast-uri` → `@astrojs/check` | `npm run check` only | high |
+      | `js-yaml` (`GHSA-5p4m-2wfm-xmqj`) | build tooling | high |
+      | `nanoid` (`GHSA-2v37-7h3g-55p8`) — **new since 2026-08-07** | build tooling | high |
+      | `postcss` → `astro`/`vite` | build time, over CSS authored in this repo | moderate |
+
+      **The count has now moved four times — 0 → 5 → 6 → 7 — and no command
+      anyone runs said so any of those times.** That is the strongest available
+      argument for the CI step below; it is not a hypothetical any more. npm
+      reports every one of these as fixable by a plain `npm audit fix`.
 
       **The finding is the silence, not the CVEs.** #40 was the PR that
       established dev-dependency CVEs count here — `sharp` processes board
-      uploads at build time — and yet `ci.yml` has no `npm audit` step, so a
-      week's drift was invisible until someone ran it by hand. Fix: `npm update
-      astro wrangler` (7.1.4 → 7.1.6, 4.114.0 → 4.118.0) and `npm audit fix` for
-      the non-breaking `fast-uri`/`postcss` fixes, then add a **non-blocking**
-      `npm audit --audit-level=high` step to `ci.yml`, and record honestly what
-      remains rather than forcing it green.
+      uploads at build time — and yet `ci.yml` has no `npm audit` step, so the
+      drift was invisible until someone ran it by hand. Fix: `npm update astro
+      wrangler` (currently 7.1.4 / 4.114.0 in `package.json`) and `npm audit fix`
+      for the non-breaking fixes, then add a **non-blocking** `npm audit
+      --audit-level=high` step to `ci.yml`, and record honestly what remains
+      rather than forcing it green.
 
       **Do not run `npm audit fix --force`** — it "fixes" the wrangler chain by
       *downgrading* wrangler to 4.35.0, which is the advisory range confusing the

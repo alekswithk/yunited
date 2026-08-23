@@ -214,11 +214,12 @@ Nothing else. Not Actions, not Workflows, not organisation permissions. Contents
 is what reads `content/**` and commits back to it; Metadata is a mandatory
 dependency GitHub adds by itself.
 
-**Expiration is a real trade-off.** A fine-grained token maxes out at one year,
-and when it expires `/admin` stops saving until someone reissues it. GitHub emails
-the owner beforehand. Pick a date you will actually notice, and write it in
-`PLAN.md` — a board that cannot publish an event the week before it happens is a
-worse outcome than a slightly longer-lived token.
+**The token in production today is non-expiring** (set 2026-08-06). That was a
+deliberate change: it used to expire annually, and when it lapsed `/admin` would
+stop saving with nothing but a GitHub email to the token's owner to warn anyone —
+a board that cannot publish an event the week before it happens is the worse
+outcome. If you do issue an expiring one instead (a fine-grained token maxes out
+at one year), pick a date you will actually notice and write it in `PLAN.md`.
 
 Commits made with it are attributed to whoever owns the token, so the commit
 message records which board member actually made the change (`Saved from /admin by
@@ -368,9 +369,17 @@ curl "http://127.0.0.1:8792/__scheduled?cron=17+4+*+*+*"
 …read the `[translate]` lines, then **put `run_worker_first` back**. Shipping
 that entry would put a public, unauthenticated path on the Worker.
 
-#### Creating the settings store (once, out of band)
+#### The settings store — **already created; this is the recipe if it is ever lost**
 
-Until this exists, the panel shows the Translations tab read-only: the status is
+**Status, verified 2026-08-23:** the namespace exists
+(`ad0d3dcdf58b44928b30362db57101a3`, titled `ADMIN_SETTINGS`) and is bound in
+`wrangler.jsonc`, so the Translations tab is fully writable — the board can
+replace the key themselves. It currently holds **no keys**, which is the expected
+default: with nothing in it, the `DEEPL_API_KEY` secret answers. The first board
+member to paste a key in the panel creates `deepl.apiKey`. Nothing below needs
+doing unless the namespace is deleted or the Worker is set up on a new account.
+
+Without the store, the panel shows the Translations tab read-only: the status is
 reported, but there is no box to paste a new key into, because there would be
 nowhere to put it.
 
@@ -540,10 +549,13 @@ how it behaved before they were filled in. Don't rely on that.
   there are no per-event pages — and renaming would break the rule in
   `src/lib/content.js` that an entry carrying an explicit `id` must match its own
   filename.
-- **`i18n` is carried through untouched on every save.** It is written by
-  `scripts/translate-content.mjs`, never by hand and never by the panel. Dropping
-  it would strip every translation — see `carry` in `collections.js`, and the
-  test that guards it.
+- **`i18n` is never *dropped* by a save, and is written by exactly three
+  things:** `translateEntry()` on the board's save, the nightly cron sweep, and
+  the board typing into an entry's Translations page. (`scripts/translate-content.mjs`
+  is a fourth, for a maintainer's bulk work.) A Git-based editor writes back only
+  the fields it knows about, so the block has to be **carried** through every
+  content save — see `carry` in `collections.js`, and the test that guards it.
+  Dropping it strips every translation on the site.
 - **Deleting an entry deletes its photo too**, unless another entry uses the same
   file.
 - **A photo's folder comes from the event's date**: `src/images/events/26_27/…`

@@ -61,8 +61,10 @@ Bosnian and Serbian text.
 If it lapses, events still save; they simply appear in the language they were
 written in on every page, and `/admin`'s Translations tab says so. **The board
 can fix this themselves** by pasting a new free key into that tab — which is the
-one credential on this page that does not need a maintainer at all, provided the
-`ADMIN_SETTINGS` store exists (see `worker/README.md`).
+one credential on this page that does not need a maintainer at all. The
+`ADMIN_SETTINGS` store that makes it writable **exists and is bound**
+(`wrangler.jsonc`, created 2026-08-21), so nothing is outstanding here; see
+`worker/README.md` if it ever has to be recreated.
 
 ### Formspree — the contact form
 

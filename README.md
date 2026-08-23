@@ -69,7 +69,7 @@ npm run dev          # local preview at http://localhost:4321
 npm run build        # writes the finished static site to dist/
 npm run preview      # serve the built dist/ locally
 npm run check        # astro check — type/diagnostics, must be 0 errors
-npm test             # unit tests for src/lib, worker/ and scripts/lib
+npm test             # unit tests for src/lib and worker/
 npm run check:dist   # post-build assertions on dist/
 npm run admin:dev    # the admin panel + its Worker, on http://localhost:8787
 ```
@@ -124,7 +124,7 @@ The Zod schemas in `src/lib/schema.js` are authoritative. In brief:
 | `description` | ✓ | |
 | `image` | ✓ | path relative to `src/`, e.g. `images/events/25_26/x.webp` |
 | `rsvpUrl` | — | full URL to the uniclubs event page |
-| `i18n` | — | **auto-managed** — machine translations; don't hand-edit |
+| `i18n` | — | **auto-managed** — filled by the Worker as the entry is saved, and corrected by the board on the entry's Translations page in `/admin`. Don't hand-edit the file; a correction there survives until the English text changes |
 
 **Board member** (`content/members/<role>.json`): `role` (required), `name`
 (blank = "to be announced"), `bio`, `photo`, `order` (1 = the large lead card).
@@ -144,11 +144,22 @@ pipeline — drop in any size/format and it's resized to WebP with a 1×/2× src
 - `src/i18n/config.js` is the locale registry. `complete: false` gates a locale:
   its pages generate and are viewable at their real URLs but are `noindex`, kept
   out of the sitemap, and hidden from the language switcher until the flag flips.
-- Translations are filled **offline**, never during the build: `npm run translate`
-  (UI strings) and `npm run translate:content` (event content) call DeepL and
-  write the JSON, which you review and commit. Both need a `DEEPL_API_KEY` —
-  copy `.env.example` to `.env` and paste one in (the free tier is enough). The
-  build itself is hermetic: no network, no secrets.
+- **Two things get translated, on two different paths.** The **UI dictionaries**
+  are filled offline by a maintainer: `npm run translate` calls DeepL and writes
+  `hr`/`bs`/`sr` (German is excluded by default — it is hand-reviewed; pass `de`
+  to include it), and you review the report and commit the JSON. **Event content**
+  — a `title` and `description` only — is translated **in the Worker, inside the
+  same commit as the board's save**, with a nightly cron sweep catching anything a
+  save missed; `npm run translate:content` is the CLI equivalent, for a maintainer
+  doing bulk work rather than the board's path. Both CLIs need a `DEEPL_API_KEY` —
+  copy `.env.example` to `.env` and paste one in (the free tier is enough).
+  **The build itself never calls a translation API and stays hermetic**: no
+  network, no secrets, and a deploy can never depend on DeepL being reachable.
+- **The rules live in one place.** `src/lib/translate/content.js` — `TRANSLATABLE`,
+  `sourceHash`, `translationState`, `planFor`, `mergeTranslations`, `gate` — is
+  imported by both the Worker and the CLIs, so "does this need translating?" has
+  one answer. That directory is **isomorphic**: it runs in Node *and* in workerd,
+  so no `node:` imports, no `fs`, no `process`.
 - **Each string is translated in its own request, with DeepL's `context`
   parameter carrying whatever disambiguates it** — the sentence a split
   Pre/Link/Post fragment belongs to, or an event's other translated field. This
@@ -216,15 +227,18 @@ content/          one JSON file per event / board member / partner (the edit sur
 src/
   pages/          one .astro per page; [...locale] emits /events and /de/events
   layouts/        BaseLayout.astro — <head>, header, footer, once
-  components/     EventCard, MemberLead, MemberRow, Portrait, PageToc, Header, Footer
+  components/     EventCard, MemberLead, MemberRow, Portrait, PageToc, EmptyUpcoming, Header, Footer
   lib/            build-time logic: content loading, Zod schema, event/date helpers
+    translate/    ISOMORPHIC translation core — glossary, DeepL client, the gate,
+                  and the one answer to "does this need translating?";
+                  imported by BOTH the Worker and the scripts/ CLIs
   i18n/           locale registry + {en,de,hr,bs,sr}.json dictionaries
   styles/         global.css — design tokens at the top
   images/         source images (optimized at build)
 worker/           the /admin API — the only server-side code; holds the GitHub token
 public/           copied verbatim into dist/ — admin/ (the panel), _headers, assets/
-scripts/          mirror-media + the offline translation pipeline (glossary, gate)
-.github/          CI (test+build+check on PRs) + the auto-translate workflow
+scripts/          mirror-media + the offline translation CLIs (bulk work, not the board's path)
+.github/          CI — test + build + check + check:dist, on PRs and pushes to main
 astro.config.mjs, wrangler.jsonc   build & deploy config
 ```
 
