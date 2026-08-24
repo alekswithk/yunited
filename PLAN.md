@@ -14,6 +14,15 @@ when a step ships, tick it here in the same PR.
   [`worker/README.md`](worker/README.md). This file is the *tracker/index*; those
   are the *reference*.
 
+_2026-08-24 (weekly agent): picked §4's **"Add to calendar" (.ics) link**, the
+first unchecked, non-🧑, non-`[~]` item in order (everything above it, including
+the partners item, is `[x]` or `[~]`). See §4 for the full entry. All four
+verification commands green — `npm test` 143/143, `build` 41 pages, `check`
+0/0/0, `check:dist`. **The next unchecked, non-🧑 item is now the
+skip-to-content link**, followed by the events RSS feed and the Formspree
+`preconnect` — the sentence two paragraphs down naming the .ics link as "next"
+is superseded by this line._
+
 _2026-08-23 (documentation sync — no code changed): brought `PLAN.md`,
 `README.md`, `CLAUDE.md`, `docs/HANDOVER.md` and `worker/README.md` back in line
 with `main` at `1e73454`, two PRs past where this pass started (`d19a236`):
@@ -988,13 +997,38 @@ they carry design decisions that need a person. The agent skips them.
       event right now, so nothing renders on `main` until the board adds one —
       correct, matching the TBA-skip rule).
 
-- [ ] **"Add to calendar" (.ics) link on each dated event** *(small).* Every
-      upcoming event already has a title, date, time and location in
-      `content/events/*.json`; attending means retyping all of that into a
-      calendar app by hand. Generate a `data:text/calendar` URI at build time —
-      one small, pure, unit-testable function alongside `src/lib/events.js` — and
-      render it as a download link on `EventCard`. No backend, no new dependency,
-      no content-schema change.
+- [x] **"Add to calendar" (.ics) link on each dated, upcoming event** (2026-08-24).
+      `icsDataUri()` in `src/lib/events.js` shapes one RFC 5545 `VEVENT` — `UID`,
+      `DTSTAMP` (the one field that stays UTC), `SUMMARY`/`DESCRIPTION`/`LOCATION`
+      escaped per §3.3.11 — into a `data:text/calendar` URI, returning `null` for
+      a TBA event exactly like `eventJsonLd`. `DTSTART`/`DTEND` are **floating
+      local time** (no `Z`, no `TZID`): the schema records no timezone and every
+      event happens in St. Gallen, so a floating time is what every calendar app
+      reads as "the device's local time" — correct for every attendee. A timed
+      event defaults to a 2-hour block (no end time is stored); a date-only event
+      becomes a whole-day `VALUE=DATE` entry with the end date one day later
+      (RFC 5545's exclusive end), computed through `Date` wall-clock arithmetic so
+      a late-night start or a month/year boundary rolls over correctly. `EventCard`
+      renders it as a second link — `events.addToCalendar`, English-only for now
+      like #64's empty-state keys, falls back automatically — next to the RSVP
+      link, both now inside a `.card-actions` flex row so the "hold this at the
+      bottom of the card" `margin-top: auto` lives on the wrapper instead of
+      `.card-link` itself, which is what let two links share the same row without
+      duplicating the rule. Never offered on a **past** event (nothing left to
+      add), so it appears only where an upcoming event also has a date — none
+      does right now, same live-calendar gap as the JSON-LD item above.
+      **Verified:** `npm test` **143/143** (10 new cases: null for TBA, timed
+      start/end 2h apart in floating local time, a 23:30 start rolling to the
+      next calendar day, a date-only event's exclusive end date, a month
+      boundary, RFC 5545 escaping of `,`/`;`/`\`/newline, missing-id UID
+      fallback) · `build` (41 pages) · `check` 0/0/0 · `check:dist`. Rendering
+      verified against the built HTML with a temporary dated+RSVP fixture (not
+      committed, matching #54's precedent): both links land in one
+      `.card-actions`, the calendar link's `href` decodes to a well-formed
+      `VCALENDAR`, and `download="<id>.ics"` is set. Reverted the fixture and
+      rebuilt clean: 0 occurrences of "Add to calendar" in `dist/events.html`,
+      confirming nothing renders from real content until the board adds a dated
+      upcoming event.
 
 - [ ] **"Skip to main content" link** *(small).* `BaseLayout.astro` has a
       `<main>` landmark but nothing before it lets a keyboard or screen-reader
