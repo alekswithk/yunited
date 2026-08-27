@@ -1030,12 +1030,25 @@ they carry design decisions that need a person. The agent skips them.
       confirming nothing renders from real content until the board adds a dated
       upcoming event.
 
-- [ ] **"Skip to main content" link** *(small).* `BaseLayout.astro` has a
-      `<main>` landmark but nothing before it lets a keyboard or screen-reader
-      user bypass the header and nav — the WCAG 2.4.1 "bypass blocks" check. Add a
-      link, visually hidden until focused, as the first element inside `<body>`,
-      pointing at an `id` added to `<main>`; style it in `global.css` (no
-      `style="…"`, per the CSP rule in `CLAUDE.md`).
+- [x] **"Skip to main content" link** *(small, done 2026-08-27).* `BaseLayout.astro`
+      now renders `<a href="#main-content" class="skip-link">` as the first
+      element inside `<body>`, before `<Header>`, pointing at `id="main-content"`
+      added to `<main>`. Visually hidden by default (`transform:
+      translateY(-150%)`) and pinned above the sticky header (`z-index: 100` vs
+      the header's `50`) the instant it receives focus (`.skip-link:focus`) —
+      styled entirely in `global.css`, no `style="…"` attribute, per the CSP rule
+      in `CLAUDE.md`. New i18n key `skipLink` added to `en.json` only (source of
+      truth); other locales fall back to English until `npm run translate` fills
+      them, same pattern as #64's `EmptyUpcoming` keys.
+      **Verified:** `npm test` 143/143 · `build` (41 pages) · `check` 0/0/0 ·
+      `check:dist`; confirmed in the built HTML (`en` and `hr`) that the link and
+      `id="main-content"` render. Browser-checked programmatically (via
+      `getComputedStyle`/`.focus()`) rather than a real Tab keypress — the
+      browser-automation extension's synthetic key events did not advance
+      document focus in this environment, a tool limitation rather than a page
+      issue — confirming: default state translates the link fully off-screen,
+      focus moves it to `top:8px,left:8px` (clear of the header), and blur
+      reverses it via the CSS transition.
 
 - [ ] **RSS feed for events** (`/events.xml`) *(small).* Board and members have
       no way to notice a new or changed event short of checking `/events`.

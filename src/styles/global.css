@@ -237,6 +237,25 @@ a {
   outline-color: var(--color-gold);
 }
 
+/* WCAG 2.4.1 "bypass blocks": a keyboard or screen-reader user can jump
+   straight past the header/nav to <main>. Off-screen until it receives
+   focus, then pinned above the sticky header (z-index 50). */
+.skip-link {
+  position: fixed;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 100;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  border: 2px solid var(--color-ink);
+  transform: translateY(-150%);
+  transition: transform 0.15s ease;
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+
 h1, h2, h3 {
   font-family: var(--font-display);
   font-optical-sizing: auto;
