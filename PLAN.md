@@ -1032,6 +1032,43 @@ they carry design decisions that need a person. The agent skips them.
       confirming nothing renders from real content until the board adds a dated
       upcoming event.
 
+      **Follow-up, 2026-08-27 — the `data:` URI didn't work on iOS.** Reported
+      by the board: "add to calendar" worked on desktop but not on iPhone.
+      Cause: a `data:text/calendar` URI combined with `download="<id>.ics"` is
+      exactly the shape iOS Safari doesn't hand to Calendar — it forces a
+      raw-text download there instead of the native "Add to Calendar" sheet,
+      which only appears when Safari **navigates** to a URL whose response is
+      genuinely `text/calendar`. Desktop browsers are far more forgiving of a
+      `data:` URI, which is why nobody had seen the gap before. Fixed by
+      serving the `.ics` as an actual static file instead of embedding it in
+      the page: `icsDataUri()` is now `icsCalendar()`, returning the raw ICS
+      text (unchanged shaping logic — same RFC 5545 rules, same tests, just no
+      more `data:` wrapper); a new dynamic endpoint,
+      `src/pages/events/[id].ics.js`, prerenders one real file per dated event
+      at `/events/<id>.ics` at build time (same mechanism as `/events.xml`,
+      still no backend, still generated at build time — just reachable at a
+      URL instead of embedded). `EventCard` now links straight to that path,
+      with no `download` attribute — on desktop the browser still downloads it
+      (from the URL's own `.ics` extension, so the filename is unchanged),
+      and on iOS it triggers the native sheet instead. `public/_headers` pins
+      `Content-Type: text/calendar; charset=utf-8` for `/events/*.ics`
+      explicitly, rather than trusting Cloudflare's own extension-based guess
+      — deliberately, even though a local check showed Astro's own preview
+      server already infers the same type from the extension unprompted.
+      **Verified:** `npm test` **147/147** (existing `icsDataUri` cases renamed
+      to exercise `icsCalendar()` directly rather than decoding a `data:` URI,
+      plus one new case for `icsHref()`) · `build` (41 pages, one `.ics` file
+      per dated event — all 9 today, including `meet-and-greet-2026.ics` once
+      it gained a real date via `/admin` mid-session) · `check` 0/0/0 ·
+      `check:dist` · confirmed the rendered `<a>` has no `download` attribute
+      and points at the real path · confirmed `/events/*.ics` is absent from
+      the sitemap, same as `/events.xml`. **Not verified: an actual iPhone.**
+      `astro preview` doesn't apply `public/_headers` (that's a Cloudflare-only
+      mechanism), so the closest check available in this environment was
+      confirming the built file's content and the header rule's syntax against
+      Cloudflare's documented `_headers` behaviour — the real test is tapping
+      the link on a deployed build.
+
 - [x] **"Skip to main content" link** *(small, done 2026-08-27).* `BaseLayout.astro`
       now renders `<a href="#main-content" class="skip-link">` as the first
       element inside `<body>`, before `<Header>`, pointing at `id="main-content"`
@@ -1058,7 +1095,7 @@ they carry design decisions that need a person. The agent skips them.
       export `src/lib/content.js` provides, via `@astrojs/rss` (the official
       Astro-maintained sibling of `@astrojs/sitemap`, already in use). One new
       pure function, `eventRssItem()` in `src/lib/events.js` (alongside
-      `eventJsonLd`/`icsDataUri`): omits `pubDate` for a TBA event rather than
+      `eventJsonLd`/`icsCalendar`): omits `pubDate` for a TBA event rather than
       guessing one, and folds date/location/description into the item body. TBA
       events lead the feed (same "floats to the top" rule as `splitEvents()`),
       dated ones follow newest-date-first — there's no last-modified timestamp

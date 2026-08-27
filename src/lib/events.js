@@ -141,10 +141,19 @@ function escapeIcsText(text) {
     .replace(/\r\n|\r|\n/g, "\\n");
 }
 
-// A per-event "add to calendar" link: one VEVENT wrapped in a data: URI, so
-// clicking it needs no backend and no client JS — the browser hands it
-// straight to whatever app owns .ics files. Returns null for a TBA event,
-// same as eventJsonLd, since there is no date to add.
+// The body of a per-event "add to calendar" file: one VEVENT, RFC 5545. Returns
+// null for a TBA event, same as eventJsonLd, since there is no date to add.
+//
+// This used to be wrapped as a `data:text/calendar` URI and linked directly,
+// so adding an event needed no backend and no client JS — the browser handed
+// it straight to whatever app owns .ics files. That works on desktop but NOT
+// on iOS Safari: a `data:` URI combined with the `download` attribute forces a
+// raw-text download there instead of the native "Add to Calendar" sheet, which
+// only appears when Safari navigates to a real URL whose response is
+// text/calendar. So this is now served as an actual static file, one per
+// dated event, at /events/<id>.ics (see src/pages/events/[id].ics.js) — same
+// architecture as /events.xml, still no backend, still generated at build
+// time, just reachable at a URL instead of embedded in the page.
 //
 // DTSTART/DTEND are written as FLOATING local time (no Z, no TZID): the
 // schema records no timezone and every YUnited event happens in St. Gallen,
@@ -160,7 +169,7 @@ function escapeIcsText(text) {
  * @param {{ now?: Date }} [options]
  * @returns {string | null}
  */
-export function icsDataUri(event, { now = new Date() } = {}) {
+export function icsCalendar(event, { now = new Date() } = {}) {
   if (!hasDate(event)) return null;
   const time = timeKey(event);
 
@@ -188,8 +197,18 @@ export function icsDataUri(event, { now = new Date() } = {}) {
   lines.push(`DESCRIPTION:${escapeIcsText(event.description)}`);
   lines.push("END:VEVENT", "END:VCALENDAR");
 
-  const ics = lines.join("\r\n") + "\r\n";
-  return `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
+  return lines.join("\r\n") + "\r\n";
+}
+
+// The URL an "add to calendar" link on a card points at — the file
+// icsCalendar() shapes, once src/pages/events/[id].ics.js has rendered it at
+// build time. Null for a TBA event: there is nothing to add yet.
+/**
+ * @param {{ id: string, date?: string | null }} event
+ * @returns {string | null}
+ */
+export function icsHref(event) {
+  return hasDate(event) ? `/events/${event.id}.ics` : null;
 }
 
 // One RSS <item> per event, for /events.xml. Pure and framework-free, like the

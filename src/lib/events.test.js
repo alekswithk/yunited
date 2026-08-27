@@ -11,7 +11,7 @@
 // deliberately framework-free (see CLAUDE.md), so the tests import it directly.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { splitEvents, hasDate, formatEventDate, eventJsonLd, icsDataUri, eventRssItem } from "./events.js";
+import { splitEvents, hasDate, formatEventDate, eventJsonLd, icsCalendar, icsHref, eventRssItem } from "./events.js";
 
 // `now` is injected into splitEvents precisely so these assertions do not rot:
 // the same input must give the same answer whenever the suite is run.
@@ -185,20 +185,13 @@ test("eventJsonLd treats a malformed time as no time", () => {
   assert.equal(schema.startDate, "2026-05-13");
 });
 
-// Decode the data: URI back to the raw .ics text so assertions read like the
-// file a calendar app would actually parse, not a URL-encoded blob.
-function decodeIcs(dataUri) {
-  assert.match(dataUri, /^data:text\/calendar;charset=utf-8,/);
-  return decodeURIComponent(dataUri.slice(dataUri.indexOf(",") + 1));
-}
-
-test("icsDataUri returns null for a TBA event", () => {
+test("icsCalendar returns null for a TBA event", () => {
   // Same rule as eventJsonLd: no date means nothing valid to add.
   const tba = { title: "Meet & Greet", description: "Say hi.", date: null };
-  assert.equal(icsDataUri(tba), null);
+  assert.equal(icsCalendar(tba), null);
 });
 
-test("icsDataUri emits a timed event as floating local start/end, 2 hours apart", () => {
+test("icsCalendar emits a timed event as floating local start/end, 2 hours apart", () => {
   const event = {
     id: "karaoke-night-2026",
     title: "Karaoke Night",
@@ -207,7 +200,7 @@ test("icsDataUri emits a timed event as floating local start/end, 2 hours apart"
     time: "20:30",
     location: "Déja Vu Bar",
   };
-  const ics = decodeIcs(icsDataUri(event, { now: new Date("2026-04-01T10:00:00Z") }));
+  const ics = icsCalendar(event, { now: new Date("2026-04-01T10:00:00Z") });
   assert.match(ics, /^BEGIN:VCALENDAR\r\n/);
   assert.match(ics, /\r\nEND:VCALENDAR\r\n$/);
   assert.match(ics, /\r\nDTSTART:20260513T203000\r\n/);
@@ -219,41 +212,41 @@ test("icsDataUri emits a timed event as floating local start/end, 2 hours apart"
   assert.match(ics, /\r\nDESCRIPTION:Sing along\.\r\n/);
 });
 
-test("icsDataUri rolls a late start over midnight into the next day", () => {
+test("icsCalendar rolls a late start over midnight into the next day", () => {
   const event = { id: "late", title: "Late Night", description: "…", date: "2026-05-13", time: "23:30" };
-  const ics = decodeIcs(icsDataUri(event, { now: new Date("2026-04-01T10:00:00Z") }));
+  const ics = icsCalendar(event, { now: new Date("2026-04-01T10:00:00Z") });
   assert.match(ics, /\r\nDTSTART:20260513T233000\r\n/);
   assert.match(ics, /\r\nDTEND:20260514T013000\r\n/);
 });
 
-test("icsDataUri emits a date-only event as a whole day, end exclusive per RFC 5545", () => {
+test("icsCalendar emits a date-only event as a whole day, end exclusive per RFC 5545", () => {
   const event = { id: "global-village-2026", title: "Global Village", description: "…", date: "2026-05-13" };
-  const ics = decodeIcs(icsDataUri(event, { now: new Date("2026-04-01T10:00:00Z") }));
+  const ics = icsCalendar(event, { now: new Date("2026-04-01T10:00:00Z") });
   assert.match(ics, /\r\nDTSTART;VALUE=DATE:20260513\r\n/);
   assert.match(ics, /\r\nDTEND;VALUE=DATE:20260514\r\n/);
   assert.doesNotMatch(ics, /DTSTART:2026/); // never the timed form
 });
 
-test("icsDataUri rolls a whole-day event over a month boundary", () => {
+test("icsCalendar rolls a whole-day event over a month boundary", () => {
   const event = { id: "may-end", title: "May's Last Day", description: "…", date: "2026-05-31" };
-  const ics = decodeIcs(icsDataUri(event, { now: new Date("2026-04-01T10:00:00Z") }));
+  const ics = icsCalendar(event, { now: new Date("2026-04-01T10:00:00Z") });
   assert.match(ics, /\r\nDTSTART;VALUE=DATE:20260531\r\n/);
   assert.match(ics, /\r\nDTEND;VALUE=DATE:20260601\r\n/);
 });
 
-test("icsDataUri treats a malformed time as no time, same as eventJsonLd", () => {
+test("icsCalendar treats a malformed time as no time, same as eventJsonLd", () => {
   const event = { id: "bad-time", title: "Bad Time", description: "…", date: "2026-05-13", time: "7pm" };
-  const ics = decodeIcs(icsDataUri(event, { now: new Date("2026-04-01T10:00:00Z") }));
+  const ics = icsCalendar(event, { now: new Date("2026-04-01T10:00:00Z") });
   assert.match(ics, /\r\nDTSTART;VALUE=DATE:20260513\r\n/);
 });
 
-test("icsDataUri omits LOCATION rather than emitting an empty line", () => {
+test("icsCalendar omits LOCATION rather than emitting an empty line", () => {
   const event = { id: "tbd-venue", title: "TBD Venue", description: "…", date: "2026-05-13", time: "18:00" };
-  const ics = decodeIcs(icsDataUri(event, { now: new Date("2026-04-01T10:00:00Z") }));
+  const ics = icsCalendar(event, { now: new Date("2026-04-01T10:00:00Z") });
   assert.doesNotMatch(ics, /LOCATION/);
 });
 
-test("icsDataUri escapes commas, semicolons, backslashes and newlines in free text", () => {
+test("icsCalendar escapes commas, semicolons, backslashes and newlines in free text", () => {
   const event = {
     id: "escaping",
     title: "Brunch, Bites; and Backslash\\Night",
@@ -262,16 +255,21 @@ test("icsDataUri escapes commas, semicolons, backslashes and newlines in free te
     time: "12:00",
     location: "Room A; Building B",
   };
-  const ics = decodeIcs(icsDataUri(event, { now: new Date("2026-04-01T10:00:00Z") }));
+  const ics = icsCalendar(event, { now: new Date("2026-04-01T10:00:00Z") });
   assert.match(ics, /\r\nSUMMARY:Brunch\\, Bites\\; and Backslash\\\\Night\r\n/);
   assert.match(ics, /\r\nDESCRIPTION:Line one\\nLine two\r\n/);
   assert.match(ics, /\r\nLOCATION:Room A\\; Building B\r\n/);
 });
 
-test("icsDataUri falls back to a date/time UID when the event carries no id", () => {
+test("icsCalendar falls back to a date/time UID when the event carries no id", () => {
   const event = { title: "No Id", description: "…", date: "2026-05-13", time: "18:00" };
-  const ics = decodeIcs(icsDataUri(event, { now: new Date("2026-04-01T10:00:00Z") }));
+  const ics = icsCalendar(event, { now: new Date("2026-04-01T10:00:00Z") });
   assert.match(ics, /\r\nUID:2026-05-13-18:00@yunited\.ch\r\n/);
+});
+
+test("icsHref points at the static per-event file, null for a TBA event", () => {
+  assert.equal(icsHref({ id: "karaoke-night-2026", date: "2026-05-13" }), "/events/karaoke-night-2026.ics");
+  assert.equal(icsHref({ id: "meet-and-greet-2026", date: null }), null);
 });
 
 test("eventRssItem omits pubDate for a TBA event rather than guessing one", () => {
