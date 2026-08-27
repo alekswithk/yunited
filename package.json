@@ -24,6 +24,7 @@
     "wrangler": "^4.114.0"
   },
   "dependencies": {
+    "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.3",
     "zod": "^4.4.3"
   }

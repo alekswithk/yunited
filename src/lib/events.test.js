@@ -11,7 +11,7 @@
 // deliberately framework-free (see CLAUDE.md), so the tests import it directly.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { splitEvents, hasDate, formatEventDate, eventJsonLd, icsDataUri } from "./events.js";
+import { splitEvents, hasDate, formatEventDate, eventJsonLd, icsDataUri, eventRssItem } from "./events.js";
 
 // `now` is injected into splitEvents precisely so these assertions do not rot:
 // the same input must give the same answer whenever the suite is run.
@@ -272,4 +272,28 @@ test("icsDataUri falls back to a date/time UID when the event carries no id", ()
   const event = { title: "No Id", description: "…", date: "2026-05-13", time: "18:00" };
   const ics = decodeIcs(icsDataUri(event, { now: new Date("2026-04-01T10:00:00Z") }));
   assert.match(ics, /\r\nUID:2026-05-13-18:00@yunited\.ch\r\n/);
+});
+
+test("eventRssItem omits pubDate for a TBA event rather than guessing one", () => {
+  const tba = { title: "Meet & Greet", description: "…", date: null };
+  const item = eventRssItem(tba, { link: "/events" });
+  assert.equal("pubDate" in item, false);
+  assert.equal(item.link, "/events");
+});
+
+test("eventRssItem sets pubDate from the event's own date and time", () => {
+  const item = eventRssItem(
+    { title: "Karaoke Night", description: "Karaoke night at Déja Vu Bar.", date: "2026-03-18", time: "19:30", location: "Déja Vu Bar" },
+    { link: "/events" },
+  );
+  assert.deepEqual(item.pubDate, new Date("2026-03-18T19:30:00"));
+  assert.match(item.description, /^18 March 2026 — Déja Vu Bar — Karaoke night at Déja Vu Bar\.$/);
+});
+
+test("eventRssItem folds date/location/description together, skipping whatever is missing", () => {
+  const noLocation = eventRssItem(
+    { title: "Brunch", description: "A brunch.", date: "2026-04-26" },
+    { link: "/events" },
+  );
+  assert.equal(noLocation.description, "26 April 2026 — A brunch.");
 });

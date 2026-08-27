@@ -192,6 +192,29 @@ export function icsDataUri(event, { now = new Date() } = {}) {
   return `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
 }
 
+// One RSS <item> per event, for /events.xml. Pure and framework-free, like the
+// rest of this module: the caller sorts and supplies the page url, this just
+// shapes one event. `pubDate` is omitted for a TBA event — there is nothing to
+// date it by — rather than guessed at, so @astrojs/rss simply leaves the
+// <pubDate> element out instead of emitting a wrong one.
+/**
+ * @param {{ title: string, description: string, date?: string | null, time?: string | null, location?: string | null }} event
+ * @param {{ link: string }} options
+ * @returns {{ title: string, pubDate?: Date, description: string, link: string }}
+ */
+export function eventRssItem(event, { link }) {
+  return {
+    title: event.title,
+    ...(hasDate(event)
+      ? { pubDate: new Date(`${event.date}T${event.time ?? "00:00"}:00`) }
+      : {}),
+    description: [formatEventDate(event.date), event.location, event.description]
+      .filter(Boolean)
+      .join(" — "),
+    link,
+  };
+}
+
 /**
  * @template {{ date?: string | null, time?: string | null }} T
  * @param {readonly T[]} allEvents

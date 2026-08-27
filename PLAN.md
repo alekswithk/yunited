@@ -1050,13 +1050,28 @@ they carry design decisions that need a person. The agent skips them.
       focus moves it to `top:8px,left:8px` (clear of the header), and blur
       reverses it via the CSS transition.
 
-- [ ] **RSS feed for events** (`/events.xml`) *(small).* Board and members have
-      no way to notice a new or changed event short of checking `/events`.
-      `@astrojs/rss` — the official Astro-maintained sibling of the
-      `@astrojs/sitemap` integration already in use — can generate a feed
-      straight from the same `events` export `src/lib/content.js` provides. One
-      new dependency, but Astro-maintained, and no server code: fits the
-      build-time-only architecture as-is.
+- [x] **RSS feed for events** (`/events.xml`) *(small, done 2026-08-27 — left
+      open for human merge, see below).* `src/pages/events.xml.js`, non-localized
+      like `404.astro`, generates the feed at build time from the same `events`
+      export `src/lib/content.js` provides, via `@astrojs/rss` (the official
+      Astro-maintained sibling of `@astrojs/sitemap`, already in use). One new
+      pure function, `eventRssItem()` in `src/lib/events.js` (alongside
+      `eventJsonLd`/`icsDataUri`): omits `pubDate` for a TBA event rather than
+      guessing one, and folds date/location/description into the item body. TBA
+      events lead the feed (same "floats to the top" rule as `splitEvents()`),
+      dated ones follow newest-date-first — there's no last-modified timestamp
+      anywhere in the schema, so an event's own date is the only proxy for "when
+      did this become news". An RSS autodiscovery `<link rel="alternate"
+      type="application/rss+xml">` was added to every page via
+      `BaseLayout.astro`. **One new dependency** (`@astrojs/rss` — no new
+      vulnerabilities per `npm audit`, still 7).
+      **Verified:** `npm test` **146/146** (3 new cases) · `build` (41 pages,
+      `events.xml` present separately) · `check` 0/0/0 · `check:dist` · the
+      built `dist/events.xml` parses as valid XML with all 9 events, TBA
+      *Meet & Greet* first with no `<pubDate>`, the rest newest-date-first.
+      **Left open rather than auto-merged**: it adds a dependency, and §7 keeps
+      dependency changes out of the weekly agent's auto-merge scope for the same
+      reason — worth a human's look before it lands.
 
 - [x] **`<link rel="preconnect">` to Formspree on the contact page** *(tiny,
       done 2026-08-27).* One line in `contact.astro`, via `BaseLayout`'s named
