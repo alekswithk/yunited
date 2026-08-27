@@ -143,16 +143,24 @@ export const TERMS = {
   buddySystem: {
     en: "buddy system",
     detect: ["buddy"],
-    // Hand-chosen in commit bad1e4b ("sr: write Serbian in Latin") and still in
-    // toc.buddy / about.buddyEyebrow / contact.topicExchange today. Kept.
-    canonical: { hr: "sustav prijatelja", bs: "sistem prijatelja", sr: "sistem prijatelja" },
-    // bcs.json shipped FOUR names for this one programme and sr.json four more.
-    // "parenje" is mating/copulation (of animals): about.buddyLede read "naš
-    // sustav prijateljskog parenja", on the About page. "mentorstvo" is a
-    // register error rather than a howler — a buddy is a peer, a mentor is a
-    // senior — but it still has to go.
-    forbidden: ["parenj", "buddy-", "mentor"],
-    note: "A peer who has already been through it — NOT a mentor, and never a form of 'parenje' (mating).",
+    // "sustav prijatelja"/"sistem prijatelja" was hand-chosen in commit bad1e4b
+    // ("sr: write Serbian in Latin") and held until 2026-08-27, when it was
+    // deliberately replaced: a literal "system of friends" undersells what the
+    // programme actually is, and "kumstvo" — the traditional Balkan god-parent/
+    // sponsor kinship — reads as a real cultural institution rather than an
+    // admin process. Balkan-language decision only; German keeps its own
+    // "Buddy-System" loanword untouched (see the forbidden note below).
+    canonical: { hr: "kumstvo", bs: "kumstvo", sr: "kumstvo" },
+    // bcs.json shipped FOUR names for this one programme and sr.json four more,
+    // before "sustav/sistem prijatelja" was pinned; both of those are now
+    // themselves forbidden, so a future auto-translation can't quietly regress
+    // to the literal rendering this term replaced. "parenje" is mating/
+    // copulation (of animals): about.buddyLede once read "naš sustav
+    // prijateljskog parenja", on the About page. "mentorstvo" is a register
+    // error rather than a howler — a buddy is a peer, a mentor is a senior —
+    // but it still has to go.
+    forbidden: ["parenj", "buddy-", "mentor", "sustav prijatelj", "sistem prijatelj"],
+    note: "A peer who has already been through it — NOT a mentor, never a form of 'parenje' (mating), and (Balkan languages) not the old literal 'sustav/sistem prijatelja' — kumstvo is the pinned term as of 2026-08-27.",
   },
 
   assessmentYear: {
