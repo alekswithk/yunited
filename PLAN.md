@@ -1058,12 +1058,14 @@ they carry design decisions that need a person. The agent skips them.
       new dependency, but Astro-maintained, and no server code: fits the
       build-time-only architecture as-is.
 
-- [ ] **`<link rel="preconnect">` to Formspree on the contact page** *(tiny).*
-      `contact.astro`'s form POSTs to `formspree.io`, the one third-party origin
-      the site talks to, with no early-connection hint — the DNS/TLS handshake
-      only starts once the visitor clicks submit. A one-line `preconnect` shaves
-      that off the perceived submit latency; no CSP change needed since the form
-      already targets that origin.
+- [x] **`<link rel="preconnect">` to Formspree on the contact page** *(tiny,
+      done 2026-08-27).* One line in `contact.astro`, via `BaseLayout`'s named
+      `head` slot (the same mechanism #54 used for JSON-LD): `<link
+      rel="preconnect" href="https://formspree.io" slot="head" />`. Renders only
+      on `/contact` — confirmed absent from `dist/events.html`. No CSP change:
+      `formspree.io` is already in `connect-src` and `form-action` for the
+      form's own submit/fallback. **Verified:** `npm test` 143/143 · `build` (41
+      pages) · `check` 0/0/0 · `check:dist`.
 
 Deferred/among-these per the original roadmap: sitemap `hreflang` — shipped instead
 as `<link rel="alternate" hreflang>` in the page `<head>` (gated to finished locales),
