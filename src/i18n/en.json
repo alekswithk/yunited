@@ -103,7 +103,8 @@
     "rsvpCta": "RSVP on uniclubs →",
     "pastCta": "Event page →",
     "dateTba": "Date TBA",
-    "photoAlt": "Photo from {title}"
+    "photoAlt": "Photo from {title}",
+    "addToCalendar": "Add to calendar"
   },
   "about": {
     "heroTitle": "About YUnited",

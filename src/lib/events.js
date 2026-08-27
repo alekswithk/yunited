@@ -94,6 +94,104 @@ export function eventJsonLd(event, { url }) {
   };
 }
 
+function pad2(n) {
+  return String(n).padStart(2, "0");
+}
+
+// "2026-05-13" + "20:30" -> a Date holding that wall-clock moment. Only ever
+// used for wall-clock arithmetic below (a 2-hour default duration, an all-day
+// event's exclusive end date) and read back through the local getters
+// (getFullYear/getMonth/…), never through toLocaleString or similar — so it
+// does not matter which timezone the process itself runs in, on a build
+// server or a developer's laptop alike.
+function wallClock(date, time = "00:00") {
+  return new Date(`${date}T${time}:00`);
+}
+
+function compactDate(d) {
+  return `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}`;
+}
+
+function compactDateTime(d) {
+  return `${compactDate(d)}T${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`;
+}
+
+// The one timestamp in the file that IS required to be UTC (RFC 5545 §3.8.7.2
+// DTSTAMP: "the date and time that the instance … was created"), unlike
+// DTSTART/DTEND below, which stay floating local time on purpose.
+function icsTimestampUtc(date) {
+  return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+}
+
+// RFC 5545 §3.3.11 TEXT escaping: backslash first (so the escapes just added
+// are not themselves re-escaped), then comma and semicolon, then a literal
+// newline collapsed to the two-character "\n" the format expects.
+//
+// Not done: §3.1 line folding (splitting a content line past 75 octets onto a
+// continuation line). That is a SHOULD, not a MUST, and most calendar clients
+// accept an unfolded long line in practice — but that claim is derived from
+// the spec, not verified against a real client here. An event with an
+// unusually long authored description is the case to check first if an
+// "add to calendar" import is ever reported broken.
+function escapeIcsText(text) {
+  return String(text)
+    .replace(/\\/g, "\\\\")
+    .replace(/;/g, "\\;")
+    .replace(/,/g, "\\,")
+    .replace(/\r\n|\r|\n/g, "\\n");
+}
+
+// A per-event "add to calendar" link: one VEVENT wrapped in a data: URI, so
+// clicking it needs no backend and no client JS — the browser hands it
+// straight to whatever app owns .ics files. Returns null for a TBA event,
+// same as eventJsonLd, since there is no date to add.
+//
+// DTSTART/DTEND are written as FLOATING local time (no Z, no TZID): the
+// schema records no timezone and every YUnited event happens in St. Gallen,
+// so a floating time — read by every calendar app as "the device's local
+// time" — is the correct rendering for every attendee. A dateless field is
+// impossible here (hasDate already excluded it); a timeless one is emitted as
+// a whole-day event instead, with the exclusive end date one day later, per
+// RFC 5545 §3.6.1. There is no stored end time, so a timed event defaults to
+// a 2-hour block — long enough for a talk, short enough not to claim the rest
+// of the attendee's evening for a brunch.
+/**
+ * @param {{ id?: string, title: string, description: string, date?: string | null, time?: string | null, location?: string | null }} event
+ * @param {{ now?: Date }} [options]
+ * @returns {string | null}
+ */
+export function icsDataUri(event, { now = new Date() } = {}) {
+  if (!hasDate(event)) return null;
+  const time = timeKey(event);
+
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//YUnited//Events//EN",
+    "BEGIN:VEVENT",
+    `UID:${event.id ?? `${event.date}-${time ?? "tba"}`}@yunited.ch`,
+    `DTSTAMP:${icsTimestampUtc(now)}`,
+  ];
+
+  if (time) {
+    const start = wallClock(event.date, time);
+    const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+    lines.push(`DTSTART:${compactDateTime(start)}`, `DTEND:${compactDateTime(end)}`);
+  } else {
+    const start = wallClock(event.date);
+    const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+    lines.push(`DTSTART;VALUE=DATE:${compactDate(start)}`, `DTEND;VALUE=DATE:${compactDate(end)}`);
+  }
+
+  lines.push(`SUMMARY:${escapeIcsText(event.title)}`);
+  if (event.location) lines.push(`LOCATION:${escapeIcsText(event.location)}`);
+  lines.push(`DESCRIPTION:${escapeIcsText(event.description)}`);
+  lines.push("END:VEVENT", "END:VCALENDAR");
+
+  const ics = lines.join("\r\n") + "\r\n";
+  return `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
+}
+
 /**
  * @template {{ date?: string | null, time?: string | null }} T
  * @param {readonly T[]} allEvents

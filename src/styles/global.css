@@ -828,9 +828,19 @@ main { position: relative; }
 
 .card-description { font-size: 1rem; color: var(--color-ink); }
 
+/* Holds the card's link(s) at the bottom regardless of how long the
+   description above ran — a card can carry one link (RSVP alone) or two
+   (RSVP plus "add to calendar"), so the flex row and the gap between them
+   live here rather than on .card-link itself. */
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-top: auto;
+}
+
 .card-link {
   position: relative;
-  margin-top: auto;
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 0.75rem;
