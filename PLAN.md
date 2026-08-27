@@ -1113,63 +1113,40 @@ implement *from* it.
 
 ## 5. Known cleanup / tech debt 🧹
 
-- [ ] **`npm audit` regressed, and nothing in CI would have said so**
-      (found 2026-08-06; drifted 2026-08-07, **and again by 2026-08-23**)
-      *(small).* Now **7 vulnerabilities — 4 high, 3 moderate**, against 0 when
-      #40 landed on 2026-07-28. Every one is dev tooling that never reaches a
-      visitor or the deployed Worker, which is why this sits in §5 rather than
-      §3:
+- [x] **`npm audit` regressed, and nothing in CI would have said so** —
+      **fixed 2026-08-27, left open for human merge.** Was **7 vulnerabilities —
+      4 high, 3 moderate** (drifted 0 → 5 → 6 → 7 across four checks with
+      nothing in CI ever saying so); now **0**. `npm audit fix` (no `--force`)
+      resolved all seven within the existing `package.json` ranges — `wrangler`
+      moved **4.114.0 → 4.127.0** (an upgrade, not the 4.35.0 downgrade the old
+      text here warned against), plus patch bumps to `undici`, `fast-uri`,
+      `js-yaml`, `nanoid`, `postcss`. `package.json` itself is unchanged; only
+      `package-lock.json` moved. Added a **non-blocking** `npm audit
+      --audit-level=high` step to `ci.yml` (`|| true`, so a future drift is
+      *visible in every PR* without failing the build) — this is the fix for the
+      actual finding, which was always the silence, not any one CVE.
+      **Verified:** `npm test` 143/143 · `build` (41 pages) · `check` 0/0/0 ·
+      `check:dist` (an Astro/wrangler bump changing something `check:dist`
+      guards against is exactly the regression this step exists to catch) ·
+      `npm audit` reports 0. **Left open rather than auto-merged**: touches
+      `ci.yml` and dependency files, which §7 keeps out of the weekly agent's
+      auto-merge scope for the same reason — a human should look before a
+      dependency bump lands.
 
-      | package | reaches | severity |
-      |---|---|---|
-      | `undici` → `miniflare` → `wrangler` | `npm run admin:dev` only | high |
-      | `fast-uri` → `@astrojs/check` | `npm run check` only | high |
-      | `js-yaml` (`GHSA-5p4m-2wfm-xmqj`) | build tooling | high |
-      | `nanoid` (`GHSA-2v37-7h3g-55p8`) — **new since 2026-08-07** | build tooling | high |
-      | `postcss` → `astro`/`vite` | build time, over CSS authored in this repo | moderate |
-
-      **The count has now moved four times — 0 → 5 → 6 → 7 — and no command
-      anyone runs said so any of those times.** That is the strongest available
-      argument for the CI step below; it is not a hypothetical any more. npm
-      reports every one of these as fixable by a plain `npm audit fix`.
-
-      **The finding is the silence, not the CVEs.** #40 was the PR that
-      established dev-dependency CVEs count here — `sharp` processes board
-      uploads at build time — and yet `ci.yml` has no `npm audit` step, so the
-      drift was invisible until someone ran it by hand. Fix: `npm update astro
-      wrangler` (currently 7.1.4 / 4.114.0 in `package.json`) and `npm audit fix`
-      for the non-breaking fixes, then add a **non-blocking** `npm audit
-      --audit-level=high` step to `ci.yml`, and record honestly what remains
-      rather than forcing it green.
-
-      **Do not run `npm audit fix --force`** — it "fixes" the wrangler chain by
-      *downgrading* wrangler to 4.35.0, which is the advisory range confusing the
-      resolver, not a real fix. Verify with all four commands afterwards,
-      `check:dist` especially: an Astro bump changing an inlining default is
-      precisely the regression that guard exists for. Touches `ci.yml` and
-      dependency files, so §7 forbids the weekly agent from auto-merging it.
-
-- [ ] **A red CI run on `main` tells nobody** (found 2026-08-07) *(small).* On
-      2026-08-06 GitHub's hosted runners failed to pick up this repo's jobs — the
-      run against `5136f53` died with *"the job was not acquired by Runner of type
-      hosted even after multiple attempts"* after 15 minutes, and the merges of
-      #52 and #53 later that evening produced **no runs at all**. The runners
-      recovered on their own and nothing was wrong with the code (all four
-      commands were verified green locally on `a822588`). **The gap is that the
-      outage was only found by someone going to look.** A failed push-run on
-      `main` produces no notification anyone reads, and `ci.yml` has no
-      `workflow_dispatch` trigger, so there is not even a one-click way to
-      re-validate `main` without pushing a commit.
-
-      Two cheap fixes, either sufficient: add `workflow_dispatch:` to `ci.yml`'s
-      `on:` block so `main` can be re-checked on demand, and/or turn on failure
-      notifications for the repo's Actions. **This is the same shape as the two
-      items either side of it** — the audit that drifted unseen, and the
-      empty-calendar warning that only a developer running a build ever reads.
-      The repo is good at building assertions and poor at delivering them to a
-      person; that pattern, not any one of the three, is the thing worth fixing.
-      Touches `.github/workflows/**`, so §7 forbids the weekly agent from
-      auto-merging it.
+- [x] **A red CI run on `main` tells nobody** — **half-fixed 2026-08-27, left
+      open for human merge.** Added `workflow_dispatch:` to `ci.yml`'s `on:`
+      block (same PR as the audit step above, since both are the "assertions
+      nobody sees" pattern), so `main` can now be re-checked on demand from the
+      Actions tab or `gh workflow run ci.yml` — no more waiting for a new
+      commit to find out whether a hosted-runner outage has cleared. **The
+      other half — turning on failure notifications for the repo's Actions —
+      is a GitHub account setting, not a file in this repo, and stays a human
+      action item**, same shape as the Access-login-branding item in this
+      section: nothing to verify with a command, needs a person in the
+      repo/org settings.
+      **Verified:** same four-command run as the audit item, since they share a
+      PR; `workflow_dispatch:` is valid YAML (parsed with `js-yaml`, already a
+      transitive dependency, rather than assumed).
 
 - [x] **Documentation drift caught and fixed** (2026-07-29). Three places had
       fallen behind the code, all in the same direction — claiming `bs`/`hr`/`sr`
