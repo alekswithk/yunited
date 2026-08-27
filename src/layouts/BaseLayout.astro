@@ -6,6 +6,7 @@
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import { defaultLocale, getLocale, localizePath, publishedLocales } from "../i18n/config.js";
+import { useTranslations } from "../i18n/utils.js";
 import "../styles/global.css";
 
 const {
@@ -17,6 +18,7 @@ const {
 } = Astro.props;
 
 const loc = getLocale(locale);
+const t = useTranslations(loc.code);
 const canonical = new URL(localizePath(path, loc.code), Astro.site).href;
 const ogImage = new URL("/assets/og-image.png", Astro.site).href;
 
@@ -80,9 +82,11 @@ const showAlternates = alternates.length > 1 && !noindex;
 </head>
 <body>
 
+  <a href="#main-content" class="skip-link">{t("skipLink")}</a>
+
   <Header path={path} switchPath={noindex ? "/" : path} locale={loc.code} />
 
-  <main>
+  <main id="main-content">
     <slot />
   </main>
 
