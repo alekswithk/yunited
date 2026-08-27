@@ -77,8 +77,13 @@ test("the buddy system is never a mating system", () => {
   assert.ok(bad.length > 0);
   assert.match(messages(bad), /forbidden rendering of "buddy system"/);
 
-  const good = errs(src, "Naš sustav prijatelja povezuje te s nekim.", "about.buddyLede", "hr");
+  // "kumstvo" is the pinned term since 2026-08-27 — the old "sustav prijatelja"
+  // canonical is itself forbidden now, so it can no longer be the "good" case.
+  const good = errs(src, "Naše kumstvo povezuje te s nekim.", "about.buddyLede", "hr");
   assert.equal(good.length, 0, messages(good));
+
+  const oldCanonical = errs(src, "Naš sustav prijatelja povezuje te s nekim.", "about.buddyLede", "hr");
+  assert.match(messages(oldCanonical), /forbidden rendering of "buddy system"/);
 });
 
 test("the buddy system is not a mentorship — a peer is not a senior", () => {
