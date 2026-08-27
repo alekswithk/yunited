@@ -9,6 +9,11 @@ on:
     branches: [main]
   push:
     branches: [main]
+  # Lets main be re-checked on demand — from the Actions tab, or `gh workflow
+  # run ci.yml`. Before this, the only way to know whether main was still
+  # green after a hosted-runner outage (2026-08-06: two merges produced no
+  # runs at all) was to push a new commit.
+  workflow_dispatch:
 
 # A newer push to the same branch/PR cancels the older, still-running check.
 concurrency:
@@ -55,3 +60,11 @@ jobs:
       # comment at the top of scripts/check-dist.mjs.
       - name: Check built output
         run: npm run check:dist
+
+      # Non-blocking: dev-tooling CVEs here never reach a visitor or the
+      # deployed Worker (see PLAN.md §5), so this reports rather than fails.
+      # It exists because the count drifted 0 -> 7 across four separate checks
+      # with nothing in CI saying so each time — this is what makes the next
+      # drift visible in a PR instead of only to whoever next runs it by hand.
+      - name: Dependency audit (report only)
+        run: npm audit --audit-level=high || true
