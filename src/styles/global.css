@@ -1735,6 +1735,237 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
 .info-panel ul { padding-left: 1.2rem; margin-top: var(--space-3); }
 .info-panel li { margin-bottom: var(--space-2); }
 
+/* ---------- Buddy system ---------- */
+
+/* The explanation on /buddy runs in two columns, broadsheet-style, above the
+   sign-up form at the foot of the page. One column on a phone. break-inside on
+   the paragraphs so a heading fragment never splits across the column gap. */
+.buddy-prose {
+  margin-top: var(--space-4);
+  column-count: 2;
+  column-gap: var(--space-6);
+  max-width: none;
+}
+.buddy-prose p {
+  break-inside: avoid;
+  margin: 0 0 var(--space-3);
+  max-width: none;
+}
+.buddy-prose p strong { font-family: var(--font-display); font-weight: 700; }
+@media (max-width: 720px) { .buddy-prose { column-count: 1; } }
+
+/* The "you've read enough, sign up" nudge between the reading and the form. */
+.buddy-prompt {
+  margin-top: var(--space-5);
+  border: var(--border);
+  border-top: 3px solid var(--color-gold);
+  border-radius: var(--radius);
+  background: #fffdf8;
+  padding: var(--space-4);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+}
+.buddy-prompt-title { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; }
+.buddy-prompt-body { font-size: 0.9rem; color: var(--color-muted); margin-top: var(--space-1); }
+
+/* The sign-up form. It reuses .form-grid and the shared input styles; these
+   rules are only the controls the contact form doesn't have — the role picker,
+   the capacity segmented control and the checkbox rows, none of which want the
+   bare uppercase-mono `label` treatment. */
+.buddy-form { max-width: 620px; }
+.buddy-opt { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--color-muted); }
+
+.buddy-roles { border: 0; margin: 0; padding: 0; }
+.buddy-roles legend {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0;
+  margin-bottom: var(--space-3);
+}
+.buddy-role-choice {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+@media (max-width: 560px) { .buddy-role-choice { grid-template-columns: 1fr; } }
+.buddy-role-choice label {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 1rem;
+  letter-spacing: 0;
+  text-transform: none;
+  margin: 0;
+  border: var(--border-structural);
+  border-radius: var(--radius);
+  background: #fffdf8;
+  padding: var(--space-3);
+  cursor: pointer;
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+.buddy-role-choice label:hover { border-color: var(--color-ink); }
+.buddy-role-choice input { width: auto; margin-top: 0.3rem; flex: none; }
+.buddy-role-choice .rc-title { display: block; font-weight: 600; }
+.buddy-role-choice .rc-sub { display: block; font-size: 0.85rem; color: var(--color-muted); margin-top: var(--space-1); }
+
+/* Revealed by the page's script for the chosen role; `hidden` is the resting
+   state so it works with JS off (both blocks simply show). */
+.buddy-role-fields {
+  border-left: 2px solid var(--color-azure);
+  padding-left: var(--space-4);
+  display: grid;
+  gap: var(--space-3);
+}
+.buddy-role-fields[hidden] { display: none; }
+.buddy-sublabel {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.buddy-capacity { display: flex; gap: var(--space-2); }
+.buddy-capacity label {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  margin: 0;
+  border: var(--border-structural);
+  border-radius: var(--radius);
+  padding: 0.4rem 1rem;
+  cursor: pointer;
+}
+.buddy-capacity input { width: auto; margin: 0 0.3rem 0 0; }
+.buddy-capacity label:has(input:checked) {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  border-color: var(--color-ink);
+}
+
+.buddy-check {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 0.95rem;
+  letter-spacing: 0;
+  text-transform: none;
+  margin: 0;
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+.buddy-check input { width: auto; margin-top: 0.3rem; flex: none; }
+
+.buddy-faq { display: grid; gap: var(--space-4); margin-top: var(--space-4); }
+.buddy-faq h3 { margin-bottom: var(--space-2); }
+.section-dark .buddy-faq h3 { color: var(--color-paper); }
+.section-dark .buddy-faq p { color: rgba(244, 236, 221, 0.78); }
+
+/* The pair dashboard at /buddy/pair — a static shell the script fills in. */
+.buddy-pair-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  margin: var(--space-4) 0;
+}
+@media (max-width: 640px) { .buddy-pair-grid { grid-template-columns: 1fr; } }
+.buddy-contact {
+  border: var(--border);
+  border-radius: var(--radius);
+  background: #fffdf8;
+  padding: var(--space-4);
+}
+.buddy-contact-role {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-red);
+  display: block;
+  margin-bottom: var(--space-2);
+}
+.buddy-contact.is-you .buddy-contact-role { color: var(--color-muted); }
+.buddy-contact h3 { margin-bottom: var(--space-2); }
+.buddy-contact dl {
+  margin: var(--space-3) 0 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-1) var(--space-3);
+  font-size: 0.9rem;
+}
+.buddy-contact dt {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  padding-top: 0.15rem;
+}
+.buddy-contact dd { margin: 0; }
+.buddy-contact-note {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: var(--border);
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  font-style: italic;
+}
+.buddy-checklist {
+  list-style: none;
+  margin: var(--space-4) 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.buddy-checklist li {
+  border: var(--border);
+  border-radius: var(--radius);
+  background: #fffdf8;
+  padding: var(--space-2) var(--space-3);
+}
+.buddy-checklist li.is-done { color: var(--color-muted); text-decoration: line-through; }
+.buddy-checklist label {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 0.95rem;
+  letter-spacing: 0;
+  text-transform: none;
+  margin: 0;
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  cursor: pointer;
+}
+.buddy-checklist input { width: auto; margin-top: 0.25rem; flex: none; }
+.buddy-prompts { margin: var(--space-3) 0; padding-left: 1.2rem; font-size: 0.92rem; color: var(--color-muted); }
+.buddy-prompts li { margin: var(--space-1) 0; }
+.buddy-confirm-bar {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border: var(--border-structural);
+  border-radius: var(--radius);
+  background: var(--color-paper-soft);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+.buddy-confirm-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
 /* ---------- 404 ---------- */
 .error-page { text-align: center; padding: var(--space-7) 0; }
 .error-lede { color: var(--color-muted); margin-bottom: var(--space-5); }
