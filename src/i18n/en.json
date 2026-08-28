@@ -299,6 +299,8 @@
     "formSending": "Adding you…",
     "formSuccessTitle": "Check your inbox.",
     "formSuccessBody": "We've sent a confirmation link to {email}. Click it and you're in the pool for the next round. The link works once and expires in 48 hours.",
+    "checkEmailTitle": "Check your inbox",
+    "checkEmailBody": "We've sent you a confirmation link. Click it and you're in the pool for the next round. The link works once and expires in 48 hours.",
     "faqEyebrow": "Questions",
     "faqHeading": "Good to know",
     "faqQ1": "Do I have to be a member?",

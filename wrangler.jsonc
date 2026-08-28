@@ -33,8 +33,9 @@
     // static assets without invoking the Worker at all, exactly as before.
     //
     // Note the shape: /admin itself is a static HTML page and must NOT be
-    // listed here, or the Worker would have to serve it.
-    "run_worker_first": ["/admin/api/*"]
+    // listed here, or the Worker would have to serve it. Same for /buddy — the
+    // page and its sub-pages are static; only /buddy/api/* runs code.
+    "run_worker_first": ["/admin/api/*", "/buddy/api/*"]
   },
 
   "compatibility_flags": [
@@ -60,6 +61,35 @@
       "remote": true
     }
   ],
+
+  // The buddy system's store — the first data the project keeps outside Git.
+  // Content stays in content/*.json; per-student signups are private, change
+  // often and must not rebuild the site, so they live in Cloudflare D1, reached
+  // only through /buddy/api/* and /admin/api/buddy/*.
+  //
+  // THERE IS NO d1_databases BLOCK HERE ON PURPOSE. An invalid database_id fails
+  // `wrangler deploy`, which would block every deploy until the DB exists — so
+  // the binding is added as part of the one-time setup, not committed ahead of
+  // it. Until then `env.BUDDY_DB` is undefined: the /admin Buddy tab is hidden
+  // and /buddy/api/* returns a 503 that names the step. Everything else is
+  // unaffected.
+  //
+  // ONE-TIME SETUP (a maintainer, out of band — like `wrangler secret put`):
+  //   npx wrangler d1 create yunited-buddy
+  //   → add the block below to this file with the printed database_id:
+  //       "d1_databases": [{
+  //         "binding": "BUDDY_DB",
+  //         "database_name": "yunited-buddy",
+  //         "database_id": "<printed id>",
+  //         "migrations_dir": "worker/migrations"
+  //       }]
+  //   npx wrangler d1 migrations apply yunited-buddy --remote   (production)
+  //   npx wrangler d1 migrations apply yunited-buddy            (local dev)
+  //
+  // Email is Resend (free tier): set RESEND_API_KEY as a Worker secret
+  //   npx wrangler secret put RESEND_API_KEY
+  // With no key set, signups still work and the board confirms people by hand
+  // from the /admin Buddy tab — nothing breaks, it is just manual.
 
   // The safety net under translation, not the mechanism. An event is translated
   // as it is saved (worker/translate.js), which is where it normally happens;

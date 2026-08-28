@@ -920,3 +920,105 @@ h1, h2, h3 {
 .translation-group .field:last-child {
   margin-bottom: 0;
 }
+
+/* ---------- Buddy system tab ---------- */
+/* Bespoke, like the Access tab. Same heavier admin look — 2px ink borders,
+   hard offset shadows — as the rest of this panel. */
+
+.buddy-subhead {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  margin: var(--space-5) 0 var(--space-2);
+}
+
+.buddy-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.buddy-tile {
+  border: var(--border);
+  background: var(--color-paper);
+  padding: var(--space-3);
+}
+
+.buddy-tile.is-bad {
+  border-color: var(--color-bad);
+  background: var(--color-bad-soft);
+}
+
+.buddy-tile-k {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.buddy-tile-v {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.6rem;
+  line-height: 1.1;
+  margin-top: var(--space-1);
+}
+
+.buddy-run {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+.buddy-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin: var(--space-3) 0 var(--space-2);
+}
+
+.buddy-table th,
+.buddy-table td {
+  text-align: left;
+  padding: var(--space-2);
+  border-bottom: 1px solid rgba(26, 22, 17, 0.2);
+}
+
+.buddy-table th {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  border-bottom: var(--border);
+}
+
+.buddy-signup-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.buddy-signup-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.buddy-signup-meta {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-muted);
+}
+
+.buddy-signup-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}

@@ -292,6 +292,8 @@
     "formSending": "Wird eingetragen …",
     "formSuccessTitle": "Schau in dein Postfach.",
     "formSuccessBody": "Wir haben einen Bestätigungslink an {email} geschickt. Klick ihn an und du bist im Pool für die nächste Runde. Der Link funktioniert einmal und läuft nach 48 Stunden ab.",
+    "checkEmailTitle": "Schau in dein Postfach",
+    "checkEmailBody": "Wir haben dir einen Bestätigungslink geschickt. Klick ihn an und du bist im Pool für die nächste Runde. Der Link funktioniert einmal und läuft nach 48 Stunden ab.",
     "faqEyebrow": "Fragen",
     "faqHeading": "Gut zu wissen",
     "faqQ1": "Muss ich Mitglied sein?",

@@ -292,6 +292,8 @@
     "formSending": "Dodajemo te…",
     "formSuccessTitle": "Provjeri sandučić.",
     "formSuccessBody": "Poslali smo link za potvrdu na {email}. Klikni ga i u grupi si za sljedeću rundu. Link radi jednom i ističe za 48 sati.",
+    "checkEmailTitle": "Provjeri sandučić",
+    "checkEmailBody": "Poslali smo ti link za potvrdu. Klikni ga i u grupi si za sljedeću rundu. Link radi jednom i ističe za 48 sati.",
     "faqEyebrow": "Pitanja",
     "faqHeading": "Dobro je znati",
     "faqQ1": "Moram li biti član?",
