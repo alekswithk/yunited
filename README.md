@@ -106,7 +106,8 @@ The one exception to "no server" is `/admin`:
 
 `CLAUDE.md` is the full architecture reference and the conventions that matter
 (extensionless URLs, image paths relative to `src/`, the CSP, etc.).
-`PLAN.md` is the living status tracker and roadmap.
+`PLAN.md` is the living status tracker — open work and the roadmap only;
+`PLAN-ARCHIVE.md` holds the shipped-PR table and the history.
 
 ### Content shape
 
