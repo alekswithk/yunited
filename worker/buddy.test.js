@@ -407,6 +407,37 @@ test("commit persists the round + pairs and marks people matched; notify emails 
   assert.ok(send.calls.every((c) => /buddy\/pair\?t=/.test(c.text)));
 });
 
+test("notify with no roundId sends for the most recent round", async () => {
+  const store = verifiedPool();
+  const send = fakeSend();
+  const opts = { store, sendEmail: send.fn, now: NOW, origin: "https://yunited.ch" };
+  await handleBuddyAdmin("round/commit", req("POST", { seed: 3 }), {}, opts);
+
+  const res = await (await handleBuddyAdmin("round/notify", req("POST", {}), {}, opts)).json();
+  assert.equal(res.ok, true);
+  assert.ok(res.sent > 0);
+  assert.equal(store._rounds[0].notified_at, NOW());
+});
+
+test("notify is idempotent — a second send is a no-op, not a re-send", async () => {
+  const store = verifiedPool();
+  const send = fakeSend();
+  const opts = { store, sendEmail: send.fn, now: NOW, origin: "https://yunited.ch" };
+  await handleBuddyAdmin("round/commit", req("POST", { seed: 3 }), {}, opts);
+  await handleBuddyAdmin("round/notify", req("POST", {}), {}, opts);
+  const before = send.calls.length;
+
+  const again = await (await handleBuddyAdmin("round/notify", req("POST", {}), {}, opts)).json();
+  assert.equal(again.ok, true);
+  assert.equal(again.alreadyNotified, true);
+  assert.equal(send.calls.length, before, "no extra emails on the second call");
+});
+
+test("notify with no round at all is a clean 404", async () => {
+  const res = await handleBuddyAdmin("round/notify", req("POST", {}), {}, { store: verifiedPool(), now: NOW });
+  assert.equal(res.status, 404);
+});
+
 test("commit is deterministic for a given seed", async () => {
   const a = await (
     await handleBuddyAdmin("round/commit", req("POST", { seed: 4242 }), {}, { store: verifiedPool(), now: NOW })

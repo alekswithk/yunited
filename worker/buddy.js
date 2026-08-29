@@ -409,10 +409,19 @@ async function adminCommit(request, _env, { store, now, actor }) {
 
 async function adminNotify(request, env, { store, send, now, origin }) {
   const body = await readBody(request);
-  const roundId = String(body.roundId || "");
-  const round = await store.roundById(roundId);
-  if (!round) return json({ ok: false, error: "That round no longer exists." }, 404);
+  // With an id, that round. Without one, the most recent round — which is what
+  // the panel sends, so "Send emails" works no matter what the browser did
+  // between commit and send (re-previewed, switched tabs, reloaded).
+  const round = body.roundId
+    ? await store.roundById(String(body.roundId))
+    : await store.lastRound();
+  if (!round) return json({ ok: false, error: "There is no round to send emails for." }, 404);
+  // Idempotent: a double-click, or a stale button, must not re-send.
+  if (round.notified_at) {
+    return json({ ok: true, sent: 0, failed: 0, alreadyNotified: true, roundId: round.id });
+  }
 
+  const roundId = round.id;
   const pairs = await store.roundPairs(roundId);
   let sent = 0;
   let failed = 0;
@@ -461,7 +470,7 @@ async function adminNotify(request, env, { store, send, now, origin }) {
   }
 
   await store.markRoundNotified(roundId, now());
-  return json({ ok: true, sent, failed, waiting: stillWaiting.length });
+  return json({ ok: true, roundId, sent, failed, waiting: stillWaiting.length });
 }
 
 // --- admin: POST /admin/api/buddy/signup ---------------------------------
