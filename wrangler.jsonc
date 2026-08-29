@@ -1,137 +1,152 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "yunited",
-  "compatibility_date": "2026-07-11",
-  "observability": {
-    "enabled": true
-  },
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "yunited",
+	"compatibility_date": "2026-07-11",
+	"observability": {
+		"enabled": true
+	},
+	// The admin API. Everything else on this site is a static file; this is the
+	// one piece of server-side code, and it lives in the SAME Worker as the site
+	// rather than a separate one on its own subdomain. That is deliberate:
+	//   * /admin/api/* is same-origin, so the panel needs no CORS and its CSP can
+	//     stay connect-src 'self';
+	//   * the Cloudflare Access application in front of yunited.ch/admin covers
+	//     the API too, because Access matches on path prefix — one policy, one
+	//     email allow-list, nothing to keep in sync;
+	//   * one `wrangler deploy` (or one Cloudflare build) ships both.
+	// See worker/README.md.
+	"main": "worker/index.js",
+	"assets": {
+		"directory": "./dist",
+		// Lets the Worker serve a static asset itself (env.ASSETS.fetch). Only
+		// reached under `wrangler dev`, where the Worker sees every request; in
+		// production `run_worker_first` keeps it off the static path entirely.
+		"binding": "ASSETS",
+		// Without this, an unknown path returns a bare 404 with an EMPTY body — the
+		// styled dist/404.html is built but never served. "404-page" makes Workers
+		// serve the nearest 404.html, which is the one at the root.
+		"not_found_handling": "404-page",
+		// Run the Worker FIRST for these paths only. Every other request — every
+		// page, image and stylesheet the public site serves — goes straight to
+		// static assets without invoking the Worker at all, exactly as before.
+		//
+		// Note the shape: /admin itself is a static HTML page and must NOT be
+		// listed here, or the Worker would have to serve it. Same for /buddy — the
+		// page and its sub-pages are static; only /buddy/api/* runs code.
+		"run_worker_first": [
+			"/admin/api/*",
+			"/buddy/api/*"
+		]
+	},
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	// Where the board's own DeepL key lives, when they set one from /admin's
+	// Translations tab. A value here overrides the DEEPL_API_KEY secret; with
+	// nothing set, the secret answers and the tab reports status without offering
+	// a box to paste into.
+	//
+	// That is the succession fix, not a convenience: a Worker secret can only be
+	// replaced by someone with the Cloudflare account, and the people running this
+	// club change every year. See the comment at the top of worker/translate.js.
+	//
+	// `remote: true` rather than a preview_id, so `wrangler dev` reads the real
+	// namespace instead of an empty local simulation — this holds one value that
+	// is tedious to recreate by hand.
+	"kv_namespaces": [
+		{
+			"binding": "ADMIN_SETTINGS",
+			"id": "ad0d3dcdf58b44928b30362db57101a3",
+			"remote": true
+		}
+	],
+	// The buddy system's D1 store is the `d1_databases` block at the foot of this
+	// file. Email is Resend, set out of band: `npx wrangler secret put
+	// RESEND_API_KEY`. See worker/README.md → "The buddy system".
 
-  // The admin API. Everything else on this site is a static file; this is the
-  // one piece of server-side code, and it lives in the SAME Worker as the site
-  // rather than a separate one on its own subdomain. That is deliberate:
-  //   * /admin/api/* is same-origin, so the panel needs no CORS and its CSP can
-  //     stay connect-src 'self';
-  //   * the Cloudflare Access application in front of yunited.ch/admin covers
-  //     the API too, because Access matches on path prefix — one policy, one
-  //     email allow-list, nothing to keep in sync;
-  //   * one `wrangler deploy` (or one Cloudflare build) ships both.
-  // See worker/README.md.
-  "main": "worker/index.js",
+	// The safety net under translation, not the mechanism. An event is translated
+	// as it is saved (worker/translate.js), which is where it normally happens;
+	// this catches the entry whose save-time attempt hit a DeepL outage, or that
+	// a maintainer committed straight to the repo without one.
+	//
+	// Once a day, not hourly: the board also has a Translate button, so the real
+	// question is how long an entry may sit untranslated with nobody noticing,
+	// and a day is the honest answer. Cost is not the constraint — a full
+	// re-translation of all nine events is about 3% of one month's free
+	// allowance. 04:17 UTC is off-peak for a Swiss club, on an odd minute rather
+	// than joining every cron on the platform at the top of the hour.
+	"triggers": {
+		"crons": [
+			"17 4 * * *"
+		]
+	},
+	// Not secrets. The repo is public, the branch is no surprise, and the two
+	// CF_ACCESS_* values are public identifiers — the AUD tag is visible in the
+	// Access login URL of anyone who visits /admin. The only secret is the token
+	// that writes to the repo, and it is set out-of-band with
+	// `wrangler secret put GITHUB_TOKEN` (see worker/README.md).
+	"vars": {
+		"GITHUB_REPO": "alekswithk/yunited",
+		"GITHUB_BRANCH": "main",
+		// With these set, the Worker verifies the signed token Cloudflare Access
+		// issues on every /admin/api/* request, rather than trusting that Access
+		// fronted the route. See worker/access.js for why that distinction matters.
+		// Both come from Zero Trust → Access → Applications → the /admin app.
+		//
+		// NOTE FOR LOCAL DEV: `wrangler dev` gets no Access token, so these make
+		// every request 403. Put CF_ACCESS_AUD = "" in your .dev.vars to switch the
+		// check off locally — .dev.vars overrides what is here.
+		"CF_ACCESS_TEAM_DOMAIN": "silent-recipe-bb34.cloudflareaccess.com",
+		"CF_ACCESS_AUD": "284df6702d4bfb7ff822cca77803e9cb845fcea2071e5958f6e80bd1d6958b59",
+		// The Access rule group holding the board's email allow-list, so the board
+		// can add and remove members from /admin instead of the Cloudflare dashboard.
+		// Both are identifiers, not credentials — the account ID appears in every
+		// dashboard URL and the group ID grants nothing on its own. The token that
+		// can actually change the group is the CF_API_TOKEN secret.
+		//
+		// The group is `yunited-board`, and the /admin application's policy includes
+		// it instead of a literal list of addresses — so the policy is written once
+		// and only the group ever changes. Point this at a DIFFERENT group and the
+		// panel edits that one instead, with no error to warn you.
+		//
+		// The tab appears only when these two AND the CF_API_TOKEN secret are all
+		// set; blank any of them and /admin goes back to exactly what it was, with
+		// the allow-list edited in the Zero Trust dashboard (see accessConfigured in
+		// worker/index.js). Full setup: worker/README.md → "Who can get in".
+		"CF_ACCOUNT_ID": "87eec737191644cadde8147c51b7ba3d",
+		"CF_ACCESS_GROUP_ID": "92f7cd66-2d4f-4730-ac95-d740d0dc0cd6"
+	},
+	// NO workers.dev HOSTNAME. This is a security setting, not a preference.
+	//
+	// Cloudflare Access is attached to the *hostname* yunited.ch, so it fronts
+	// yunited.ch/admin and nothing else. The Worker was also reachable at
+	// yunited.maric-aleksandar.workers.dev, serving the identical site with no
+	// Access in front of it — which, once this Worker owns /admin/api/*, would
+	// have meant an unauthenticated endpoint that commits to the repo.
+	//
+	// Turning the hostname off removes that door entirely. The JWT verification
+	// above independently rejects any request without a valid Access token, so
+	// the two together are belt and braces; keep both.
+	//
+	// It also ends a duplicate of the whole public site being served, and
+	// indexable, on a second hostname.
+	//
+	// yunited.ch is attached as a Custom Domain in the Cloudflare dashboard, not
+	// as a `routes` entry here, so the site keeps serving normally.
+	"workers_dev": false,
+	"preview_urls": false,
 
-  "assets": {
-    "directory": "./dist",
-    // Lets the Worker serve a static asset itself (env.ASSETS.fetch). Only
-    // reached under `wrangler dev`, where the Worker sees every request; in
-    // production `run_worker_first` keeps it off the static path entirely.
-    "binding": "ASSETS",
-    // Without this, an unknown path returns a bare 404 with an EMPTY body — the
-    // styled dist/404.html is built but never served. "404-page" makes Workers
-    // serve the nearest 404.html, which is the one at the root.
-    "not_found_handling": "404-page",
-    // Run the Worker FIRST for these paths only. Every other request — every
-    // page, image and stylesheet the public site serves — goes straight to
-    // static assets without invoking the Worker at all, exactly as before.
-    //
-    // Note the shape: /admin itself is a static HTML page and must NOT be
-    // listed here, or the Worker would have to serve it.
-    "run_worker_first": ["/admin/api/*"]
-  },
-
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
-
-  // Where the board's own DeepL key lives, when they set one from /admin's
-  // Translations tab. A value here overrides the DEEPL_API_KEY secret; with
-  // nothing set, the secret answers and the tab reports status without offering
-  // a box to paste into.
-  //
-  // That is the succession fix, not a convenience: a Worker secret can only be
-  // replaced by someone with the Cloudflare account, and the people running this
-  // club change every year. See the comment at the top of worker/translate.js.
-  //
-  // `remote: true` rather than a preview_id, so `wrangler dev` reads the real
-  // namespace instead of an empty local simulation — this holds one value that
-  // is tedious to recreate by hand.
-  "kv_namespaces": [
-    {
-      "binding": "ADMIN_SETTINGS",
-      "id": "ad0d3dcdf58b44928b30362db57101a3",
-      "remote": true
-    }
-  ],
-
-  // The safety net under translation, not the mechanism. An event is translated
-  // as it is saved (worker/translate.js), which is where it normally happens;
-  // this catches the entry whose save-time attempt hit a DeepL outage, or that
-  // a maintainer committed straight to the repo without one.
-  //
-  // Once a day, not hourly: the board also has a Translate button, so the real
-  // question is how long an entry may sit untranslated with nobody noticing,
-  // and a day is the honest answer. Cost is not the constraint — a full
-  // re-translation of all nine events is about 3% of one month's free
-  // allowance. 04:17 UTC is off-peak for a Swiss club, on an odd minute rather
-  // than joining every cron on the platform at the top of the hour.
-  "triggers": {
-    "crons": ["17 4 * * *"]
-  },
-
-  // Not secrets. The repo is public, the branch is no surprise, and the two
-  // CF_ACCESS_* values are public identifiers — the AUD tag is visible in the
-  // Access login URL of anyone who visits /admin. The only secret is the token
-  // that writes to the repo, and it is set out-of-band with
-  // `wrangler secret put GITHUB_TOKEN` (see worker/README.md).
-  "vars": {
-    "GITHUB_REPO": "alekswithk/yunited",
-    "GITHUB_BRANCH": "main",
-
-    // With these set, the Worker verifies the signed token Cloudflare Access
-    // issues on every /admin/api/* request, rather than trusting that Access
-    // fronted the route. See worker/access.js for why that distinction matters.
-    // Both come from Zero Trust → Access → Applications → the /admin app.
-    //
-    // NOTE FOR LOCAL DEV: `wrangler dev` gets no Access token, so these make
-    // every request 403. Put CF_ACCESS_AUD = "" in your .dev.vars to switch the
-    // check off locally — .dev.vars overrides what is here.
-    "CF_ACCESS_TEAM_DOMAIN": "silent-recipe-bb34.cloudflareaccess.com",
-    "CF_ACCESS_AUD": "284df6702d4bfb7ff822cca77803e9cb845fcea2071e5958f6e80bd1d6958b59",
-
-    // The Access rule group holding the board's email allow-list, so the board
-    // can add and remove members from /admin instead of the Cloudflare dashboard.
-    // Both are identifiers, not credentials — the account ID appears in every
-    // dashboard URL and the group ID grants nothing on its own. The token that
-    // can actually change the group is the CF_API_TOKEN secret.
-    //
-    // The group is `yunited-board`, and the /admin application's policy includes
-    // it instead of a literal list of addresses — so the policy is written once
-    // and only the group ever changes. Point this at a DIFFERENT group and the
-    // panel edits that one instead, with no error to warn you.
-    //
-    // The tab appears only when these two AND the CF_API_TOKEN secret are all
-    // set; blank any of them and /admin goes back to exactly what it was, with
-    // the allow-list edited in the Zero Trust dashboard (see accessConfigured in
-    // worker/index.js). Full setup: worker/README.md → "Who can get in".
-    "CF_ACCOUNT_ID": "87eec737191644cadde8147c51b7ba3d",
-    "CF_ACCESS_GROUP_ID": "92f7cd66-2d4f-4730-ac95-d740d0dc0cd6"
-  },
-
-  // NO workers.dev HOSTNAME. This is a security setting, not a preference.
-  //
-  // Cloudflare Access is attached to the *hostname* yunited.ch, so it fronts
-  // yunited.ch/admin and nothing else. The Worker was also reachable at
-  // yunited.maric-aleksandar.workers.dev, serving the identical site with no
-  // Access in front of it — which, once this Worker owns /admin/api/*, would
-  // have meant an unauthenticated endpoint that commits to the repo.
-  //
-  // Turning the hostname off removes that door entirely. The JWT verification
-  // above independently rejects any request without a valid Access token, so
-  // the two together are belt and braces; keep both.
-  //
-  // It also ends a duplicate of the whole public site being served, and
-  // indexable, on a second hostname.
-  //
-  // yunited.ch is attached as a Custom Domain in the Cloudflare dashboard, not
-  // as a `routes` entry here, so the site keeps serving normally.
-  "workers_dev": false,
-  "preview_urls": false
+	// The buddy system's store (worker/buddy.js, worker/buddy-store.js). The
+	// binding name must stay BUDDY_DB — the Worker reads env.BUDDY_DB. No
+	// `remote`, so `wrangler dev` uses a local SQLite copy that cannot touch
+	// production signups; apply the schema to both with
+	// `npx wrangler d1 migrations apply yunited-buddy [--remote]`.
+	"d1_databases": [
+		{
+			"binding": "BUDDY_DB",
+			"database_name": "yunited-buddy",
+			"database_id": "2d2d99a4-2706-4369-b6cb-c87bddb5993c",
+			"migrations_dir": "worker/migrations"
+		}
+	]
 }

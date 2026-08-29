@@ -68,6 +68,7 @@ import {
   withTranslationState,
 } from "./translate.js";
 import { gate } from "../src/lib/translate/content.js";
+import { handleBuddyPublic, handleBuddyAdmin, purgeStaleBuddySignups } from "./buddy.js";
 
 export default {
   /**
@@ -77,10 +78,17 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // wrangler.jsonc routes only /admin/api/* here (`run_worker_first`), so in
-    // production this branch is effectively unreachable. It matters for
-    // `wrangler dev`, where the Worker sees every request, and it keeps the
-    // static site working if that route list is ever widened.
+    // The buddy system's public endpoints. NO Cloudflare Access in front — the
+    // token in each URL is the credential (see worker/buddy.js). It brings its
+    // own error handling, so it is not wrapped in the try/catch below.
+    if (url.pathname.startsWith("/buddy/api/")) {
+      return handleBuddyPublic(request, env, url);
+    }
+
+    // wrangler.jsonc routes only /admin/api/* and /buddy/api/* here
+    // (`run_worker_first`), so in production this branch is effectively
+    // unreachable. It matters for `wrangler dev`, where the Worker sees every
+    // request, and it keeps the static site working if that route list changes.
     if (!url.pathname.startsWith("/admin/api/")) {
       return env.ASSETS.fetch(request);
     }
@@ -168,7 +176,9 @@ export default {
    * @param {{waitUntil: (p: Promise<any>) => void}} ctx
    */
   async scheduled(_event, env, ctx) {
-    ctx.waitUntil(sweep(env));
+    // The translation sweep and the buddy-signup retention sweep are unrelated;
+    // run both, and let one failing never stop the other.
+    ctx.waitUntil(Promise.allSettled([sweep(env), purgeStaleBuddySignups(env)]));
   },
 };
 
@@ -305,6 +315,30 @@ async function handle(request, env, url) {
   }
 
   const route = url.pathname.slice("/admin/api/".length);
+
+  // The buddy-system admin routes (pool, run a round, notify, edit signups,
+  // export). Same Access gate as everything else here; the logic and its D1
+  // access live in worker/buddy.js. The acting board member's verified email is
+  // recorded on every round it commits.
+  if (route.startsWith("buddy/")) {
+    if (!env.BUDDY_DB) {
+      return json(
+        {
+          ok: false,
+          error:
+            "The buddy database is not set up in this deployment. A maintainer needs to run " +
+            "`npx wrangler d1 create yunited-buddy`, put its id in wrangler.jsonc, and apply " +
+            "worker/migrations/0001_buddy.sql.",
+        },
+        503,
+      );
+    }
+    return handleBuddyAdmin(route.slice("buddy/".length), request, env, {
+      actor: verified.email ?? identity(request).email,
+      origin: url.origin,
+    });
+  }
+
   // Each route declares which upstream it needs, because they have different
   // secrets and a missing one has to name itself. Before the access list existed
   // this was a single unconditional GITHUB_TOKEN check, which would have answered
@@ -414,6 +448,9 @@ async function getState(request, env) {
       // proves the key still WORKS stays out of here and runs when the tab is
       // opened, because loading Events must not wait on deepl.com.
       translations: { enabled: true, configured: Boolean(await resolveKey(env)) },
+      // The buddy tab appears only where the D1 store is bound. Like access
+      // above, this is a binding check, not a query.
+      buddy: { enabled: Boolean(env.BUDDY_DB) },
     },
   });
 }

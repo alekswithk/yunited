@@ -432,6 +432,88 @@ grants nothing without a token that can write to it. They belong in
 
 ---
 
+## The buddy system
+
+`/buddy` lets students sign up to be a buddy or to be matched with one, and the
+board runs a matching round from the **Buddy** tab in `/admin`. It is the first
+data the project keeps outside Git — per-student signups are private, change
+often, and must not rebuild the site — so it lives in **Cloudflare D1**.
+
+### The files
+
+| file | what it is |
+| --- | --- |
+| `src/lib/buddy/match.js` | `planMatches()` — the pairing rule (fill to one, then overflow only onto opted-in buddies, then hold the rest). Pure, seeded, unit-tested. |
+| `src/lib/buddy/schema.js` | the Zod signup schema + `normalizeSignup()`. |
+| `src/lib/buddy/tokens.js` | opaque capability tokens (Web Crypto). |
+| `src/lib/buddy/emails.js` | the three localised emails + a Resend client. `sendEmail` never throws. |
+| `worker/buddy.js` | the request handlers — `handleBuddyPublic` (`/buddy/api/*`, no Access) and `handleBuddyAdmin` (`/admin/api/buddy/*`, behind Access), plus `purgeStaleBuddySignups` for the nightly sweep. |
+| `worker/buddy-store.js` | every D1 query, behind named methods. Injected into the handlers so they are testable; this file is the untested I/O layer (like `github.js`). |
+| `worker/migrations/0001_buddy.sql` | the schema: `signups`, `rounds`, `pairs`. |
+
+`worker/buddy.test.js` drives the handlers against an in-memory fake store.
+
+### Auth
+
+There is none, deliberately — the same principle as `/admin`, applied the other
+way. `/buddy/api/*` is **not** behind Access (students are not on the allow-list).
+Instead every URL carries a random token that is stored next to the row it
+unlocks: a `verify_token` to confirm an email, a `manage_token` for the
+unsubscribe link, and a `buddy_token` / `seeker_token` per pair for the pair
+page. Nothing is signed or derived, so there is nothing to forge; a bad token
+just redirects to `/buddy`.
+
+`/admin/api/buddy/*` goes through the **same** Access gate as everything else in
+this Worker (`handle()` checks the JWT, then dispatches anything under `buddy/`
+to `handleBuddyAdmin`). The acting board member's verified email is written onto
+every round it commits.
+
+### One-time setup
+
+Both are maintainer steps, out of band, like `wrangler secret put`:
+
+1. **Create the database and apply the schema.**
+   ```bash
+   npx wrangler d1 create yunited-buddy
+   ```
+   Then add the binding to `wrangler.jsonc` (there is a commented template next
+   to the `kv_namespaces` block — it is not committed ahead of time because an
+   invalid `database_id` would fail every `wrangler deploy`):
+   ```jsonc
+   "d1_databases": [{
+     "binding": "BUDDY_DB",
+     "database_name": "yunited-buddy",
+     "database_id": "<the id it printed>",
+     "migrations_dir": "worker/migrations"
+   }]
+   ```
+   ```bash
+   npx wrangler d1 migrations apply yunited-buddy --remote   # production
+   npx wrangler d1 migrations apply yunited-buddy            # local dev
+   ```
+   With no `BUDDY_DB` binding the **Buddy** tab does not appear and
+   `/buddy/api/*` returns a 503 that names this step.
+
+2. **Set the Resend key** (free tier — 100 emails/day, 3,000/month):
+   ```bash
+   npx wrangler secret put RESEND_API_KEY
+   ```
+   Also add the SPF/DKIM records Resend gives you for **yunited.ch**, and
+   (optionally) `BUDDY_EMAIL_FROM` / `BUDDY_EMAIL_REPLYTO` as plain vars if the
+   defaults (`YUnited Buddy <buddy@yunited.ch>` / `yunited@shsg.ch`) need
+   changing. **With no key, signups still work** — the board confirms people by
+   hand from the Buddy tab, which says so — and no round email goes out until a
+   key is set. A send failure never fails a signup or a round.
+
+### Retention
+
+The nightly cron (`scheduled` in `index.js`) now runs two independent sweeps:
+the translation sweep and `purgeStaleBuddySignups`, which deletes unverified
+signups older than 14 days. `Promise.allSettled`, so one failing never stops the
+other.
+
+---
+
 ## Who can get in
 
 **Cloudflare Access decides, from an email allow-list.** There is no login code in

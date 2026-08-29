@@ -78,11 +78,24 @@ const el = {
   translationsFields: $("translations-fields"),
   translationsEmpty: $("translations-empty"),
   translateBtn: $("translate-btn"),
+  buddyBody: $("buddy-body"),
+  buddyLoading: $("buddy-loading"),
+  buddyMain: $("buddy-main"),
+  buddyTiles: $("buddy-tiles"),
+  buddyPreviewBtn: $("buddy-preview-btn"),
+  buddyCommitBtn: $("buddy-commit-btn"),
+  buddyNotifyBtn: $("buddy-notify-btn"),
+  buddyError: $("buddy-error"),
+  buddyPreview: $("buddy-preview"),
+  buddySignups: $("buddy-signups"),
+  buddyEmpty: $("buddy-empty"),
+  buddyEmailNote: $("buddy-email-note"),
 };
 
-/** The two tabs that are not content collections. */
+/** The tabs that are not content collections. */
 const ACCESS = "access";
 const TRANSLATIONS = "translations";
+const BUDDY = "buddy";
 
 /** Everything the page knows. Replaced wholesale by every reload of state. */
 const state = {
@@ -103,6 +116,12 @@ const state = {
   access: { loaded: false, emails: [], you: null },
   /** The DeepL key's status, once the Translations tab has been opened. */
   translations: { loaded: false, deepl: null },
+  /**
+   * The buddy pool, once its tab has been opened. `seed` is the previewed
+   * pairing's seed, carried into commit so the exact same pairing is written;
+   * `roundId` is set by a commit and consumed by "Send emails".
+   */
+  buddy: { loaded: false, data: null, seed: null, roundId: null },
 };
 
 // ---------------------------------------------------------------------------
@@ -167,6 +186,7 @@ function renderTabs() {
   // Always present, unlike Access. This tab is where a key gets set, so hiding
   // it when none is set would hide the fix along with the problem.
   if (state.sections.translations?.enabled) tabs.push({ name: TRANSLATIONS, label: "Translations" });
+  if (state.sections.buddy?.enabled) tabs.push({ name: BUDDY, label: "Buddy" });
 
   for (const { name, label } of tabs) {
     const tab = document.createElement("button");
@@ -189,9 +209,11 @@ function renderTabs() {
 /** Show whichever section `state.active` names, loading it if it needs loading. */
 function openSection() {
   const active = state.active;
-  el.listBody.hidden = active === ACCESS || active === TRANSLATIONS;
+  const special = active === ACCESS || active === TRANSLATIONS || active === BUDDY;
+  el.listBody.hidden = special;
   el.accessBody.hidden = active !== ACCESS;
   el.translationsBody.hidden = active !== TRANSLATIONS;
+  el.buddyBody.hidden = active !== BUDDY;
 
   if (active === ACCESS) {
     if (!state.access.loaded) loadAccess();
@@ -201,6 +223,9 @@ function openSection() {
     // works, and the Events tab must not wait on deepl.com to draw itself.
     if (!state.translations.loaded) loadTranslations();
     else renderTranslations();
+  } else if (active === BUDDY) {
+    if (!state.buddy.loaded) loadBuddy();
+    else renderBuddy();
   } else {
     renderList();
   }
@@ -1122,10 +1147,249 @@ function showEdit() {
   window.scrollTo({ top: 0 });
 }
 
+// ---------------------------------------------------------------------------
+// Buddy system
+//
+// Not content — per-student signups in D1, reached only through
+// /admin/api/buddy/*. The board's job here is to run a matching round:
+// preview (writes nothing) → commit (writes the round + pairs) → send emails.
+// See worker/buddy.js.
+
+async function loadBuddy() {
+  el.buddyLoading.hidden = false;
+  el.buddyMain.hidden = true;
+  try {
+    const data = await api("/admin/api/buddy/state");
+    // Keep any in-flight round state across a refresh — a commit sets roundId
+    // then reloads, and "Send emails" must stay available.
+    state.buddy = {
+      loaded: true,
+      data,
+      seed: state.buddy.seed,
+      roundId: state.buddy.roundId,
+      lastPreview: state.buddy.lastPreview,
+    };
+    renderBuddy();
+  } catch (error) {
+    el.buddyLoading.hidden = true;
+    showBanner(`Couldn't load the buddy pool: ${error.message}`, false);
+  }
+}
+
+function renderBuddy() {
+  const data = state.buddy.data ?? {};
+  const c = data.counts ?? {};
+
+  el.buddyLoading.hidden = true;
+  el.buddyMain.hidden = false;
+  el.buddyError.hidden = true;
+
+  const headroom = (c.capacity ?? 0) - (c.seekers ?? 0);
+  const tiles = [
+    { k: "Buddies", v: c.buddies ?? 0 },
+    { k: "Looking for a buddy", v: c.seekers ?? 0 },
+    { k: "Places offered", v: c.capacity ?? 0 },
+    {
+      k: "If matched now",
+      v: headroom >= 0 ? "all placed" : `${-headroom} short`,
+      bad: headroom < 0,
+    },
+    { k: "Unconfirmed", v: c.pending ?? 0 },
+    { k: "Matched", v: c.matched ?? 0 },
+  ];
+  el.buddyTiles.replaceChildren(
+    ...tiles.map((t) => {
+      const box = document.createElement("div");
+      box.className = "buddy-tile" + (t.bad ? " is-bad" : "");
+      const k = document.createElement("span");
+      k.className = "buddy-tile-k";
+      k.textContent = t.k;
+      const v = document.createElement("span");
+      v.className = "buddy-tile-v";
+      v.textContent = String(t.v);
+      box.append(k, v);
+      return box;
+    }),
+  );
+
+  // "Send emails" only makes sense right after a commit this session.
+  el.buddyCommitBtn.hidden = state.buddy.seed === null;
+  el.buddyNotifyBtn.hidden = state.buddy.roundId === null;
+
+  el.buddyEmailNote.hidden = data.emailConfigured !== false;
+
+  const pending = data.pending ?? [];
+  el.buddySignups.replaceChildren(...pending.map(renderBuddyRow));
+  el.buddyEmpty.hidden = pending.length > 0;
+
+  if (state.buddy.lastPreview) renderBuddyPreview(state.buddy.lastPreview);
+  else el.buddyPreview.hidden = true;
+}
+
+function renderBuddyRow(person) {
+  const row = document.createElement("li");
+  row.className = "entry buddy-signup-row";
+
+  const main = document.createElement("div");
+  main.className = "buddy-signup-main";
+  const name = document.createElement("strong");
+  name.textContent = person.name;
+  const meta = document.createElement("span");
+  meta.className = "buddy-signup-meta";
+  meta.textContent = `${person.role === "buddy" ? "Buddy" : "Seeker"} · ${person.email} · ${
+    person.verified ? "confirmed" : "unconfirmed"
+  }`;
+  main.append(name, meta);
+
+  const actions = document.createElement("div");
+  actions.className = "buddy-signup-actions";
+  if (!person.verified) {
+    const confirm = document.createElement("button");
+    confirm.type = "button";
+    confirm.className = "btn";
+    confirm.textContent = "Mark confirmed";
+    confirm.addEventListener("click", () =>
+      run(confirm, "Saving…", async () => {
+        const res = await api("/admin/api/buddy/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: person.id, action: "verify" }),
+        });
+        showBanner(res.message, true);
+        loadBuddy();
+      }, failBuddy),
+    );
+    actions.append(confirm);
+  }
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "btn btn-danger";
+  remove.textContent = "Remove";
+  remove.addEventListener("click", async () => {
+    const go = await confirmAction({
+      title: "Remove this signup?",
+      body: `${person.name} (${person.email}) will be deleted from the buddy pool.`,
+      warning: "They can sign up again from the website.",
+      action: "Remove",
+    });
+    if (!go) return;
+    run(remove, "Removing…", async () => {
+      const res = await api("/admin/api/buddy/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: person.id, action: "remove" }),
+      });
+      showBanner(res.message, true);
+      loadBuddy();
+    }, failBuddy);
+  });
+  actions.append(remove);
+
+  row.append(main, actions);
+  return row;
+}
+
+function renderBuddyPreview(preview) {
+  el.buddyPreview.hidden = false;
+  el.buddyPreview.replaceChildren();
+
+  const table = document.createElement("table");
+  table.className = "buddy-table";
+  const head = document.createElement("tr");
+  for (const h of ["Seeker", "Buddy", "Basis"]) {
+    const th = document.createElement("th");
+    th.textContent = h;
+    head.append(th);
+  }
+  table.append(head);
+  for (const p of preview.pairs) {
+    const tr = document.createElement("tr");
+    for (const v of [p.seeker, p.buddy, p.basis === "overflow" ? "overflow" : "fill"]) {
+      const td = document.createElement("td");
+      td.textContent = v;
+      tr.append(td);
+    }
+    table.append(tr);
+  }
+  el.buddyPreview.append(table);
+
+  const note = document.createElement("p");
+  note.className = "help";
+  const bits = [`${preview.pairs.length} pair${preview.pairs.length === 1 ? "" : "s"}`];
+  if (preview.unmatched.length) bits.push(`unmatched: ${preview.unmatched.join(", ")}`);
+  if (preview.idle.length) bits.push(`idle buddies: ${preview.idle.join(", ")}`);
+  note.textContent = bits.join(" · ");
+  el.buddyPreview.append(note);
+}
+
+function failBuddy(message) {
+  el.buddyError.textContent = message;
+  el.buddyError.hidden = false;
+}
+
+function wireBuddy() {
+  el.buddyPreviewBtn.addEventListener("click", () =>
+    run(el.buddyPreviewBtn, "Working…", async () => {
+      const preview = await api("/admin/api/buddy/round/preview", { method: "POST" });
+      state.buddy.seed = preview.seed;
+      state.buddy.roundId = null;
+      state.buddy.lastPreview = preview;
+      renderBuddy();
+    }, failBuddy),
+  );
+
+  el.buddyCommitBtn.addEventListener("click", async () => {
+    if (state.buddy.seed === null) return;
+    const go = await confirmAction({
+      title: "Commit this pairing?",
+      body: "The round and its pairs are written to the database. No emails go out yet.",
+      warning: "You can still send the emails afterwards, or leave it and run a fresh preview.",
+      action: "Commit",
+    });
+    if (!go) return;
+    run(el.buddyCommitBtn, "Committing…", async () => {
+      const res = await api("/admin/api/buddy/round/commit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ seed: state.buddy.seed }),
+      });
+      state.buddy.roundId = res.roundId;
+      state.buddy.seed = null;
+      showBanner(
+        `Committed: ${res.pairs} pair(s), ${res.unmatched} unmatched, ${res.idle} idle. Now send the emails.`,
+        true,
+      );
+      loadBuddy();
+    }, failBuddy);
+  });
+
+  el.buddyNotifyBtn.addEventListener("click", async () => {
+    if (!state.buddy.roundId) return;
+    const go = await confirmAction({
+      title: "Send the emails?",
+      body: "Every matched person gets their pairing, and everyone still unmatched gets a 'no match this round' note.",
+      warning: "There is no undo on a sent email.",
+      action: "Send",
+    });
+    if (!go) return;
+    run(el.buddyNotifyBtn, "Sending…", async () => {
+      const res = await api("/admin/api/buddy/round/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roundId: state.buddy.roundId }),
+      });
+      state.buddy.roundId = null;
+      showBanner(`Sent ${res.sent}, failed ${res.failed}.`, res.failed === 0);
+      loadBuddy();
+    }, failBuddy);
+  });
+}
+
 function wireUpChrome() {
   el.addBtn.addEventListener("click", () => openForm(null));
   el.backBtn.addEventListener("click", showList);
   el.cancelBtn.addEventListener("click", showList);
+  wireBuddy();
 
   // Remembered per collection, so switching tabs and coming back keeps the
   // order you chose rather than snapping back to the default.

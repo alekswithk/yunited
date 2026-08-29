@@ -152,6 +152,51 @@
             <p class="form-error" id="translations-error" role="alert" hidden></p>
           </form>
         </div>
+
+        <!-- ============ BUDDY SYSTEM ============ -->
+        <!-- Bespoke, like Access — not a generated collection form. Shown only
+             where the D1 store is bound (sections.buddy.enabled). All data
+             comes from /admin/api/buddy/*; see worker/buddy.js. -->
+        <div id="buddy-body" hidden>
+          <div class="list-head">
+            <h1 class="list-title">Buddy system</h1>
+            <div class="list-actions">
+              <a class="btn" id="buddy-export" href="/admin/api/buddy/export.csv">Export CSV</a>
+            </div>
+          </div>
+
+          <p class="access-lede">
+            Students sign up at yunited.ch/buddy to be a buddy or to be matched
+            with one. You run a matching round here: preview a random pairing over
+            everyone in the pool, commit it, then send the emails. Nothing is
+            written or sent until you press the button that says so.
+          </p>
+
+          <p class="loading" id="buddy-loading">Loading the buddy pool…</p>
+
+          <div id="buddy-main" hidden>
+            <div class="buddy-tiles" id="buddy-tiles"></div>
+
+            <h2 class="buddy-subhead">Run a round</h2>
+            <div class="buddy-run">
+              <button class="btn btn-primary" id="buddy-preview-btn" type="button">Preview a round</button>
+              <button class="btn" id="buddy-commit-btn" type="button" hidden>Commit this pairing</button>
+              <button class="btn" id="buddy-notify-btn" type="button" hidden>Send emails</button>
+            </div>
+            <p class="form-error" id="buddy-error" role="alert" hidden></p>
+            <div id="buddy-preview" hidden></div>
+
+            <h2 class="buddy-subhead">Signups</h2>
+            <p class="help" id="buddy-email-note" hidden>
+              Email isn't set up, so new signups can't confirm themselves. Check
+              with each person that the address is right, then press
+              <strong>Mark confirmed</strong> — they go into the next round like
+              any other.
+            </p>
+            <ul class="entries" id="buddy-signups"></ul>
+            <p class="empty" id="buddy-empty" hidden>No signups yet.</p>
+          </div>
+        </div>
       </section>
 
       <!-- ============ EDIT VIEW ============ -->

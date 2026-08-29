@@ -1,0 +1,190 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { localePaths, localizePath } from "../../../i18n/config.js";
+import { useTranslations } from "../../../i18n/utils.js";
+
+export const getStaticPaths = localePaths;
+
+const { locale } = Astro.params;
+const t = useTranslations(locale);
+
+// A thin static shell. The pairing itself is private, so it is fetched at
+// runtime from /buddy/api/pair?t=<token> — the token in the link is the only
+// key. Nothing is rendered here at build time except the loading and error
+// states and the labels the script fills in.
+const title = t("meta.buddyPair.title");
+const description = t("meta.buddyPair.description");
+---
+
+<BaseLayout locale={locale} title={title} description={description} path="/buddy/pair" noindex>
+  <section class="page-hero">
+    <div class="container">
+      <p class="hero-script">Kumstvo · Кумство · Buddy system</p>
+      <h1>{t("buddy.pairEyebrow")}</h1>
+    </div>
+  </section>
+
+  <div class="motif-divider" role="presentation"></div>
+
+  <section>
+    <div
+      class="container buddy-pair"
+      data-api={localizePath("/buddy/api/pair", locale)}
+      data-flag-api={localizePath("/buddy/api/pair/flag", locale)}
+      data-confirm-api={localizePath("/buddy/api/pair/confirm", locale)}
+      data-buddy-home={localizePath("/buddy", locale)}
+      data-label-loading={t("buddy.pairLoading")}
+      data-label-error={t("buddy.pairError")}
+      data-label-heading-prefix={t("buddy.pairHeadingPrefix")}
+      data-label-role-buddy={t("buddy.pairRoleBuddy")}
+      data-label-role-seeker={t("buddy.pairRoleSeeker")}
+      data-label-role-you={t("buddy.pairRoleYou")}
+      data-label-email={t("buddy.pairLabelEmail")}
+      data-label-studies={t("buddy.pairLabelStudies")}
+      data-label-languages={t("buddy.pairLabelLanguages")}
+      data-label-steps={t("buddy.pairStepsEyebrow")}
+      data-step-1={t("buddy.pairStep1")}
+      data-step-2={t("buddy.pairStep2")}
+      data-step-3={t("buddy.pairStep3")}
+      data-label-prompts={t("buddy.pairPromptsEyebrow")}
+      data-prompt-1={t("buddy.pairPrompt1")}
+      data-prompt-2={t("buddy.pairPrompt2")}
+      data-prompt-3={t("buddy.pairPrompt3")}
+      data-label-confirm-text={t("buddy.pairConfirmText")}
+      data-label-confirm-btn={t("buddy.pairConfirmBtn")}
+      data-label-flag-btn={t("buddy.pairFlagBtn")}
+      data-label-confirm-done={t("buddy.pairConfirmDone")}
+      data-label-flag-done={t("buddy.pairFlagDone")}
+    >
+      <p id="buddy-pair-status" class="section-intro">{t("buddy.pairLoading")}</p>
+      <div id="buddy-pair-body" hidden></div>
+    </div>
+  </section>
+
+  <script>
+    // Renders the pairing named by ?t=<token>. Progressive enhancement has
+    // nothing to fall back to here — without the token there is no page — so the
+    // no-token / bad-token case shows the same friendly error as a failed fetch.
+    const root = document.querySelector<HTMLElement>(".buddy-pair");
+    const statusLine = document.querySelector<HTMLElement>("#buddy-pair-status");
+    const bodyBox = document.querySelector<HTMLElement>("#buddy-pair-body");
+
+    if (root && statusLine && bodyBox) {
+      const d = root.dataset;
+      const token = new URLSearchParams(location.search).get("t") || "";
+
+      const fail = () => {
+        statusLine.textContent = d.labelError || "";
+        statusLine.hidden = false;
+        bodyBox.hidden = true;
+      };
+
+      const el = (tag: string, className?: string, text?: string) => {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text != null) node.textContent = text;
+        return node;
+      };
+
+      const card = (person: any, roleLabel: string, isYou: boolean) => {
+        const wrap = el("div", isYou ? "buddy-contact is-you" : "buddy-contact");
+        wrap.append(el("span", "buddy-contact-role", roleLabel));
+        wrap.append(el("h3", undefined, person.name || ""));
+        const dl = el("dl");
+        const row = (term: string, value: string) => {
+          if (!value) return;
+          dl.append(el("dt", undefined, term));
+          dl.append(el("dd", undefined, value));
+        };
+        row(d.labelEmail || "", person.email || "");
+        row(d.labelStudies || "", person.studies || "");
+        row(d.labelLanguages || "", person.languages || "");
+        wrap.append(dl);
+        if (person.note) {
+          const note = el("p", "buddy-contact-note", person.note);
+          wrap.append(note);
+        }
+        return wrap;
+      };
+
+      const render = (data: any) => {
+        bodyBox.replaceChildren();
+
+        const heading = el("h2", undefined, `${d.labelHeadingPrefix || ""} ${data.partner?.name || ""}`.trim());
+        bodyBox.append(heading);
+
+        const grid = el("div", "buddy-pair-grid");
+        grid.append(card(data.partner || {}, data.partnerIsBuddy ? (d.labelRoleBuddy || "") : (d.labelRoleSeeker || ""), false));
+        grid.append(card(data.you || {}, d.labelRoleYou || "", true));
+        bodyBox.append(grid);
+
+        bodyBox.append(el("p", "eyebrow eyebrow-azure", d.labelSteps || ""));
+        const steps = el("ul", "buddy-checklist");
+        const stepStore = `buddy-steps-${token}`;
+        let ticked: Record<string, boolean> = {};
+        try { ticked = JSON.parse(localStorage.getItem(stepStore) || "{}"); } catch { ticked = {}; }
+        [d.step1, d.step2, d.step3].forEach((label, i) => {
+          const li = el("li");
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.checked = Boolean(ticked[i]);
+          li.classList.toggle("is-done", cb.checked);
+          cb.addEventListener("change", () => {
+            ticked[i] = cb.checked;
+            li.classList.toggle("is-done", cb.checked);
+            try { localStorage.setItem(stepStore, JSON.stringify(ticked)); } catch { /* private mode */ }
+          });
+          const lab = el("label");
+          lab.append(cb, document.createTextNode(" " + (label || "")));
+          li.append(lab);
+          steps.append(li);
+        });
+        bodyBox.append(steps);
+
+        bodyBox.append(el("p", "eyebrow", d.labelPrompts || ""));
+        const prompts = el("ul", "buddy-prompts");
+        [d.prompt1, d.prompt2, d.prompt3].forEach((p) => prompts.append(el("li", undefined, p || "")));
+        bodyBox.append(prompts);
+
+        const bar = el("div", "buddy-confirm-bar");
+        bar.append(el("span", undefined, d.labelConfirmText || ""));
+        const actions = el("span", "buddy-confirm-actions");
+        const confirmBtn = el("button", "btn btn-outline", d.labelConfirmBtn || "") as HTMLButtonElement;
+        confirmBtn.type = "button";
+        const flagBtn = el("button", "btn btn-ghost", d.labelFlagBtn || "") as HTMLButtonElement;
+        flagBtn.type = "button";
+        const post = async (url: string, done: string, btn: HTMLButtonElement) => {
+          btn.disabled = true;
+          try {
+            await fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ t: token }),
+            });
+          } catch { /* best effort */ }
+          btn.textContent = done;
+        };
+        confirmBtn.addEventListener("click", () => post(d.confirmApi || "", d.labelConfirmDone || "", confirmBtn));
+        flagBtn.addEventListener("click", () => post(d.flagApi || "", d.labelFlagDone || "", flagBtn));
+        actions.append(confirmBtn, flagBtn);
+        bar.append(actions);
+        bodyBox.append(bar);
+
+        statusLine.hidden = true;
+        bodyBox.hidden = false;
+      };
+
+      if (!token) {
+        fail();
+      } else {
+        fetch(`${d.api}?t=${encodeURIComponent(token)}`, { headers: { Accept: "application/json" } })
+          .then((r) => (r.ok ? r.json() : Promise.reject(new Error("bad status"))))
+          .then((body) => {
+            if (body && body.ok && body.pair) render(body.pair);
+            else fail();
+          })
+          .catch(fail);
+      }
+    }
+  </script>
+</BaseLayout>

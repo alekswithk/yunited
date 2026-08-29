@@ -1,0 +1,331 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageToc from "../../components/PageToc.astro";
+import { localePaths, localizePath } from "../../i18n/config.js";
+import { useTranslations } from "../../i18n/utils.js";
+
+export const getStaticPaths = localePaths;
+
+const { locale } = Astro.params;
+const t = useTranslations(locale);
+
+const title = t("meta.buddy.title");
+const description = t("meta.buddy.description");
+
+// Each id must match a <section id> below.
+const sections = [
+  { id: "what", key: "buddy.tocWhat" },
+  { id: "who", key: "buddy.tocWho" },
+  { id: "signup", key: "buddy.tocSignup" },
+  { id: "faq", key: "buddy.tocFaq" },
+];
+---
+
+<BaseLayout locale={locale} title={title} description={description} path="/buddy">
+  <PageToc sections={sections} locale={locale} label="toc.aria" />
+
+  <section class="page-hero">
+    <div class="container">
+      <p class="hero-script">Kumstvo · Кумство · Buddy system</p>
+      <h1>{t("buddy.heroTitle")}</h1>
+      <p>{t("buddy.heroLede")}</p>
+    </div>
+  </section>
+
+  <div class="motif-divider" role="presentation"></div>
+
+  <section id="what">
+    <div class="container">
+      <p class="eyebrow">{t("buddy.whatEyebrow")}</p>
+      <h2>{t("buddy.whatHeading")}</h2>
+      <p class="section-intro">{t("buddy.whatLede")}</p>
+      <div class="buddy-prose">
+        <p set:html={t("buddy.whatP1")}></p>
+        <p set:html={t("buddy.whatP2")}></p>
+        <p set:html={t("buddy.whatP3")}></p>
+        <p set:html={t("buddy.whatP4")}></p>
+        <p set:html={t("buddy.whatP5")}></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="who">
+    <div class="container">
+      <p class="eyebrow eyebrow-azure">{t("buddy.whoEyebrow")}</p>
+      <div class="split-grid">
+        <div class="info-panel panel-red">
+          <h3>{t("buddy.studentsTitle")}</h3>
+          <p>{t("buddy.studentsBody")}</p>
+        </div>
+        <div class="info-panel">
+          <h3>{t("buddy.exchangeTitle")}</h3>
+          <p>{t("buddy.exchangeBody")}</p>
+        </div>
+      </div>
+      <div class="buddy-prompt">
+        <div>
+          <p class="buddy-prompt-title">{t("buddy.promptTitle")}</p>
+          <p class="buddy-prompt-body">{t("buddy.promptBody")}</p>
+        </div>
+        <a class="btn btn-gold" href="#signup">{t("buddy.promptCta")}</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="signup">
+    <div class="container">
+      <p class="eyebrow">{t("buddy.signupEyebrow")}</p>
+      <h2>{t("buddy.signupHeading")}</h2>
+
+      <p class="form-success" id="buddy-success" role="status" tabindex="-1"></p>
+
+      <form
+        id="buddy-form"
+        class="form-grid buddy-form"
+        action={localizePath("/buddy/api/signup", locale)}
+        method="POST"
+        novalidate
+        data-success-title={t("buddy.formSuccessTitle")}
+        data-success-body={t("buddy.formSuccessBody")}
+        data-msg-invalid={t("buddy.formError")}
+        data-msg-fallback={t("buddy.formFallback")}
+        data-label-send={t("buddy.submit")}
+        data-label-sending={t("buddy.formSending")}
+      >
+        <input type="hidden" name="locale" value={locale ?? "en"} />
+
+        <fieldset class="buddy-roles">
+          <legend>{t("buddy.roleLegend")}</legend>
+          <div class="buddy-role-choice">
+            <label>
+              <input type="radio" name="role" value="buddy" required />
+              <span>
+                <span class="rc-title">{t("buddy.roleBuddy")}</span>
+                <span class="rc-sub">{t("buddy.roleBuddyHint")}</span>
+              </span>
+            </label>
+            <label>
+              <input type="radio" name="role" value="seeker" required />
+              <span>
+                <span class="rc-title">{t("buddy.roleSeeker")}</span>
+                <span class="rc-sub">{t("buddy.roleSeekerHint")}</span>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div>
+          <label for="buddy-name">{t("buddy.fieldName")}</label>
+          <input id="buddy-name" name="name" type="text" required autocomplete="name" />
+        </div>
+
+        <div>
+          <label for="buddy-email">{t("buddy.fieldEmail")}</label>
+          <input id="buddy-email" name="email" type="email" required autocomplete="email"
+            placeholder="you@student.unisg.ch" />
+          <p class="form-note">{t("buddy.fieldEmailHelp")}</p>
+        </div>
+
+        <div>
+          <label for="buddy-audience">{t("buddy.fieldAudience")}</label>
+          <select id="buddy-audience" name="audience" required>
+            <option value="">{t("buddy.audienceChoose")}</option>
+            <option value="hsg">{t("buddy.audienceHsg")}</option>
+            <option value="exchange">{t("buddy.audienceExchange")}</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="buddy-level">{t("buddy.fieldLevel")} <span class="buddy-opt">({t("buddy.optional")})</span></label>
+          <select id="buddy-level" name="studyLevel">
+            <option value="">{t("buddy.levelChoose")}</option>
+            <option value="assessment">{t("buddy.levelAssessment")}</option>
+            <option value="bachelor">{t("buddy.levelBachelor")}</option>
+            <option value="master">{t("buddy.levelMaster")}</option>
+            <option value="other">{t("buddy.levelOther")}</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="buddy-languages">{t("buddy.fieldLanguages")} <span class="buddy-opt">({t("buddy.optional")})</span></label>
+          <input id="buddy-languages" name="languages" type="text"
+            placeholder="English, German, BCS" />
+          <p class="form-note">{t("buddy.fieldLanguagesHelp")}</p>
+        </div>
+
+        <div class="buddy-role-fields" id="buddy-fields-buddy" hidden>
+          <span class="buddy-sublabel">{t("buddy.fieldCapacity")}</span>
+          <div class="buddy-capacity" role="radiogroup" aria-label={t("buddy.fieldCapacity")}>
+            <label><input type="radio" name="capacity" value="1" checked /> 1</label>
+            <label><input type="radio" name="capacity" value="2" /> 2</label>
+            <label><input type="radio" name="capacity" value="3" /> 3</label>
+          </div>
+          <label class="buddy-check">
+            <input type="checkbox" name="openToExtra" value="on" />
+            <span>{t("buddy.fieldExtra")}</span>
+          </label>
+        </div>
+
+        <div class="buddy-role-fields" id="buddy-fields-seeker" hidden>
+          <label for="buddy-note">{t("buddy.fieldNote")} <span class="buddy-opt">({t("buddy.optional")})</span></label>
+          <textarea id="buddy-note" name="note" rows="4"
+            placeholder={t("buddy.fieldNotePlaceholder")}></textarea>
+          <p class="form-note">{t("buddy.fieldNoteHelp")}</p>
+        </div>
+
+        <label class="buddy-check">
+          <input type="checkbox" name="isMember" value="on" />
+          <span>{t("buddy.consentMember")}</span>
+        </label>
+        <label class="buddy-check">
+          <input type="checkbox" name="consent" value="on" required />
+          <span>{t("buddy.consentShare")}</span>
+        </label>
+
+        <!-- Honeypot: real people never see it; a bot that fills it in is dropped. -->
+        <input class="honeypot" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+        <p class="form-error" id="buddy-error" role="alert"></p>
+
+        <div>
+          <button class="btn btn-gold" type="submit" id="buddy-submit">{t("buddy.submit")}</button>
+        </div>
+        <p class="form-note">{t("buddy.submitNote")}</p>
+      </form>
+    </div>
+  </section>
+
+  <section id="faq" class="section-dark">
+    <div class="container">
+      <p class="eyebrow">{t("buddy.faqEyebrow")}</p>
+      <h2>{t("buddy.faqHeading")}</h2>
+      <div class="buddy-faq">
+        <div>
+          <h3>{t("buddy.faqQ1")}</h3>
+          <p>{t("buddy.faqA1")}</p>
+        </div>
+        <div>
+          <h3>{t("buddy.faqQ2")}</h3>
+          <p>{t("buddy.faqA2")}</p>
+        </div>
+        <div>
+          <h3>{t("buddy.faqQ3")}</h3>
+          <p>{t("buddy.faqA3")}</p>
+        </div>
+        <div>
+          <h3>{t("buddy.faqQ4")}</h3>
+          <p>{t("buddy.faqA4")}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Buddy signup: reveal the fields for the chosen role, validate in place,
+    // then submit to the Worker over fetch so the visitor stays on the page.
+    // With this script absent the form posts natively to the same endpoint and
+    // the Worker returns a plain confirmation page — nothing here is required
+    // for a signup to work.
+    //
+    // A processed <script>, not is:inline — Astro bundles it to a hashed file
+    // under /_astro, which is what lets script-src stay 'self'.
+    const form = document.querySelector<HTMLFormElement>("#buddy-form");
+    const errorLine = document.querySelector<HTMLElement>("#buddy-error");
+    const successLine = document.querySelector<HTMLElement>("#buddy-success");
+    const submitButton = document.querySelector<HTMLButtonElement>("#buddy-submit");
+
+    if (form && errorLine && successLine && submitButton) {
+      const fieldsFor: Record<string, HTMLElement | null> = {
+        buddy: document.querySelector("#buddy-fields-buddy"),
+        seeker: document.querySelector("#buddy-fields-seeker"),
+      };
+      const roleInputs = form.querySelectorAll<HTMLInputElement>('input[name="role"]');
+
+      const applyRole = (value: string) => {
+        for (const [role, box] of Object.entries(fieldsFor)) {
+          if (box) box.hidden = role !== value;
+        }
+      };
+      for (const input of roleInputs) {
+        input.addEventListener("change", () => applyRole(input.value));
+      }
+
+      const MSG_INVALID = form.dataset.msgInvalid || "";
+      const MSG_FALLBACK = form.dataset.msgFallback || "";
+      const LABEL_SEND = form.dataset.labelSend || submitButton.textContent || "";
+      const LABEL_SENDING = form.dataset.labelSending || "";
+      const SUCCESS_TITLE = form.dataset.successTitle || "";
+      const SUCCESS_BODY = form.dataset.successBody || "";
+
+      const showError = (text: string) => {
+        errorLine.textContent = text;
+        errorLine.classList.add("is-visible");
+      };
+
+      const emailField = form.querySelector<HTMLInputElement>("#buddy-email");
+      const nameField = form.querySelector<HTMLInputElement>("#buddy-name");
+      const audienceField = form.querySelector<HTMLSelectElement>("#buddy-audience");
+      const consentField = form.querySelector<HTMLInputElement>('input[name="consent"]');
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!emailField || !nameField || !audienceField || !consentField) return;
+
+        const role = form.querySelector<HTMLInputElement>('input[name="role"]:checked');
+        const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailField.value.trim());
+
+        const checks: [HTMLElement, boolean][] = [
+          [role ? role.closest("fieldset")! : form, Boolean(role)],
+          [nameField, Boolean(nameField.value.trim())],
+          [emailField, emailOk],
+          [audienceField, Boolean(audienceField.value)],
+          [consentField, consentField.checked],
+        ];
+        for (const [field, ok] of checks) {
+          if (field instanceof HTMLInputElement || field instanceof HTMLSelectElement) {
+            field.setAttribute("aria-invalid", ok ? "false" : "true");
+          }
+        }
+        const firstBad = checks.find(([, ok]) => !ok);
+        if (firstBad) {
+          showError(MSG_INVALID);
+          firstBad[0].focus?.();
+          return;
+        }
+
+        errorLine.classList.remove("is-visible");
+        submitButton.disabled = true;
+        submitButton.textContent = LABEL_SENDING;
+
+        try {
+          const response = await fetch(form.action, {
+            method: "POST",
+            body: new FormData(form),
+            headers: { Accept: "application/json" },
+          });
+          const body = await response.json().catch(() => null);
+
+          if (response.ok && body && body.ok) {
+            form.reset();
+            form.hidden = true;
+            successLine.innerHTML = "";
+            const strong = document.createElement("strong");
+            strong.textContent = SUCCESS_TITLE;
+            const p = document.createElement("p");
+            p.textContent = SUCCESS_BODY.replace("{email}", emailField.value.trim());
+            successLine.append(strong, p);
+            successLine.classList.add("is-visible");
+            successLine.focus();
+            return;
+          }
+          showError((body && body.error) || MSG_FALLBACK);
+        } catch {
+          showError(MSG_FALLBACK);
+        } finally {
+          submitButton.disabled = false;
+          submitButton.textContent = LABEL_SEND;
+        }
+      });
+    }
+  </script>
+</BaseLayout>

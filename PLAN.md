@@ -287,6 +287,9 @@ extensionless; events are never marked "past" by hand; shared chrome lives once 
 | #66–#72 | **A batch of small roadmap/content items** — the add-to-calendar `.ics` link, a skip-to-main-content link (WCAG 2.4.1), a Formspree `preconnect`, an `/events.xml` RSS feed, an `npm audit` fix (7 → 0 vulnerabilities) plus a non-blocking audit step and `workflow_dispatch` in CI, and two rounds of join-page copy ("casino nights" → "adventures"/"avanture"/"Abenteuer", English then the other four locales). Each is detailed under its own §3/§4/§5 item above rather than repeated here |
 | #73 | **Membership: CHF 15/semester → CHF 30/year, everywhere; "buddy system" → "kumstvo" in hr/bs/sr** — two board-requested content changes. **Pricing:** `meta.join.description`, `join.semesterTitle` and `join.semesterBody` updated in all five dictionaries ("Semester membership — CHF 15" → "Annual membership — CHF 30"; "for the semester" → "for the year"/"pro Jahr"/"godišnje", matching each language's existing construction). **Terminology:** the club judged a literal "sustav/sistem prijatelja" ("system of friends") undersells the programme, and picked **kumstvo** — the traditional Balkan god-parent/sponsor kinship — instead. Replaced in every hr/bs/sr string that names the concept (`toc.buddy`, `about.buddyEyebrow`/`buddyLede`/`buddyCta`, `about.missionP4`, `exchange.incomingBuddy`, `contact.topicExchange`), with the surrounding grammar re-agreed where "sustav/sistem" was masculine and "kumstvo" is neuter (`naš` → `naše`). **German is untouched** — the request was Balkan-languages-only, and German's own "Buddy-System" loanword was never the problem. `src/lib/translate/glossary.js`'s `TERMS.buddySystem` — the pinned-terminology policy both the Worker and the CLIs read — is updated to match: `canonical` is now `kumstvo` for hr/bs/sr, and the old `sustav prijatelj`/`sistem prijatelj` renderings are added to `forbidden`, so a future auto-translation of new buddy-system copy can't quietly regress to the literal phrase this replaces. One existing `validate.test.js` fixture asserted the *old* canonical as the "good, zero-error" case; updated to assert `kumstvo` instead, plus a new assertion that the old canonical is now itself flagged. The Casino Night event and its imagery are untouched, per instruction. **Verified:** `npm test` 146/146 · `build` (41 pages) · `check` 0/0/0 · `check:dist` · `checkDictionary()` run directly against the real hr/bs/sr dictionaries (not just test fixtures) confirms zero buddy-system-related findings, and the 7 pre-existing findings per locale (untranslated `skipLink`/`emptyUpcoming*`/`addToCalendar` keys) are unchanged · confirmed in the built HTML for every locale. **Not done, flagged for a decision:** `events.heroLede` in en/hr/bs/sr still names "casino nights"/"casino večeri" — a different page (`/events`, not `/join`) that was out of scope for the earlier "adventures" wording change and untouched here too |
 
+| — | **Buddy system, part 1 — the `/buddy` page** *(branch `buddy-system`)* — the programme gets its own localized page (nav "Buddy" en/de, "Kumstvo" hr/bs/sr): a two-column explanation, a sign-up prompt, then the sign-up form at the foot; About keeps a teaser linking across. `buddy/confirmed`, `buddy/removed`, `buddy/check-email` and a `buddy/pair` dashboard shell. The pairing rule is a pure seeded function `planMatches()` in `src/lib/buddy/match.js` (fill everyone to one buddy, then overflow **only** onto buddies who opted in, then hold the rest) with `schema.js` (Zod signup) and `tokens.js` alongside it. Full `buddy.*` block in all five dictionaries — hr/bs/sr on *kumstvo*, bs/sr in their own lexis, sr in Latin. `npm test` 171 |
+| — | **Buddy system, part 2 — signup, matching, emails, admin** *(branch `buddy-system`)* — the server half. New **Cloudflare D1** store (`worker/migrations/0001_buddy.sql`: `signups`/`rounds`/`pairs`) reached only through `/buddy/api/*` (public, token-authed — no Access) and `/admin/api/buddy/*` (behind the existing Access gate). `worker/buddy.js` + `worker/buddy-store.js` handle signup → email verification → the board's **preview → commit → send** round from a new `/admin` **Buddy** tab → the per-pair page with "we've connected" / "something's not working". Email is **Resend** (free tier) via `src/lib/buddy/emails.js` — `sendEmail` never throws, a failure never blocks a signup or a round, and with no key the board confirms people by hand from the tab. Nightly cron also purges unverified signups older than 14 days. `npm test` 198 · `build` 66 pages · `check` 0/0/0 · `check:dist`. **Inert until the two §3 items (create the D1 database; set `RESEND_API_KEY` + DNS) are done.** |
+
 Earlier foundation (pre-#12): Astro migration + build-time image optimization.
 
 ---
@@ -349,6 +352,31 @@ Manual/account steps (code is in place).
       DeepL key from **yunited@shsg.ch** rather than a personal address, so a
       handover is a password change. Same for `GITHUB_TOKEN` and `CF_API_TOKEN`.
       See [`docs/HANDOVER.md`](docs/HANDOVER.md).
+
+- [ ] **Turn on the buddy system** — 🧑 maintainer, two out-of-band steps; the
+      code is on branch `buddy-system` and does nothing until both are done.
+      Full recipe in [`worker/README.md`](worker/README.md) → "The buddy system".
+      1. **Create the D1 database and apply the schema.**
+         ```bash
+         npx wrangler d1 create yunited-buddy
+         # paste the printed id into wrangler.jsonc (replace REPLACE_WITH_D1_ID)
+         npx wrangler d1 migrations apply yunited-buddy --remote
+         ```
+         With no `BUDDY_DB` binding the `/admin` **Buddy** tab is hidden and
+         `/buddy/api/*` returns a 503 naming this step.
+      2. **Set the Resend key** and add its SPF/DKIM records for `yunited.ch`.
+         ```bash
+         npx wrangler secret put RESEND_API_KEY
+         ```
+         Free tier (100/day, 3,000/month) covers the club. Ideally the Resend
+         account is on `yunited@shsg.ch`, not a personal address — same reasoning
+         as the DeepL key. **Signups still work with no key** (the board confirms
+         people by hand from the Buddy tab); no round email goes out until it is
+         set.
+
+      Also open, once it is live: decide the round cadence (assume term-start +
+      one straggler round), and whether the optional UniClubs member-list
+      cross-check is worth doing (export a CSV from UniClubs each term).
 
 - [ ] **Add the 26/27 events when the dates are set** — 🧑 board. **Still open,
       re-verified 2026-08-23:** all 8 dated events are in the past (the newest is

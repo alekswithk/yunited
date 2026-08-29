@@ -123,6 +123,53 @@ key is back.
 
 ---
 
+## The buddy system
+
+Students sign up at **yunited.ch/buddy** to be a buddy or to be matched with one.
+Everything the board does is on the **Buddy** tab (it only appears once a
+maintainer has set the buddy database up — see `worker/README.md`).
+
+### Running a matching round
+
+Do this at the start of term, and again a few weeks later for anyone who signed
+up late. It is three deliberate steps, and nothing is written or sent until the
+step that says so:
+
+1. **Preview a round.** You get a table of who would be paired with whom, plus
+   anyone who would be left unmatched and any buddies who would get nobody. Press
+   it again for a different random pairing. Nothing is saved.
+2. **Commit this pairing.** The round and its pairs are written down. The people
+   in it are marked *matched*. Still no emails.
+3. **Send emails.** Everyone matched gets their pairing with a private link;
+   everyone still waiting gets a short "no match this round" note. There is no
+   undo on a sent email, so this asks you to confirm.
+
+The pool snapshot at the top tells you *when* a round is worth running — how many
+buddies, how many people looking, and whether there are enough places to go
+round. If buddies are short, the ones who ticked "take an extra if we're short"
+each get one more; anyone still unmatched is held for the next round, never
+forced onto a buddy who did not offer.
+
+### Signups
+
+The list under the round controls is everyone whose email is **not yet
+confirmed**. Normally they confirm themselves from the link we email them. If
+email isn't set up yet, the panel says so — check the address with each person
+and press **Mark confirmed** to put them in the next round by hand. **Remove**
+deletes a signup (spam, or someone who asked to be taken off).
+
+**Export CSV** downloads the whole pool for your own records and for handover.
+
+### After a pair is made
+
+Each pair gets its own page — reached only through the link in their email — with
+both people's contact details, a short first-steps checklist, and two buttons:
+*We've connected* (tells you the pair took) and *Something's not working* (flags
+it, and you re-pair that person in the next round). Every email also has a
+one-click link to leave the pool.
+
+---
+
 ## Giving someone access
 
 **In the panel, under the `Access` tab.** Type their email address, press
