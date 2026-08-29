@@ -85,6 +85,7 @@ const el = {
   buddyPreviewBtn: $("buddy-preview-btn"),
   buddyCommitBtn: $("buddy-commit-btn"),
   buddyNotifyBtn: $("buddy-notify-btn"),
+  buddyRoundStatus: $("buddy-round-status"),
   buddyError: $("buddy-error"),
   buddyPreview: $("buddy-preview"),
   buddySignups: $("buddy-signups"),
@@ -1160,13 +1161,14 @@ async function loadBuddy() {
   el.buddyMain.hidden = true;
   try {
     const data = await api("/admin/api/buddy/state");
-    // Keep any in-flight round state across a refresh — a commit sets roundId
-    // then reloads, and "Send emails" must stay available.
+    // Whether "Send emails" shows is decided by the server (data.lastRound has
+    // no notifiedAt), not by anything this session remembers — so it survives a
+    // re-preview, a tab switch or a reload. `seed`/`lastPreview` are just the
+    // last preview table, kept so it doesn't vanish on a refresh.
     state.buddy = {
       loaded: true,
       data,
       seed: state.buddy.seed,
-      roundId: state.buddy.roundId,
       lastPreview: state.buddy.lastPreview,
     };
     renderBuddy();
@@ -1212,9 +1214,30 @@ function renderBuddy() {
     }),
   );
 
-  // "Send emails" only makes sense right after a commit this session.
+  // Commit shows while a preview is on screen; Send emails shows whenever the
+  // most recent round has been committed but not yet emailed — read straight
+  // from the server, so re-previewing or reloading can't lose it.
+  const last = data.lastRound;
+  const roundPending = Boolean(last && !last.notifiedAt);
   el.buddyCommitBtn.hidden = state.buddy.seed === null;
-  el.buddyNotifyBtn.hidden = state.buddy.roundId === null;
+  el.buddyNotifyBtn.hidden = !roundPending;
+  el.buddyNotifyBtn.classList.toggle("btn-primary", roundPending);
+
+  if (roundPending) {
+    el.buddyRoundStatus.textContent =
+      `Round committed — ${last.pairs} pair${last.pairs === 1 ? "" : "s"}, not emailed yet. ` +
+      `Press “Send emails”.`;
+    el.buddyRoundStatus.hidden = false;
+  } else if (last) {
+    const when = last.notifiedAt ? ` on ${last.notifiedAt.slice(0, 10)}` : "";
+    el.buddyRoundStatus.textContent =
+      `Last round: ${last.pairs} pair${last.pairs === 1 ? "" : "s"}, emailed${when}` +
+      (last.flagged ? ` · ${last.flagged} flagged a problem` : "") +
+      ".";
+    el.buddyRoundStatus.hidden = false;
+  } else {
+    el.buddyRoundStatus.hidden = true;
+  }
 
   el.buddyEmailNote.hidden = data.emailConfigured !== false;
 
@@ -1332,18 +1355,23 @@ function wireBuddy() {
     run(el.buddyPreviewBtn, "Working…", async () => {
       const preview = await api("/admin/api/buddy/round/preview", { method: "POST" });
       state.buddy.seed = preview.seed;
-      state.buddy.roundId = null;
       state.buddy.lastPreview = preview;
+      // Previewing never touches a committed round — "Send emails" is driven by
+      // the server, and renderBuddy reads it fresh each time.
       renderBuddy();
     }, failBuddy),
   );
 
   el.buddyCommitBtn.addEventListener("click", async () => {
     if (state.buddy.seed === null) return;
+    const last = state.buddy.data?.lastRound;
+    const roundPending = Boolean(last && !last.notifiedAt);
     const go = await confirmAction({
       title: "Commit this pairing?",
       body: "The round and its pairs are written to the database. No emails go out yet.",
-      warning: "You can still send the emails afterwards, or leave it and run a fresh preview.",
+      warning: roundPending
+        ? "The last round still hasn't been emailed. Send it first — committing now leaves it unsent."
+        : "You can still send the emails afterwards, or leave it and run a fresh preview.",
       action: "Commit",
     });
     if (!go) return;
@@ -1353,10 +1381,9 @@ function wireBuddy() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ seed: state.buddy.seed }),
       });
-      state.buddy.roundId = res.roundId;
       state.buddy.seed = null;
       showBanner(
-        `Committed: ${res.pairs} pair(s), ${res.unmatched} unmatched, ${res.idle} idle. Now send the emails.`,
+        `Committed: ${res.pairs} pair(s), ${res.unmatched} unmatched, ${res.idle} idle. Now press “Send emails”.`,
         true,
       );
       loadBuddy();
@@ -1364,7 +1391,6 @@ function wireBuddy() {
   });
 
   el.buddyNotifyBtn.addEventListener("click", async () => {
-    if (!state.buddy.roundId) return;
     const go = await confirmAction({
       title: "Send the emails?",
       body: "Every matched person gets their pairing, and everyone still unmatched gets a 'no match this round' note.",
@@ -1373,13 +1399,14 @@ function wireBuddy() {
     });
     if (!go) return;
     run(el.buddyNotifyBtn, "Sending…", async () => {
+      // No roundId — the Worker sends for the most recent un-emailed round.
       const res = await api("/admin/api/buddy/round/notify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roundId: state.buddy.roundId }),
+        body: JSON.stringify({}),
       });
-      state.buddy.roundId = null;
-      showBanner(`Sent ${res.sent}, failed ${res.failed}.`, res.failed === 0);
+      if (res.alreadyNotified) showBanner("That round's emails had already gone out.", true);
+      else showBanner(`Sent ${res.sent}, failed ${res.failed}.`, res.failed === 0);
       loadBuddy();
     }, failBuddy);
   });

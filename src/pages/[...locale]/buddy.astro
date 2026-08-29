@@ -306,15 +306,20 @@ const sections = [
           const body = await response.json().catch(() => null);
 
           if (response.ok && body && body.ok) {
+            const address = emailField.value.trim();
             form.reset();
             form.hidden = true;
             successLine.innerHTML = "";
             const strong = document.createElement("strong");
             strong.textContent = SUCCESS_TITLE;
             const p = document.createElement("p");
-            p.textContent = SUCCESS_BODY.replace("{email}", emailField.value.trim());
+            p.textContent = SUCCESS_BODY.replace("{email}", address);
             successLine.append(strong, p);
-            successLine.classList.add("is-visible");
+            // Prominent, and brought into view — the one thing left to do is in
+            // an inbox, so it should not be a quiet line at the foot of a long
+            // page.
+            successLine.classList.add("is-visible", "buddy-form-done");
+            successLine.scrollIntoView({ behavior: "smooth", block: "center" });
             successLine.focus();
             return;
           }
