@@ -8,7 +8,12 @@ export const getStaticPaths = localePaths;
 
 const { locale } = Astro.params;
 const t = useTranslations(locale);
-const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA";
+// Production site key baked in as the default — it is public, and relying on a
+// Cloudflare build-env var alone meant a missing/misplaced var silently shipped
+// the always-pass test key. Override with PUBLIC_TURNSTILE_SITE_KEY (e.g. the
+// test key "1x00000000000000000000AA") for local dev if localhost is not an
+// allowed hostname on the widget.
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAAEiJ4FmgBclbap5B";
 
 const title = t("meta.buddy.title");
 const description = t("meta.buddy.description");
