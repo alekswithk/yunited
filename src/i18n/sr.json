@@ -1,4 +1,5 @@
 {
+  "skipLink": "Preskoči na glavni sadržaj",
   "nav": {
     "home": "Početna",
     "about": "O nama",
@@ -103,11 +104,17 @@
     "pastEyebrow": "Sažeci",
     "pastHeading": "Prošli događaji",
     "pastIntro": "Pogled na ono što smo nedavno radili. Fotografije i priče možeš pronaći i na našem <a href=\"https://www.instagram.com/yunited.unisg\" target=\"_blank\" rel=\"noopener\">Instagramu</a>.",
+    "emptyUpcomingEyebrow": "Sledeće izdanje",
+    "emptyUpcomingHeading": "Sledeći događaj još nije najavljen.",
+    "emptyUpcomingBody": "Odbor utvrđuje program semestra u prvim nedeljama semestra. Prati nas i bićeš prvi koji čuje.",
+    "emptyUpcomingInstagram": "Prati @yunited.unisg",
+    "emptyUpcomingUniclubs": "Pogledaj na uniclubs",
     "emptyPast": "Još nema prošlih događaja.",
     "rsvpCta": "Prijavi se na uniclubs →",
     "pastCta": "Stranica događaja →",
     "dateTba": "Datum će biti objavljen",
-    "photoAlt": "Fotografija s događaja {title}"
+    "photoAlt": "Fotografija s događaja {title}",
+    "addToCalendar": "Dodaj u kalendar"
   },
   "about": {
     "heroTitle": "O klubu YUnited",

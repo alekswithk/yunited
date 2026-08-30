@@ -38,6 +38,14 @@ quota and grow D1 for up to 14 days. Fixed with Cloudflare Turnstile:
   `wrangler secret put TURNSTILE_SECRET_KEY`, set `PUBLIC_TURNSTILE_SITE_KEY` in
   Workers Build env. Without the secret the check is skipped (safe fallback).
 
+**2026-08-30 — Fill the 7 English-fallback i18n keys**
+
+`skipLink`, `events.emptyUpcomingEyebrow/Heading/Body/Instagram/Uniclubs`, and
+`events.addToCalendar` were missing in de/hr/bs/sr and fell back to English. Filled
+manually following the glossary policy (Swiss ss/no-ß for de; Ijekavian + Croatian
+lexis for hr; Ijekavian + Bosnian lexis for bs; Ekavian Latin for sr). `npm test`
+201/201, `npm run build` 66 pages, `npm run check:dist` clean.
+
 ---
 
 # PLAN.md — YUnited website: status, structure & roadmap
