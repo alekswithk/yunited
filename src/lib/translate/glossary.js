@@ -139,6 +139,18 @@ export const PROTECTED = [
  * Where a canonical form was already chosen by hand in this repo's history, it
  * is preserved rather than re-decided — see the `buddySystem` note.
  */
+
+/**
+ * @typedef {Object} Term
+ * @property {string} en           The English headword, used in messages and as the detect fallback.
+ * @property {string[]} detect     Source-text stems that scope the check; empty means prompt-only.
+ * @property {Record<string, string>} canonical  The pinned rendering, per language code.
+ * @property {string[]} forbidden  Renderings blocked in every language.
+ * @property {Record<string, string[]>} [forbiddenIn]  Renderings blocked only in the listed languages.
+ * @property {string} [note]       Shown alongside a forbidden-rendering error.
+ */
+
+/** @type {Record<string, Term>} */
 export const TERMS = {
   buddySystem: {
     en: "buddy system",
