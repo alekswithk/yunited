@@ -159,7 +159,12 @@ export const TERMS = {
     // prijateljskog parenja", on the About page. "mentorstvo" is a register
     // error rather than a howler — a buddy is a peer, a mentor is a senior —
     // but it still has to go.
-    forbidden: ["parenj", "buddy-", "mentor", "sustav prijatelj", "sistem prijatelj"],
+    //
+    // "buddy-" is scoped to Balkan languages only via forbiddenIn: German keeps
+    // its own "Buddy-System" loanword untouched, so the stem must not be flagged
+    // there, and adding it to the universal list would reject the correct output.
+    forbidden: ["parenj", "mentor", "sustav prijatelj", "sistem prijatelj"],
+    forbiddenIn: { hr: ["buddy-"], bs: ["buddy-"], sr: ["buddy-"] },
     note: "A peer who has already been through it — NOT a mentor, never a form of 'parenje' (mating), and (Balkan languages) not the old literal 'sustav/sistem prijatelja' — kumstvo is the pinned term as of 2026-08-27.",
   },
 

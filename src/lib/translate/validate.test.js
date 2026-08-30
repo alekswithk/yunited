@@ -86,6 +86,17 @@ test("the buddy system is never a mating system", () => {
   assert.match(messages(oldCanonical), /forbidden rendering of "buddy system"/);
 });
 
+test("'buddy-' is only forbidden in Balkan languages, not German", () => {
+  // German's canonical is "Buddy-System" — the loanword. The stem "buddy-" must
+  // not be flagged there, only in hr/bs/sr where "kumstvo" is pinned.
+  const src = "Our buddy system pairs you with someone who has already been through it.";
+  const good = errs(src, "Unser Buddy-System verbindet dich mit jemandem, der das schon kennt.", "about.buddyLede", "de");
+  assert.equal(good.length, 0, messages(good));
+
+  // Still forbidden in Croatian.
+  assert.match(messages(errs(src, "Naš Buddy-System povezuje te s nekim.", "about.buddyLede", "hr")), /forbidden rendering of "buddy system"/);
+});
+
 test("the buddy system is not a mentorship — a peer is not a senior", () => {
   const src = "Our buddy system offers guidance.";
   const bad = errs(src, "Naš sistem mentorstva pruža smernice.", "about.missionP4", "sr");
@@ -336,10 +347,13 @@ test("every pinned term defines a canonical form for every Balkan target", () =>
 
 test("no pinned term forbids its own canonical form", () => {
   // A contradiction here would make every translation of that concept fail,
-  // whatever the model returned.
+  // whatever the model returned. Checks both universal `forbidden` and the
+  // per-language `forbiddenIn` — a language-scoped stem must not contradict
+  // that same language's canonical.
   for (const [name, term] of Object.entries(TERMS)) {
     for (const [code, canonical] of Object.entries(term.canonical)) {
-      for (const bad of term.forbidden) {
+      const stems = [...term.forbidden, ...(term.forbiddenIn?.[code] ?? [])];
+      for (const bad of stems) {
         assert.ok(
           !canonical.toLowerCase().includes(bad.toLowerCase()),
           `TERMS.${name}.canonical.${code} ("${canonical}") contains its own forbidden form "${bad}"`,
