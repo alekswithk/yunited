@@ -136,6 +136,13 @@
 	"workers_dev": false,
 	"preview_urls": false,
 
+	// TURNSTILE_SECRET_KEY — Worker secret for the signup abuse check (Cloudflare
+	// Turnstile). Without it the server-side check is skipped, which is the safe
+	// fallback for a fresh deploy or a dev setup. Set it with:
+	//   npx wrangler secret put TURNSTILE_SECRET_KEY
+	// The matching site key (PUBLIC_TURNSTILE_SITE_KEY) is a build-env var, not a
+	// secret — it is public and can be hardcoded.
+
 	// The buddy system's store (worker/buddy.js, worker/buddy-store.js). The
 	// binding name must stay BUDDY_DB — the Worker reads env.BUDDY_DB. No
 	// `remote`, so `wrangler dev` uses a local SQLite copy that cannot touch
