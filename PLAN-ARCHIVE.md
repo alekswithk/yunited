@@ -17,6 +17,16 @@
 
 ---
 
+## Shipped: fill the 7 English-fallback i18n keys (2026-08-30)
+
+`skipLink`, `events.emptyUpcomingEyebrow/Heading/Body/Instagram/Uniclubs`, and
+`events.addToCalendar` were missing in de/hr/bs/sr and fell back to English. Filled
+manually following the glossary policy (Swiss ss/no-ß for de; Ijekavian + Croatian
+lexis for hr; Ijekavian + Bosnian lexis for bs; Ekavian Latin for sr). `npm test`
+201/201, `npm run build` 66 pages, `npm run check:dist` clean.
+
+---
+
 # PLAN.md — YUnited website: status, structure & roadmap
 
 **Purpose.** One living document to see at a glance what the repo *is*, what's

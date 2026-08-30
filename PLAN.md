@@ -208,17 +208,7 @@ implement *from* it. Roughly ordered by impact ÷ effort.
   tree entry with a null sha. No network, per `CLAUDE.md`. Touches `worker/**`, so
   human review either way (§6).
 
-- **Fill the 7 English-fallback i18n keys** *(S).* `skipLink`,
-  `events.emptyUpcomingEyebrow/Heading/Body/Instagram/Uniclubs`, and
-  `events.addToCalendar` are missing in de/hr/bs/sr and render in English. The
-  `emptyUpcoming` ones are shown on `/events` whenever the calendar is bare, so
-  non-English visitors see English on that page. Run `npm run translate` (needs
-  `DEEPL_API_KEY` in a gitignored `.env`; pass `de` explicitly — it is
-  hand-reviewed), read the review report, commit the JSON. `buddy.*` keys are
-  already fully translated.
-
-- **Surface untranslated keys in CI** *(S).* The 7 keys above have survived ~5
-  PRs because the fix needs a key and a review pass and keeps being deferred. A
+- **Surface untranslated keys in CI** *(S).* A
   non-failing `check:dist` (or CI) warning listing every key identical to English
   in a `complete: true` locale would make the debt visible on every PR. English
   fallback is legitimate mid-work — so a warning, not an error.
