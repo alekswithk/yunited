@@ -108,6 +108,13 @@ Admin panel markup for the Buddy tab is in `public/admin/{index.html,admin.js,ad
 12. **The `/buddy` pages obey the site CSP** (no inline `style=`, no inline
     `<script>`) and the "browser pass at the breakpoints" rule — `/buddy/pair`
     especially, since students open it on a phone from an email link.
+13. **Turnstile protects `POST /buddy/api/signup` against bot abuse.** The check
+    runs only when `env.TURNSTILE_SECRET_KEY` is set (skipped without it — a
+    known fallback, not a silent failure). `verifyTurnstile` is injected via
+    `deps` so tests can mock it. The site key (`PUBLIC_TURNSTILE_SITE_KEY`) is
+    a build-time env var (public; defaults to Cloudflare's always-pass test key
+    `1x00000000000000000000AA`). Both are provisioned out-of-band — see
+    `worker/README.md` → "The buddy system" → "One-time setup".
 
 ---
 
@@ -134,11 +141,6 @@ Admin panel markup for the Buddy tab is in `public/admin/{index.html,admin.js,ad
   yunited-buddy --remote` (verify it ran), then `npx wrangler secret put
   RESEND_API_KEY` + the Resend SPF/DKIM records for `yunited.ch`. D1 is already
   created and bound (`wrangler.jsonc` has a real `database_id`).
-- **No per-IP rate limit on `POST /buddy/api/signup`.** Present defences: the
-  honeypot, the email-verification gate, same-email dedup, and the 14-day purge.
-  Gap: distinct fake emails are unbounded — a script can exhaust the Resend
-  100/day quota and grow D1 for up to 14 days. Close before `/buddy` is announced
-  widely.
 - **`worker/buddy-store.js` has no tests** (by design — thin I/O layer, like
   `github.js`). Worth an injected-D1-stub test; see `PLAN.md` §4.
 - **`/buddy/pair` and `/admin` have never been rendered at the 33rem phone width.**
@@ -152,6 +154,7 @@ Admin panel markup for the Buddy tab is in `public/admin/{index.html,admin.js,ad
 ## Pointers
 
 - `worker/README.md` → "The buddy system" — the maintainer setup recipe.
+- `worker/README.md` → "The buddy system" → "One-time setup" — includes Turnstile setup (step 3).
 - `docs/ADMIN.md` — board-facing usage.
-- `PLAN.md` §2 (go-live) and §4 (abuse gap, store tests).
+- `PLAN.md` §2 (go-live) and §4 (store tests).
 - `CLAUDE.md` — the cross-cutting rules (CSP, isomorphic constraint, browser pass).

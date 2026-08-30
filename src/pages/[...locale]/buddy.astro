@@ -8,6 +8,7 @@ export const getStaticPaths = localePaths;
 
 const { locale } = Astro.params;
 const t = useTranslations(locale);
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA";
 
 const title = t("meta.buddy.title");
 const description = t("meta.buddy.description");
@@ -185,6 +186,9 @@ const sections = [
         <!-- Honeypot: real people never see it; a bot that fills it in is dropped. -->
         <input class="honeypot" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
 
+        <!-- Turnstile bot challenge — resolved automatically with the test key in dev -->
+        <div class="cf-turnstile" data-sitekey={siteKey} data-theme="auto"></div>
+
         <p class="form-error" id="buddy-error" role="alert"></p>
 
         <div>
@@ -229,6 +233,17 @@ const sections = [
     //
     // A processed <script>, not is:inline — Astro bundles it to a hashed file
     // under /_astro, which is what lets script-src stay 'self'.
+
+    // Dynamically inject the Turnstile script so it stays out of the HTML source and
+    // the CSP can pin the origin to script-src without needing a nonce.
+    const tsEl = document.querySelector(".cf-turnstile");
+    if (tsEl) {
+      const tsScript = document.createElement("script");
+      tsScript.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+      tsScript.async = true;
+      document.head.appendChild(tsScript);
+    }
+
     const form = document.querySelector<HTMLFormElement>("#buddy-form");
     const errorLine = document.querySelector<HTMLElement>("#buddy-error");
     const successLine = document.querySelector<HTMLElement>("#buddy-success");

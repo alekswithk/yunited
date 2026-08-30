@@ -68,7 +68,19 @@ function studyLabel(row) {
 
 // --- public: POST /buddy/api/signup -------------------------------------------
 
-async function signup(request, env, { store, send, now, origin }) {
+async function defaultVerifyTurnstile(token, secret) {
+  const form = new FormData();
+  form.append("secret", secret);
+  form.append("response", token);
+  const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+    method: "POST",
+    body: form,
+  });
+  const data = await res.json().catch(() => ({ success: false }));
+  return Boolean(data.success);
+}
+
+async function signup(request, env, { store, send, now, origin, verifyTurnstile }) {
   const raw = await readBody(request);
 
   // Honeypot: a bot fills the hidden field. Answer as if it worked, write
@@ -77,6 +89,17 @@ async function signup(request, env, { store, send, now, origin }) {
     return wantsJson(request)
       ? json({ ok: true })
       : redirect(localePath(guessLocale(raw.locale), "/buddy/check-email"));
+  }
+
+  const tsSecret = env.TURNSTILE_SECRET_KEY || "";
+  if (tsSecret) {
+    const tsToken = String(raw["cf-turnstile-response"] || "");
+    const ok = await verifyTurnstile(tsToken, tsSecret);
+    if (!ok) {
+      return wantsJson(request)
+        ? json({ ok: false, error: "Security check failed. Please reload and try again.", field: "turnstile" }, 400)
+        : redirect(localePath(guessLocale(raw.locale), "/buddy/check-email"));
+    }
   }
 
   const parsed = parseSignup(raw);
@@ -253,8 +276,9 @@ export async function handleBuddyPublic(request, env, url, deps = {}) {
   const send = deps.sendEmail ?? sendEmail;
   const now = deps.now ?? (() => new Date().toISOString());
   const origin = deps.origin ?? url.origin;
+  const verifyTurnstile = deps.verifyTurnstile ?? defaultVerifyTurnstile;
   const route = url.pathname.slice("/buddy/api/".length);
-  const ctx = { store, send, now, origin };
+  const ctx = { store, send, now, origin, verifyTurnstile };
 
   try {
     if (request.method === "POST" && route === "signup") return await signup(request, env, ctx);
