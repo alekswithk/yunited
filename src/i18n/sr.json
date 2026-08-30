@@ -69,7 +69,7 @@
     },
     "buddy": {
       "title": "Kumstvo — YUnited",
-      "description": "Prijavi se za kumstvo kluba YUnited: budi kum ili dobij kuma. Za studente HSG-a i studente na razmeni koji dolaze na Univerzitet St. Gallen."
+      "description": "Prijavi se za kumstvo kluba YUnited: budi kum ili dobij kuma. Za studente HSG-a i studente na razmeni koji dolaze na Univerzitet u St. Gallenu."
     },
     "buddyPair": {
       "title": "Tvoj par iz kumstva — YUnited",
@@ -106,7 +106,7 @@
     "pastIntro": "Pogled na ono što smo nedavno radili. Fotografije i priče možeš pronaći i na našem <a href=\"https://www.instagram.com/yunited.unisg\" target=\"_blank\" rel=\"noopener\">Instagramu</a>.",
     "emptyUpcomingEyebrow": "Sledeće izdanje",
     "emptyUpcomingHeading": "Sledeći događaj još nije najavljen.",
-    "emptyUpcomingBody": "Odbor utvrđuje program semestra u prvim nedeljama semestra. Prati nas i bićeš prvi koji čuje.",
+    "emptyUpcomingBody": "Odbor utvrđuje program semestra u prvim nedeljama nastave. Prati nas i bićeš prvi koji čuje.",
     "emptyUpcomingInstagram": "Prati @yunited.unisg",
     "emptyUpcomingUniclubs": "Pogledaj na uniclubs",
     "emptyPast": "Još nema prošlih događaja.",
@@ -127,7 +127,7 @@
     "missionP4": "Naše kumstvo nudi podršku studentima Assessment godine i studentima na razmeni te povezuje ljude sa svih studijskih smerova i iz svih semestara.",
     "buddyEyebrow": "Kumstvo",
     "buddyHeading": "Neko koga možeš pitati, od prvog dana",
-    "buddyLede": "Početak na HSG-u je puno toga odjednom — novi grad, novi sistem, mnogo novih ljudi. Naše kumstvo povezuje te s nekim ko je sve to već prošao. Otvoren je za svakog člana kluba YUnited, ne samo za studente koji dolaze na razmenu.",
+    "buddyLede": "Početak na HSG-u je puno toga odjednom — novi grad, novi sistem, mnogo novih ljudi. Naše kumstvo povezuje te s nekim ko je sve to već prošao. Otvoreno je za svakog člana kluba YUnited, ne samo za studente koji dolaze na razmenu.",
     "buddyStudentsTitle": "Za studente HSG-a",
     "buddyStudentsBody": "Studenti Assessment godine dobijaju prvu osobu kojoj se mogu obratiti za ono što ne piše ni u jednom priručniku — kako isplanirati semestar, koji se predmeti dobro slušaju zajedno, gde se šta nalazi. Povezuje i studente sa različitih smerova i godina, od Assessment godine do master studija.",
     "buddyExchangeTitle": "Za studente na razmeni",
@@ -147,7 +147,7 @@
     "valueCultureTitle": "Kultura",
     "valueCultureBody": "Održavamo hranu, muziku, humor i tradiciju regiona živima u St. Gallenu — i delimo ih sa svima koje to zanima.",
     "valueCareersTitle": "Karijera",
-    "valueCareersBody": "Profesionalni događaji i most prema firmama i organizacijama s bivšim jugoslovenskim korenima, tokom studija i nakon njega."
+    "valueCareersBody": "Profesionalni događaji i most prema firmama i organizacijama s bivšim jugoslovenskim korenima, tokom studija i nakon njih."
   },
   "members": {
     "heroTitle": "Članovi i odbor",
@@ -167,7 +167,7 @@
     "incomingEyebrow": "Dolazak na HSG",
     "incomingHeading": "Studenti na razmeni koji dolaze",
     "incomingLede": "Provodiš semestar u St. Gallenu? Od srca si pozvan — balkanski koreni nisu potrebni.",
-    "incomingBuddy": "<strong>Kumstvo:</strong> naše kumstvo nudi podršku studentima Assessment godine i studentima na razmeni — prva je osoba kojoj se možeš obratiti s pitanjima o HSG-u i životu u St. Gallenu.",
+    "incomingBuddy": "<strong>Kumstvo:</strong> naše kumstvo nudi podršku studentima Assessment godine i studentima na razmeni — ljubazan prvi kontakt za pitanja o HSG-u i životu u St. Gallenu.",
     "incomingEvents": "<strong>Događaji:</strong> pridruži se našim brunčevima, roštiljima, karaoke i party večerima od samog početka semestra. Članstvo (putem uniclubs) daje pristup svim događajima.",
     "incomingHome": "<strong>Delić doma:</strong> ako su tvoji koreni u regionu, mi smo način da ostaneš povezan s kulturom dok si u inostranstvu. Ako nisu, mi smo zabavan način da je otkriješ.",
     "incomingCta": "Pitaj nas šta god želiš",
@@ -191,7 +191,7 @@
     "visibilityTitle": "Vidljivost",
     "visibilityBody": "Partneri su istaknuti na našim događajima te na našoj web stranici i društvenim mrežama, pred angažovanom i povezanom publikom.",
     "networkTitle": "Talenti i mreža",
-    "networkBody": "Delujemo kao most prema firmama i organizacijama s bivšim jugoslovenskim korenima i povezujemo studente s prilikama tokom studija i nakon njega.",
+    "networkBody": "Delujemo kao most prema firmama i organizacijama s bivšim jugoslovenskim korenima i povezujemo studente s prilikama tokom studija i nakon njih.",
     "ctaEyebrow": "Uključi se",
     "ctaHeading": "Zanima te partnerstvo?",
     "ctaBody": "Bilo da je reč o sponzorisanju jednog događaja ili dugoročnijem partnerstvu, rado bismo čuli tvoju ideju. Javi nam se i reci nam šta imaš na umu.",
@@ -297,14 +297,14 @@
     "formError": "Pre slanja popuni označena polja.",
     "formFallback": "Nešto je pošlo po zlu. Pošalji nam e-mail na yunited@shsg.ch i dodaćemo te ručno.",
     "formSending": "Dodajemo te…",
-    "formSuccessTitle": "Proveri sanduče.",
+    "formSuccessTitle": "Proveri sandučić.",
     "formSuccessBody": "Poslali smo link za potvrdu na {email}. Klikni ga i u grupi si za sledeću rundu. Link radi jednom i ističe za 48 sati. Ako ga nema za minut, proveri folder neželjene pošte (spam).",
-    "checkEmailTitle": "Proveri sanduče",
+    "checkEmailTitle": "Proveri sandučić",
     "checkEmailBody": "Poslali smo ti link za potvrdu. Klikni ga i u grupi si za sledeću rundu. Link radi jednom i ističe za 48 sati. Ako ga nema za minut, proveri folder neželjene pošte (spam).",
     "faqEyebrow": "Pitanja",
     "faqHeading": "Dobro je znati",
     "faqQ1": "Moram li da budem član?",
-    "faqA1": "Kumstvo je za članove kluba YUnited. Učlanjenje traje nekoliko minuta na uniclubs.ch — postoji besplatan nivo ako prvo želiš da nas isprobaš.",
+    "faqA1": "Kumstvo je za članove kluba YUnited. Učlanjenje traje nekoliko minuta na uniclubs.ch — postoji besplatan paket ako prvo želiš da nas isprobaš.",
     "faqQ2": "Kada ću dobiti odgovor?",
     "faqA2": "Odbor pokreće rundu uparivanja na početku svakog semestra, i manju nekoliko nedelja kasnije za one koji su se prijavili kasno. Dobićeš e-mail čim te uparimo.",
     "faqQ3": "Šta ako par ne odgovara?",
