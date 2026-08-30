@@ -9,6 +9,13 @@
 // Copy is kept here rather than pulled from src/i18n/*.json: the phrasing is
 // email-specific, and a self-contained table is easier to review than a diff
 // against the page dictionaries. English is the fallback for any missing string.
+//
+// `renderHtml` is a single hand-written, inline-styled, table-based HTML
+// template — the shape every serious client (Outlook included) still needs.
+// No web fonts load in mail, so the wordmark is a system serif and the body a
+// system sans. The reading order is fixed: masthead → greeting → context →
+// the one call-to-action button → sign-off → a hairline → fine print, with the
+// "leave the pool" link always last, in muted footer type. Keep it that way.
 
 const FALLBACK = "en";
 
@@ -17,6 +24,7 @@ const FALLBACK = "en";
 const L = {
   en: {
     hi: (n) => `Hi ${n},`,
+    kicker: "Buddy programme",
     verifySub: "Confirm your email to join the buddy pool",
     verifyBody:
       "You asked to be part of the YUnited buddy system. Confirm this is your address and you're in for the next matching round:",
@@ -38,6 +46,7 @@ const L = {
   },
   de: {
     hi: (n) => `Hallo ${n},`,
+    kicker: "Buddy-Programm",
     verifySub: "Bestätige deine E-Mail für den Buddy-Pool",
     verifyBody:
       "Du möchtest beim YUnited-Buddy-System mitmachen. Bestätige, dass das deine Adresse ist, und du bist bei der nächsten Matching-Runde dabei:",
@@ -58,6 +67,7 @@ const L = {
   },
   hr: {
     hi: (n) => `Bok ${n},`,
+    kicker: "Kumstvo",
     verifySub: "Potvrdi e-mail za skupinu kumstva",
     verifyBody:
       "Želiš sudjelovati u kumstvu kluba YUnited. Potvrdi da je ovo tvoja adresa i u sljedećoj si rundi uparivanja:",
@@ -78,6 +88,7 @@ const L = {
   },
   bs: {
     hi: (n) => `Zdravo ${n},`,
+    kicker: "Kumstvo",
     verifySub: "Potvrdi e-mail za grupu kumstva",
     verifyBody:
       "Želiš učestvovati u kumstvu kluba YUnited. Potvrdi da je ovo tvoja adresa i u sljedećoj si rundi uparivanja:",
@@ -98,6 +109,7 @@ const L = {
   },
   sr: {
     hi: (n) => `Zdravo ${n},`,
+    kicker: "Kumstvo",
     verifySub: "Potvrdi e-mail za grupu kumstva",
     verifyBody:
       "Želiš da učestvuješ u kumstvu kluba YUnited. Potvrdi da je ovo tvoja adresa i u sledećoj si rundi uparivanja:",
@@ -120,17 +132,119 @@ const L = {
 
 const dict = (locale) => L[locale] || L[FALLBACK];
 
-/** Wrap plain paragraphs + one link button in the smallest sensible HTML. */
-function htmlBody(paragraphs, link) {
-  const ps = paragraphs.map((p) => `<p>${escapeHtml(p)}</p>`).join("\n");
-  const button = link
-    ? `<p><a href="${escapeHtml(link.href)}">${escapeHtml(link.label)} &rarr;</a></p>`
-    : "";
-  return `<!doctype html><html><body style="font-family:Georgia,serif;font-size:16px;line-height:1.5;color:#1a1611">\n${ps}\n${button}\n</body></html>`;
-}
-
 function escapeHtml(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+// --- one shared visual language for all three mails -------------------------
+// System stacks only (mail clients don't load web fonts); brand palette from
+// src/styles/global.css. Square corners, a hairline card, one gold-shadowed
+// button — the site's editorial look, trimmed to what mail can render.
+const SERIF = "Georgia, 'Times New Roman', Times, serif";
+const SANS =
+  "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+const INK = "#1a1611";
+const PAPER = "#f4ecdd";
+const SHELL = "#efe6d6";
+const CARD = "#ffffff";
+const HAIRLINE = "#e2d7c0";
+const MUTED = "#6a5f4e";
+const RED = "#b3202c";
+const GOLD = "#e9b44c";
+
+/**
+ * The full HTML mail. One centred card: masthead, body copy, the single call
+ * to action, sign-off, then a muted footer holding the fine print and — last —
+ * the unsubscribe link.
+ *
+ * @param {{ lang: string, subject: string, preheader: string, kicker: string,
+ *   paragraphs: string[], cta: {href:string,label:string}|null, signoff: string,
+ *   fine: string[], unsub: {href:string,label:string}|null }} parts
+ */
+function renderHtml(parts) {
+  const { lang, subject, preheader, kicker, paragraphs, cta, signoff, fine, unsub } = parts;
+  const e = escapeHtml;
+
+  const body = paragraphs
+    .map((p) => `<p style="margin:0 0 16px;">${e(p)}</p>`)
+    .join("\n          ");
+
+  const ctaRow = cta
+    ? `
+        <tr>
+          <td style="padding:8px 40px 6px;">
+            <a href="${e(cta.href)}" style="display:inline-block;background:${INK};color:${PAPER};font-family:${SANS};font-size:15px;font-weight:600;letter-spacing:.02em;line-height:1;text-decoration:none;padding:14px 30px;border:2px solid ${INK};box-shadow:4px 4px 0 ${GOLD};">${e(cta.label)}</a>
+          </td>
+        </tr>`
+    : "";
+
+  const footerBits = [
+    ...fine.map((p) => `<p style="margin:0 0 12px;">${e(p)}</p>`),
+    unsub
+      ? `<p style="margin:0 0 12px;"><a href="${e(unsub.href)}" style="color:${MUTED};text-decoration:underline;">${e(unsub.label)}</a></p>`
+      : "",
+    `<p style="margin:0;">YUnited &middot; Balkan &amp; ex-Yugoslav student club at the University of St.&nbsp;Gallen</p>`,
+  ]
+    .filter(Boolean)
+    .join("\n          ");
+
+  return `<!doctype html>
+<html lang="${e(lang)}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
+  <title>${e(subject)}</title>
+</head>
+<body style="margin:0;padding:0;background:${SHELL};-webkit-text-size-adjust:100%;">
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${e(preheader)}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${SHELL};">
+    <tr>
+      <td align="center" style="padding:32px 14px;">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;background:${CARD};border:1px solid ${HAIRLINE};">
+          <tr>
+            <td style="padding:30px 40px 0;">
+              <div style="font-family:${SERIF};font-size:21px;font-weight:700;letter-spacing:.02em;color:${INK};">YUnited</div>
+              <div style="font-family:${SANS};font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:${RED};padding-top:6px;">${e(kicker)}</div>
+              <div style="border-top:2px solid ${INK};font-size:0;line-height:0;margin-top:14px;">&nbsp;</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 40px 6px;font-family:${SANS};font-size:16px;line-height:1.6;color:${INK};">
+          ${body}
+            </td>
+          </tr>${ctaRow}
+          <tr>
+            <td style="padding:14px 40px 30px;font-family:${SANS};font-size:16px;line-height:1.6;color:${INK};">
+              <p style="margin:0;">${e(signoff)}</p>
+            </td>
+          </tr>
+        </table>
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;">
+          <tr>
+            <td style="padding:18px 40px 0;font-family:${SANS};font-size:12px;line-height:1.6;color:${MUTED};">
+          ${footerBits}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+/** The plain-text alternative, same reading order as the HTML. */
+function renderText({ paragraphs, cta, signoff, fine, unsubLine }) {
+  const lines = [...paragraphs];
+  if (cta) lines.push(`${cta.label}: ${cta.href}`);
+  lines.push(signoff);
+  const tail = [...fine];
+  if (unsubLine) tail.push(unsubLine);
+  const blocks = [lines.join("\n\n")];
+  if (tail.length) blocks.push(tail.join("\n"));
+  return blocks.join("\n\n---\n\n");
 }
 
 /**
@@ -141,43 +255,59 @@ function escapeHtml(s) {
  */
 export function buildEmail(kind, locale, vars = {}) {
   const t = dict(locale);
+  const lang = L[locale] ? locale : FALLBACK;
   const name = vars.name || "";
-  const unsub = vars.manageUrl ? `${t.unsub}: ${vars.manageUrl}` : "";
+  const unsub = vars.manageUrl ? { href: vars.manageUrl, label: t.unsub } : null;
+  const unsubLine = vars.manageUrl ? `${t.unsub}: ${vars.manageUrl}` : "";
+
+  const compose = ({ subject, preheader, paragraphs, cta, fine }) => ({
+    subject,
+    text: renderText({ paragraphs, cta, signoff: t.signoff, fine, unsubLine }),
+    html: renderHtml({
+      lang,
+      subject,
+      preheader,
+      kicker: t.kicker,
+      paragraphs,
+      cta,
+      signoff: t.signoff,
+      fine,
+      unsub,
+    }),
+  });
 
   if (kind === "verify") {
-    const paras = [t.hi(name), t.verifyBody];
-    const link = { href: vars.verifyUrl, label: t.verifyBtn };
-    const foot = [t.verifyFoot, unsub].filter(Boolean).join("\n");
-    return {
+    return compose({
       subject: t.verifySub,
-      text: [...paras, `${t.verifyBtn}: ${vars.verifyUrl}`, "", foot, t.signoff].join("\n\n"),
-      html: htmlBody([...paras, foot, t.signoff], link),
-    };
+      preheader: t.verifyBody,
+      paragraphs: [t.hi(name), t.verifyBody],
+      cta: { href: vars.verifyUrl, label: t.verifyBtn },
+      fine: [t.verifyFoot],
+    });
   }
 
   if (kind === "matched") {
-    const isBuddy = vars.youAre === "buddy";
-    const partnerLine = isBuddy
-      ? t.matchedBodyBuddy(vars.partner)
-      : t.matchedBodySeeker(vars.partner, vars.partnerRole || "");
-    const paras = [t.hi(name), partnerLine, t.matchedOpen];
-    const link = { href: vars.pairUrl, label: t.matchedBtn };
-    const foot = [t.matchedFoot, unsub].filter(Boolean).join("\n");
-    return {
+    const partnerLine =
+      vars.youAre === "buddy"
+        ? t.matchedBodyBuddy(vars.partner)
+        : t.matchedBodySeeker(vars.partner, vars.partnerRole || "");
+    return compose({
       subject: t.matchedSub(vars.partner),
-      text: [...paras, `${t.matchedBtn}: ${vars.pairUrl}`, "", foot, t.signoff].join("\n\n"),
-      html: htmlBody([...paras, foot, t.signoff], link),
-    };
+      preheader: partnerLine,
+      paragraphs: [t.hi(name), partnerLine, t.matchedOpen],
+      cta: { href: vars.pairUrl, label: t.matchedBtn },
+      fine: [t.matchedFoot],
+    });
   }
 
-  // noMatch
-  const paras = [t.hi(name), t.noMatchBody];
-  const foot = unsub || "";
-  return {
+  // noMatch — no call to action
+  return compose({
     subject: t.noMatchSub,
-    text: [...paras, foot, t.signoff].filter(Boolean).join("\n\n"),
-    html: htmlBody([...paras, foot, t.signoff].filter(Boolean), null),
-  };
+    preheader: t.noMatchBody,
+    paragraphs: [t.hi(name), t.noMatchBody],
+    cta: null,
+    fine: [],
+  });
 }
 
 /**

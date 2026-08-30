@@ -63,6 +63,10 @@ venv/
 # after they went live). Keep it local, edit it freely, delete it any time.
 EDITABLE-TEXT-FILES.txt
 
+# A throwaway side-by-side render of the buddy email templates, handy while
+# tweaking src/lib/buddy/emails.js. Regenerate it locally; never tracked.
+buddy-email-preview.html
+
 # ---- Host / deploy tooling ----
 .wrangler/
 .netlify/
