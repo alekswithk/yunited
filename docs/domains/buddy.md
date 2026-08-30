@@ -112,8 +112,12 @@ Admin panel markup for the Buddy tab is in `public/admin/{index.html,admin.js,ad
     runs only when `env.TURNSTILE_SECRET_KEY` is set (skipped without it — a
     known fallback, not a silent failure). `verifyTurnstile` is injected via
     `deps` so tests can mock it. The site key (`PUBLIC_TURNSTILE_SITE_KEY`) is
-    a build-time env var (public; defaults to Cloudflare's always-pass test key
-    `1x00000000000000000000AA`). Both are provisioned out-of-band — see
+    a build-time env var (public; the real production key
+    `0x4AAAAAAEiJ4FmgBclbap5B` is baked into `buddy.astro` as the default, so a
+    missing/misplaced Cloudflare build var no longer silently ships the test key
+    — set `PUBLIC_TURNSTILE_SITE_KEY` only to override, e.g. the test key
+    `1x00000000000000000000AA` for local dev). The secret is provisioned
+    out-of-band — see
     `worker/README.md` → "The buddy system" → "One-time setup".
 
 ---
