@@ -6,6 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The website for **YUnited**, the Balkan / ex-Yugoslav student club at the University of St. Gallen (HSG), served at `yunited.ch`. It is a static site built with **Astro** and deployed on **Cloudflare** (Workers static assets).
 
+## Domain notes
+
+Two subsystems are complex and cleanly bounded enough to have their own reference — read the relevant one **before** working in that area, and keep it current in the same change:
+
+- **[`docs/domains/buddy.md`](docs/domains/buddy.md)** — the buddy / kumstvo system: `src/lib/buddy/**`, `worker/buddy*.js`, the `/buddy` pages, the D1 store, the `/admin` Buddy tab, the emails.
+- **[`docs/domains/translate.md`](docs/domains/translate.md)** — the translation / i18n pipeline: `src/lib/translate/**`, `worker/translate.js`, `scripts/translate*.mjs`, `src/i18n/**`, event-content translation.
+
+Each has a thin agent wrapper in `.claude/agents/` (`buddy`, `translate`) that just loads its doc and states the boundary. Everything not covered by a domain doc is governed by this file.
+
 ## Commands
 
 ```bash
@@ -31,11 +40,11 @@ npm run admin:dev  # wrangler dev — the admin panel + its Worker on :8787
 
 Cloudflare builds the repo with `npm run build` and serves `dist/` (`wrangler.jsonc` sets `assets.directory: "./dist"`). The build command must be configured in the Cloudflare Workers Builds settings — it is not in the repo. `public/_headers` carries the CSP and cache rules and is copied verbatim into `dist/`.
 
-The admin Worker (`worker/`) is part of the **same** Worker: `wrangler.jsonc` sets `main: "worker/index.js"` and `assets.run_worker_first: ["/admin/api/*"]`, so only those paths invoke code and everything else is served statically exactly as before. It deploys with the site — there is no second deploy. Its `GITHUB_TOKEN` is an encrypted Worker secret set out-of-band; see [`worker/README.md`](worker/README.md).
+The admin Worker (`worker/`) is part of the **same** Worker: `wrangler.jsonc` sets `main: "worker/index.js"` and `assets.run_worker_first: ["/admin/api/*", "/buddy/api/*"]`, so only those paths invoke code and everything else is served statically exactly as before. It deploys with the site — there is no second deploy. Its `GITHUB_TOKEN` is an encrypted Worker secret set out-of-band; the buddy system adds a `BUDDY_DB` D1 binding and a `RESEND_API_KEY` secret — see [`worker/README.md`](worker/README.md) and [`docs/domains/buddy.md`](docs/domains/buddy.md).
 
 ## Architecture
 
-The load-bearing idea: **content is authored as JSON and rendered to static HTML at build time** — there is no client-side data fetching and no database. The one piece of server-side code is the admin API (`worker/`), which writes those JSON files; it runs when the board saves, never when a visitor loads a page.
+The load-bearing idea: **content is authored as JSON and rendered to static HTML at build time** — there is no client-side data fetching and no database *for content*. The main piece of server-side code is the admin API (`worker/`), which writes those JSON files; it runs when the board saves, never when a visitor loads a page. The **buddy / kumstvo system** is the one exception to both halves of that: it keeps per-student signups in a **Cloudflare D1** database and its public `/buddy/api/*` endpoints in the same Worker *do* run on visitor requests (confirming a signup, loading a pair page). It is cleanly bounded and has its own reference — [`docs/domains/buddy.md`](docs/domains/buddy.md).
 
 - `content/events/*.json` and `content/members/*.json` are the entire content layer — **one JSON file per entry** (an event's filename is its `id`; a member's is a slug of its role). The board edits these through `/admin` (see below) or by hand; **this is the primary edit surface and each entry's field shape must stay stable.** Do not rename fields without cause.
 - `src/lib/events.js` / `src/lib/members.js` hold the pure logic (date parsing, upcoming-vs-past split, TBA handling, placeholder detection) that runs at **build time**. This logic was previously client-side JS; keep it framework-free. Same-date events are ordered by `time` as a deterministic tiebreaker; members render in `order` order (lowest = the large lead card).
@@ -56,7 +65,7 @@ The load-bearing idea: **content is authored as JSON and rendered to static HTML
 
 ### The admin panel
 
-The board edits content at `/admin`: a first-party form plus a Cloudflare Worker that commits to this repo. Every save is a commit; no database. Board-facing usage is [`docs/ADMIN.md`](docs/ADMIN.md) and the in-page help panel; the maintainer reference is **[`worker/README.md`](worker/README.md)** — read that before changing anything under `worker/`.
+The board edits content at `/admin`: a first-party form plus a Cloudflare Worker that commits to this repo. Every content save is a commit; no database. (The panel's **Buddy tab** is the exception — it reads and writes the D1 store, not the repo; that tab and its Worker routes are covered by [`docs/domains/buddy.md`](docs/domains/buddy.md).) Board-facing usage is [`docs/ADMIN.md`](docs/ADMIN.md) and the in-page help panel; the maintainer reference is **[`worker/README.md`](worker/README.md)** — read that before changing anything under `worker/`.
 
 It replaced **Sveltia CMS** in the same change. The history is worth knowing, because two of the reasons are architectural:
 
@@ -122,6 +131,6 @@ Pages live under `src/pages/[...locale]/` — a **rest parameter that matches ze
 
 ## Roadmap context
 
-**[`PLAN.md`](PLAN.md) is the living status tracker** — the repo map, what's done (with PR numbers), pending human actions, and the ordered roadmap. Read it first for orientation, and tick items there in the same PR that ships them.
+**[`PLAN.md`](PLAN.md) is the living status tracker** — the repo map, the open human actions, the remaining roadmap, and improvement ideas. It holds *only work not yet done*. Read it first for orientation. When a task ships, **move its entry to [`PLAN-ARCHIVE.md`](PLAN-ARCHIVE.md)** in the same PR — the archive holds the shipped-PR table, the dated status notes, and the full write-ups of completed decisions (its §1–§7 numbering is preserved because code comments cite "PLAN.md §4" etc.). Do not add a `[x]` item or a history section back to `PLAN.md`.
 
 A phased improvement plan exists at `~/.claude/plans/compare-this-static-website-cryptic-key.md`. The Astro migration was Phase 1. Known deferred work: generated sitemap with hreflang, English + BCS i18n, a partners/recruiting funnel, and CSP/CI hardening. (Done: Phase 1 Astro migration, image optimization, generated sitemap, Zod content schemas, and the `/admin` panel — first Sveltia, now the first-party form + Worker that replaced it.) Check that plan before large structural changes so work aligns with the intended direction.
