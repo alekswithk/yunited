@@ -155,7 +155,8 @@ export function checkString(source, translated, key, code) {
     if (detect.length === 0) continue;
     if (!detect.some((stem) => notPrecededByLetter(stem).test(src))) continue;
 
-    for (const bad of term.forbidden) {
+    const forbidden = [...term.forbidden, ...(term.forbiddenIn?.[code] ?? [])];
+    for (const bad of forbidden) {
       if (notPrecededByLetter(bad).test(out)) {
         found.push(problem("error", key, `forbidden rendering of "${term.en}": "${bad}"`, term.note ?? ""));
       }

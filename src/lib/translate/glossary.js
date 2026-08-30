@@ -139,6 +139,18 @@ export const PROTECTED = [
  * Where a canonical form was already chosen by hand in this repo's history, it
  * is preserved rather than re-decided — see the `buddySystem` note.
  */
+
+/**
+ * @typedef {Object} Term
+ * @property {string} en           The English headword, used in messages and as the detect fallback.
+ * @property {string[]} detect     Source-text stems that scope the check; empty means prompt-only.
+ * @property {Record<string, string>} canonical  The pinned rendering, per language code.
+ * @property {string[]} forbidden  Renderings blocked in every language.
+ * @property {Record<string, string[]>} [forbiddenIn]  Renderings blocked only in the listed languages.
+ * @property {string} [note]       Shown alongside a forbidden-rendering error.
+ */
+
+/** @type {Record<string, Term>} */
 export const TERMS = {
   buddySystem: {
     en: "buddy system",
@@ -159,7 +171,12 @@ export const TERMS = {
     // prijateljskog parenja", on the About page. "mentorstvo" is a register
     // error rather than a howler — a buddy is a peer, a mentor is a senior —
     // but it still has to go.
-    forbidden: ["parenj", "buddy-", "mentor", "sustav prijatelj", "sistem prijatelj"],
+    //
+    // "buddy-" is scoped to Balkan languages only via forbiddenIn: German keeps
+    // its own "Buddy-System" loanword untouched, so the stem must not be flagged
+    // there, and adding it to the universal list would reject the correct output.
+    forbidden: ["parenj", "mentor", "sustav prijatelj", "sistem prijatelj"],
+    forbiddenIn: { hr: ["buddy-"], bs: ["buddy-"], sr: ["buddy-"] },
     note: "A peer who has already been through it — NOT a mentor, never a form of 'parenje' (mating), and (Balkan languages) not the old literal 'sustav/sistem prijatelja' — kumstvo is the pinned term as of 2026-08-27.",
   },
 
