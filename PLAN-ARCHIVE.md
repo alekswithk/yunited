@@ -17,6 +17,29 @@
 
 ---
 
+## Shipped after the split
+
+**2026-08-30 — Buddy-signup Turnstile abuse protection (branch `vk/8fb7-close-the-buddy`)**
+
+Closed the signup-abuse gap from `PLAN.md` §4. `POST /buddy/api/signup` was
+unbounded on distinct fake emails — a script could exhaust Resend's 100/day
+quota and grow D1 for up to 14 days. Fixed with Cloudflare Turnstile:
+
+- `worker/buddy.js`: `defaultVerifyTurnstile` + server-side check in `signup()`
+  gated on `env.TURNSTILE_SECRET_KEY`; injected via `deps` for testability.
+- `src/pages/[...locale]/buddy.astro`: `<div class="cf-turnstile">` widget in
+  the form; Turnstile script injected dynamically from the bundled `<script>`
+  (avoids `is:inline`, keeps HTML source clean, CSP stays tight).
+- `public/_headers`: added `https://challenges.cloudflare.com` to `script-src`
+  and `frame-src` in the global `/*` rule.
+- `worker/buddy.test.js`: 3 new tests (skip without secret, pass, reject).
+- `worker/README.md` step 3, `.env.example`, `wrangler.jsonc`, `docs/domains/buddy.md`: all updated.
+- **Human action still needed**: create Turnstile widget at Cloudflare dashboard,
+  `wrangler secret put TURNSTILE_SECRET_KEY`, set `PUBLIC_TURNSTILE_SITE_KEY` in
+  Workers Build env. Without the secret the check is skipped (safe fallback).
+
+---
+
 # PLAN.md — YUnited website: status, structure & roadmap
 
 **Purpose.** One living document to see at a glance what the repo *is*, what's

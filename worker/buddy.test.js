@@ -234,6 +234,46 @@ test("a bad signup is rejected with the field name", async () => {
   assert.equal((await res.json()).field, "email");
 });
 
+test("signup skips Turnstile when TURNSTILE_SECRET_KEY is absent", async () => {
+  const store = fakeStore();
+  const vt = async () => { throw new Error("should not be called"); };
+  const res = await handleBuddyPublic(req("POST", goodSignup), {}, url("/buddy/api/signup"), {
+    store,
+    sendEmail: fakeSend().fn,
+    now: NOW,
+    verifyTurnstile: vt,
+  });
+  // No secret in env → skip check → row written
+  assert.equal((await res.json()).ok, true);
+  assert.equal(store._signups.length, 1);
+});
+
+test("signup passes when Turnstile verifies successfully", async () => {
+  const store = fakeStore();
+  const res = await handleBuddyPublic(
+    req("POST", { ...goodSignup, "cf-turnstile-response": "valid-token" }),
+    { TURNSTILE_SECRET_KEY: "secret" },
+    url("/buddy/api/signup"),
+    { store, sendEmail: fakeSend().fn, now: NOW, verifyTurnstile: async () => true },
+  );
+  assert.equal((await res.json()).ok, true);
+  assert.equal(store._signups.length, 1);
+});
+
+test("signup is rejected with 400 when Turnstile verification fails", async () => {
+  const store = fakeStore();
+  const res = await handleBuddyPublic(
+    req("POST", { ...goodSignup, "cf-turnstile-response": "bad-token" }),
+    { TURNSTILE_SECRET_KEY: "secret" },
+    url("/buddy/api/signup"),
+    { store, sendEmail: fakeSend().fn, now: NOW, verifyTurnstile: async () => false },
+  );
+  const body = await res.json();
+  assert.equal(res.status, 400);
+  assert.equal(body.field, "turnstile");
+  assert.equal(store._signups.length, 0);
+});
+
 test("signing up again while still pending reissues the link, not a second row", async () => {
   const store = fakeStore();
   const send = fakeSend();

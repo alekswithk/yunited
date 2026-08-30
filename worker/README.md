@@ -505,6 +505,22 @@ Both are maintainer steps, out of band, like `wrangler secret put`:
    hand from the Buddy tab, which says so — and no round email goes out until a
    key is set. A send failure never fails a signup or a round.
 
+3. **Set the Turnstile secret** to close the signup-abuse gap (a script hitting
+   distinct fake emails can exhaust Resend's quota without it):
+   ```bash
+   npx wrangler secret put TURNSTILE_SECRET_KEY
+   ```
+   Create a **Turnstile widget** at **Cloudflare dashboard → Turnstile → Add site**:
+   pick "Managed" mode for `yunited.ch`. You get two values:
+   - **Site key** (public) → set as `PUBLIC_TURNSTILE_SITE_KEY` in the Cloudflare
+     Workers Build environment variables (same place as other build-time vars).
+   - **Secret key** → paste into `wrangler secret put TURNSTILE_SECRET_KEY`.
+
+   **Without this secret the server-side check is skipped** — a known safe
+   fallback, not a silent failure. The widget still renders using the test key
+   (the build default), but the token is never verified. Set the secret before
+   announcing `/buddy` widely.
+
 ### Retention
 
 The nightly cron (`scheduled` in `index.js`) now runs two independent sweeps:

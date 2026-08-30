@@ -115,10 +115,15 @@ Account / dashboard steps. The code is in place; these need a person.
      covers the club. Signups still work with no key — the board confirms people
      by hand from the Buddy tab — but no round email goes out until it is set.
      Ideally the Resend account is on `yunited@shsg.ch`, not a personal address.
-  3. Once live: decide the **round cadence** (assume term-start + one straggler
+  3. **Set the Turnstile secret** to activate the signup-abuse protection: create
+     a widget at Cloudflare dashboard → Turnstile → Add site (Managed mode,
+     `yunited.ch`); set the secret key with `npx wrangler secret put
+     TURNSTILE_SECRET_KEY`; set the public site key as `PUBLIC_TURNSTILE_SITE_KEY`
+     in Workers Build environment variables. Full recipe in
+     `worker/README.md` → "The buddy system" → "One-time setup" step 3.
+  4. Once live: decide the **round cadence** (assume term-start + one straggler
      round) and whether the optional **UniClubs member-list cross-check** is
      worth doing (export a CSV each term).
-  - **Before announcing `/buddy` widely**, close the signup-abuse gap in §4.
 
 - [ ] **Add the 26/27 events as dates are set** — 🧑 board, in `/admin`. Only one
       dated upcoming event exists right now (*Meet & Greet*, 2026-09-23); the
@@ -188,16 +193,6 @@ What remains:
 
 Not agreed work — the weekly agent (§6) may propose *into* this section, never
 implement *from* it. Roughly ordered by impact ÷ effort.
-
-- **Close the buddy-signup abuse gap** *(real weakness, S–M).*
-  `POST /buddy/api/signup` (`worker/buddy.js`) is public and unauthenticated: it
-  inserts a D1 row and fires a Resend email per call. Present defences: a honeypot
-  (`website`) field, same-email updates instead of duplicating, an
-  email-verification gate before "active", and a 14-day purge of unverified rows.
-  Gap: distinct fake emails past the honeypot are unbounded — a script can exhaust
-  the Resend 100/day quota (blocking real verification mail) and grow D1 for up to
-  14 days. Cheapest fix: a per-IP throttle in the Worker. Stronger: Turnstile
-  (there is a `turnstile-spin` skill). **Do this before `/buddy` is announced widely.**
 
 - **Test `worker/github.js` and `worker/buddy-store.js`** *(M).* Both are untested
   I/O layers. `github.js` (194 lines) is what makes `/admin`'s "nothing was
