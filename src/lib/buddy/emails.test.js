@@ -52,6 +52,42 @@ test("html output escapes angle brackets in a name", () => {
   assert.match(mail.html, /&lt;script&gt;/);
 });
 
+test("html is a full table-based document with masthead, preheader and locale kicker", () => {
+  const mail = buildEmail("verify", "hr", {
+    name: "Luka",
+    verifyUrl: "https://x/y",
+    manageUrl: "https://x/withdraw?t=z",
+  });
+  assert.match(mail.html, /^<!doctype html>/);
+  assert.match(mail.html, /<html lang="hr">/);
+  assert.match(mail.html, /role="presentation"/);
+  // hidden preheader mirrors the first body line
+  assert.match(mail.html, /Potvrdi da je ovo tvoja adresa/);
+  // masthead wordmark + localised kicker
+  assert.match(mail.html, />YUnited</);
+  assert.match(mail.html, />Kumstvo</);
+  // unsubscribe link renders last, as a real anchor
+  assert.match(mail.html, /<a href="https:\/\/x\/withdraw\?t=z"/);
+});
+
+test("noMatch email has no call-to-action button in either part", () => {
+  const mail = buildEmail("noMatch", "en", { name: "Sara", manageUrl: "https://x/w" });
+  assert.ok(!/box-shadow:4px 4px 0/.test(mail.html), "no CTA button in html");
+  assert.match(mail.text, /Leave the buddy pool: https:\/\/x\/w/);
+});
+
+test("plain-text alternative keeps reading order: body, cta, sign-off, then fine print", () => {
+  const mail = buildEmail("verify", "en", {
+    name: "Mara",
+    verifyUrl: "https://yunited.ch/v?t=1",
+    manageUrl: "https://yunited.ch/w?t=2",
+  });
+  const iBody = mail.text.indexOf("Hi Mara,");
+  const iCta = mail.text.indexOf("https://yunited.ch/v?t=1");
+  const iUnsub = mail.text.indexOf("https://yunited.ch/w?t=2");
+  assert.ok(iBody >= 0 && iCta > iBody && iUnsub > iCta, mail.text);
+});
+
 test("sendEmail is a no-op (not an error) when no key is configured", async () => {
   const result = await sendEmail({}, { to: "a@b.c", subject: "s", text: "t", html: "<p>t</p>" });
   assert.deepEqual(result, { ok: false, skipped: true, reason: "no-key" });
