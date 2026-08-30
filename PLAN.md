@@ -108,11 +108,7 @@ Account / dashboard steps. The code is in place; these need a person.
       real `database_id`). Still to do — full recipe in
       [`worker/README.md`](worker/README.md) → "The buddy system":
   1. ~~**Apply the schema to production D1**~~ ✅ done — `npx wrangler d1 migrations apply yunited-buddy --remote` confirmed clean.
-  2. **Set the Resend key** and add its SPF/DKIM records for `yunited.ch`:
-     `npx wrangler secret put RESEND_API_KEY`. Free tier (100/day, 3,000/month)
-     covers the club. Signups still work with no key — the board confirms people
-     by hand from the Buddy tab — but no round email goes out until it is set.
-     Ideally the Resend account is on `yunited@shsg.ch`, not a personal address.
+  2. ~~**Set the Resend key** and add its SPF/DKIM records for `yunited.ch`~~ ✅ done — `RESEND_API_KEY` set.
   3. Once live: decide the **round cadence** (assume term-start + one straggler
      round) and whether the optional **UniClubs member-list cross-check** is
      worth doing (export a CSV each term).
