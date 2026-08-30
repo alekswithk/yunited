@@ -1,4 +1,5 @@
 {
+  "skipLink": "Zum Hauptinhalt springen",
   "nav": {
     "home": "Start",
     "about": "Über uns",
@@ -103,11 +104,17 @@
     "pastEyebrow": "Recaps",
     "pastHeading": "Vergangene Veranstaltungen",
     "pastIntro": "Ein Rückblick auf unsere letzten Aktivitäten. Fotos und Berichte findest du auch auf unserer <a href=\"https://www.instagram.com/yunited.unisg\" target=\"_blank\" rel=\"noopener\">Instagram-Seite</a>.",
+    "emptyUpcomingEyebrow": "Nächste Ausgabe",
+    "emptyUpcomingHeading": "Das nächste Event ist noch nicht angekündigt.",
+    "emptyUpcomingBody": "Der Vorstand legt das Semesterprogramm in den ersten Wochen des Semesters fest. Folge uns und du erfährst es als Erstes.",
+    "emptyUpcomingInstagram": "Folge @yunited.unisg",
+    "emptyUpcomingUniclubs": "Auf uniclubs ansehen",
     "emptyPast": "Es gibt noch keine vergangenen Veranstaltungen.",
     "rsvpCta": "Auf uniclubs anmelden →",
     "pastCta": "Veranstaltungsseite →",
     "dateTba": "Termin wird noch bekannt gegeben",
-    "photoAlt": "Foto von {title}"
+    "photoAlt": "Foto von {title}",
+    "addToCalendar": "Zum Kalender hinzufügen"
   },
   "about": {
     "heroTitle": "Über YUnited",
