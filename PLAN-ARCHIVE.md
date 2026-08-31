@@ -46,6 +46,29 @@ manually following the glossary policy (Swiss ss/no-ß for de; Ijekavian + Croat
 lexis for hr; Ijekavian + Bosnian lexis for bs; Ekavian Latin for sr). `npm test`
 201/201, `npm run build` 66 pages, `npm run check:dist` clean.
 
+**2026-08-30 — Scope `validate.js`'s `forbidden` stems per language, and the
+`Svadba` mistranslation (#79)**
+
+Both closed the §4 item of the same name in the same PR that landed as #79.
+`glossary.js`'s `buddy-` forbidden stem (written for hr/bs/sr) was firing
+against German's own accepted loanword "Buddy-System"; it moved to a new
+`forbiddenIn: { hr, bs, sr }` field, and `validate.js` now merges
+`term.forbidden` with `term.forbiddenIn[code]` per language. The "no canonical
+forbidden" integrity test was extended to check `forbiddenIn[code]` too. The
+`movie-night-svadba-2026.json` German title the item flagged as translating
+`Svadba` (a protected film name) to "Die Hochzeit" is also no longer an issue —
+it reads `"Filmabend – Svadba"`, confirmed on `main` at 2026-08-31.
+
+**2026-08-31 (no code changed) — "Prune stale remote branches" removed as
+moot**
+
+The §4 item assumed ~15 squash-merged `origin/*` branches were still sitting on
+the remote. Checked while picking this run's roadmap item: `git branch -r` on
+`main` at `3ddb9ef` shows only `origin/main` and the current run's own working
+branch — nothing left to prune. Whatever pruned them (a manual cleanup, or the
+`/cleanup` slash command added in #87) already happened; removed rather than
+re-proposed.
+
 ---
 
 # PLAN.md — YUnited website: status, structure & roadmap
