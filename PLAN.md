@@ -208,23 +208,38 @@ implement *from* it. Roughly ordered by impact ÷ effort.
   nights"/"casino večeri" in en/hr/bs/sr (de lacks the key). Pick a word, update
   all five, mirror the #71/#73 edits.
 
-- **Scope `validate.js`'s `forbidden` stems per language** *(S).* Running the
-  translation gate against committed `de.json` surfaces ~13 false positives: the
-  `buddy-` forbidden stem (written for hr/bs/sr) matches German's own accepted
-  loanword "Buddy-System". Scope `forbidden` per language the way `canonical`
-  already is. Separately, a real finding to hand the board:
-  `movie-night-svadba-2026.json`'s German title translated `Svadba` (a protected
-  film name) to "Die Hochzeit".
-
 - **A phone-width pass on `/admin` and `/buddy/pair`** *(S).* Neither has been
   rendered at the 33rem breakpoint. `/admin` is board-facing; `/buddy/pair` is
   tapped by students from an email link and just had a rendering bug fixed (#77).
   One deliberate look at 375px in a long-label locale (hr/bs *kumstvo* pages).
 
-- **Prune stale remote branches** *(S).* ~15 `origin/*` branches, every one
-  already squash-merged (verified: `main` is ahead of all three `buddy-*`
-  branches on every file; the rest are single pre-squash PR commits). Safe to
-  `git push origin --delete`.
+- **Unit-test `src/lib/members.js`** *(S).* `events.js` carries the same class of
+  build-time logic (date parsing, TBA handling, placeholder detection) and is
+  unit-tested per `CLAUDE.md`'s own rule for this repo — "get the ... boundary
+  wrong ... and every command still passes while the site shows the wrong
+  thing" — but `members.js` (`isUnfilled`, `displayName`, `initialOf`) has no
+  test file at all. The placeholder regex (`/\[.*?\]/`) and the
+  empty/whitespace-name fallback in `initialOf` are exactly the edge case that
+  could ship a literal `"[PLACEHOLDER: Full Name]"` or a bare `"?"` initial to a
+  live member card without failing `test`, `build`, `check` or `check:dist`.
+
+- **Unit-test `verifyAccessJwt` in `worker/access.js`** *(M).* It is the sole
+  authorization gate for every `/admin/api/*` route (save, delete, the Access
+  allow-list, the Buddy admin endpoints) and has zero test coverage today —
+  `access.test.js` doesn't exist, unlike its sibling `board-access.test.js`.
+  Its branches (wrong issuer, wrong audience, expired, unknown `kid`, bad
+  signature) are independently checkable with `node:test`: mint a real RSA
+  keypair with the Web Crypto global (available in Node), sign a fake JWT with
+  it, and stub `fetch` to return a matching JWKS — no network, per `CLAUDE.md`.
+  Touches `worker/**`, so human review either way (§6).
+
+- **An internal-link integrity check in `check:dist`** *(M).* Nothing today
+  crawls the built `dist/**/*.html` for internal `<a href>` targets or hreflang
+  links that don't resolve to a real file — a `localizePath` typo or a renamed
+  route would only surface as a live 404 a visitor actually hits. `check-dist.mjs`
+  already walks every page for CSP/brand/image checks; extending it to collect
+  internal hrefs per page and assert the target exists under `dist/` needs no
+  new dependency and runs in the same CI pass.
 
 - **A "what's on" nudge when the calendar empties** *(M, only if it recurs).* The
   build warns when no upcoming event has a date, but only a developer running a
