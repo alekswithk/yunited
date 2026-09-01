@@ -147,6 +147,10 @@ export const PROTECTED = [
  * @property {Record<string, string>} canonical  The pinned rendering, per language code.
  * @property {string[]} forbidden  Renderings blocked in every language.
  * @property {Record<string, string[]>} [forbiddenIn]  Renderings blocked only in the listed languages.
+ * @property {{from: RegExp, to: string}[]} [rewrite]  Unambiguous regressions to
+ *   repair before the gate (deepl.js `pinCanonical`), applied only for a language
+ *   this term pins a `canonical` form for. Not a second policy — the gate still
+ *   catches whatever a rule does not.
  * @property {string} [note]       Shown alongside a forbidden-rendering error.
  */
 
@@ -211,6 +215,15 @@ export const TERMS = {
     // "upravnom odboru" — these languages inflect, so a forbidden form has to be
     // matched on its stem or it only catches the cases someone happened to type.
     forbidden: ["uprav"],
+    // MECHANICAL REPAIR, applied before the gate (deepl.js `pinCanonical`).
+    // DeepL reliably renders "the board" as "upravni odbor" for hr/bs/sr — the
+    // adjective + noun board-of-directors phrase, and only ever that: "upravn-"
+    // is never anything but that adjective, unlike the bare stem "uprav" which
+    // also begins the innocent "upravo" (just now) and "upravljati" (to manage).
+    // So strip the adjective and keep the noun in its case, rather than failing
+    // the whole entry on a regression that is unambiguous to fix. Anything the
+    // rule does not match still hits `forbidden` above and fails loudly.
+    rewrite: [{ from: /\bupravn\p{L}*\s+(odbor\p{L}*)/giu, to: "$1" }],
     note: "A student club's committee. Never the corporate 'upravni odbor' (board of directors) or 'uprava' (management).",
   },
 
@@ -392,5 +405,7 @@ export const FORBIDDEN_VARIANTS = {
 // scripts/lib/claude.mjs (the en->hr/bs/sr DeepL migration, PLAN.md §4). DeepL
 // cannot be handed a prose instruction, only PROTECTED terms (via tag_handling)
 // and per-string context; TERMS/MORPHOLOGY/ADDRESS_FORM stay as the recorded
-// policy and as what validate.js checks on the output, which is now the only
-// enforcement mechanism for pinned terminology.
+// policy and as what validate.js checks on the output. That check is the
+// enforcement mechanism for pinned terminology; a TERM may additionally carry a
+// `rewrite` rule (see the typedef) for a regression unambiguous enough to
+// repair in deepl.js `pinCanonical` before the gate rather than fail the entry.

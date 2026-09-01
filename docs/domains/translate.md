@@ -19,9 +19,9 @@ hermetic — no translation API call ever happens during `npm run build`.
 | Path | Role |
 |---|---|
 | `src/lib/translate/content.js` | **The one answer to "does this need translating?"** — `TRANSLATABLE`, `TARGETS`, `sourceHash`, `translationState`, `planFor`, `mergeTranslations`, `gate`. |
-| `src/lib/translate/deepl.js` | DeepL plumbing — one request per string + `context`; `protect`/`unprotect` (`<x>` brand wrapper); `postProcess` (entity decode, unquote, `ß`→`ss`, `toSerbianLatin`); free/pro endpoint by `:fx`; `usage()` liveness probe; `detectSourceLang`. |
+| `src/lib/translate/deepl.js` | DeepL plumbing — one request per string + `context`; `protect`/`unprotect` (`<x>` brand wrapper); `postProcess` (entity decode, unquote, `ß`→`ss`, `toSerbianLatin`, `pinCanonical`); free/pro endpoint by `:fx`; `usage()` liveness probe; `detectSourceLang`. |
 | `src/lib/translate/validate.js` | **The write gate** — `checkString` / `checkDictionary` / `checkSplitSentences` / `errorsOf`. Nothing is written until it passes at 0 errors. |
-| `src/lib/translate/glossary.js` | **The policy** — `LANGUAGES` (variant rules), `PROTECTED` (never-translate names), `TERMS` (one pinned rendering per concept per language + `forbidden`), `MORPHOLOGY`, `ADDRESS_FORM`, `CYRILLIC_RE`, `VARIANT_FORMS`, `FORBIDDEN_VARIANTS`. Read `TERMS` as a changelog of shipped bugs. |
+| `src/lib/translate/glossary.js` | **The policy** — `LANGUAGES` (variant rules), `PROTECTED` (never-translate names), `TERMS` (one pinned rendering per concept per language + `forbidden` + optional `rewrite`), `MORPHOLOGY`, `ADDRESS_FORM`, `CYRILLIC_RE`, `VARIANT_FORMS`, `FORBIDDEN_VARIANTS`. Read `TERMS` as a changelog of shipped bugs. |
 | `src/lib/translate/flat.js` | `flatten` / `unflatten` / `splitSentenceGroups` (Pre/Link/Post). |
 | `src/lib/translate/*.test.js` | `node:test` — validate (mutation-checked), golden `sourceHash` vs the committed files, deepl pure functions. |
 | `worker/translate.js` | **Worker-only** — `resolveKey` (KV over secret), `keyStatus`/`putKey`/`clearKey` (Translations tab), `translateEntry` (never throws; `SAVE_BUDGET_MS = 8000`), `withTranslationState`/`stateOf` (badges). |
@@ -51,7 +51,11 @@ hermetic — no translation API call ever happens during `npm run build`.
 - **`deepl.js` sends one request per string** because `context` is a single
   per-request value, not indexed per text. `context` is disambiguating text (a
   `NOTES` entry, or a split sentence joined back together) — never an instruction;
-  DeepL cannot be told a rule. It is not translated and not billed.
+  DeepL cannot be told a rule. It is not translated and not billed. `postProcess`
+  then runs `pinCanonical`, which applies any `rewrite` rule a `glossary.js` TERM
+  carries — currently just `board`, collapsing DeepL's reliable "upravni odbor"
+  to the pinned "odbor" before the gate. Not a second policy; the gate still
+  catches whatever a rule misses.
 - **`validate.js` runs on the output**, so it is engine-agnostic. Checks: key
   sets, placeholders, HTML tag structure + hrefs, protected names, forbidden
   renderings, script (no Cyrillic on `sr`), regional variant (hr vs bs lexis;
@@ -150,8 +154,11 @@ hermetic — no translation API call ever happens during `npm run build`.
   protected name `Svadba`.
 - **No CI surfacing** of keys identical to English in a `complete: true` locale —
   the 7-key debt above stays invisible between PRs. See `PLAN.md` §4.
-- **DeepL glossaries exist only for `de`** among the four targets — hr/bs/sr
-  terminology pinning is `context` + the validator, nothing mechanical.
+- **DeepL glossaries exist only for `de`** among the four targets. hr/bs/sr
+  terminology pinning is `context` + the validator, plus per-TERM `rewrite`
+  rules in `glossary.js` (`pinCanonical` in `deepl.js`) for regressions
+  unambiguous enough to repair before the gate — so far only `board`
+  ("upravni odbor" → "odbor").
 
 ---
 

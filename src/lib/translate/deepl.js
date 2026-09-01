@@ -33,14 +33,17 @@
 //     not the process, so it is the real net regardless of which engine wrote
 //     the text. NOTHING IS WRITTEN until it passes.
 //
-// Terminology pinning has no live enforcement here: DeepL glossaries do not
-// exist for en->hr/bs/sr (checked against the live API, PLAN.md §4). validate.js
-// asserts the canonical term as a warning, not silently.
+// Terminology pinning is mostly checked after the fact, not enforced here:
+// DeepL glossaries do not exist for en->hr/bs/sr (checked against the live API,
+// PLAN.md §4), so validate.js asserts the canonical term on the output. The one
+// active repair is `pinCanonical` below — a TERM in glossary.js may carry a
+// `rewrite` rule for a regression that is unambiguous to fix (DeepL's reliable
+// "upravni odbor" for "the board"), collapsed here before the gate sees it.
 //
 // NOT PART OF THE BUILD. `npm run build` never calls this — the build stays
 // hermetic, which is load-bearing in CLAUDE.md.
 
-import { PROTECTED } from "./glossary.js";
+import { PROTECTED, TERMS } from "./glossary.js";
 
 const escapeRe = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const PROTECT_RE = new RegExp(`(${PROTECTED.map(escapeRe).join("|")})`, "g");
@@ -106,7 +109,22 @@ const QUOTED_PROTECT = new RegExp(`[„“"«»](${PROTECTED.map(escapeRe).join(
 export function postProcess(text, code) {
   let out = decodeEntities(unprotect(text)).replace(QUOTED_PROTECT, "$1");
   if (code === "de") out = out.replace(/ß/g, "ss");
-  if (code === "sr") out = toSerbianLatin(out);
+  if (code === "sr") out = toSerbianLatin(out); // -> Latin, so pinCanonical's rules match
+  return pinCanonical(out, code);
+}
+
+// Collapse the mechanical, unambiguous term regressions DeepL repeats — the ones
+// a `rewrite` rule in glossary.js pins down — back to the canonical form, BEFORE
+// validate.js sees the string. This is not a second policy: the rules live next
+// to their `forbidden` stems in TERMS, and the gate still catches anything a
+// rule does not. Runs only for a language the term actually pins a canonical
+// form for, so German (which correctly keeps "Vorstand") is untouched.
+export function pinCanonical(text, code) {
+  let out = text;
+  for (const term of Object.values(TERMS)) {
+    if (!term.rewrite || term.canonical[code] == null) continue;
+    for (const { from, to } of term.rewrite) out = out.replace(from, to);
+  }
   return out;
 }
 
