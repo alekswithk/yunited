@@ -11,11 +11,13 @@ import {
   apiUrlFor,
   decodeEntities,
   lostPlaceholders,
+  pinCanonical,
   postProcess,
   protect,
   toSerbianLatin,
   unprotect,
 } from "./deepl.js";
+import { checkString, errorsOf } from "./validate.js";
 
 test("protect wraps a protected term and unprotect removes the wrapper", () => {
   const wrapped = protect("Join YUnited at HSG");
@@ -67,6 +69,40 @@ test("postProcess converts Serbian output to Latin script", () => {
 
 test("postProcess unwraps the <x> protection markers", () => {
   assert.equal(postProcess("Pridruži se <x>YUnited</x> klubu", "hr"), "Pridruži se YUnited klubu");
+});
+
+test("pinCanonical collapses DeepL's 'upravni odbor' to the pinned 'odbor', keeping the noun's case", () => {
+  assert.equal(
+    pinCanonical("dođite upoznati upravni odbor i ostale članove", "hr"),
+    "dođite upoznati odbor i ostale članove",
+  );
+  assert.equal(pinCanonical("članovi upravnog odbora kluba", "bs"), "članovi odbora kluba");
+  assert.equal(pinCanonical("obratite se upravnom odboru", "sr"), "obratite se odboru");
+});
+
+test("pinCanonical leaves the innocent 'uprav' words alone", () => {
+  // "upravo" (just now) and "upravljati" (to manage) share the stem the
+  // validator forbids but are not the corporate-board phrase.
+  const s = "upravo smo počeli i znamo upravljati klubom";
+  assert.equal(pinCanonical(s, "hr"), s);
+});
+
+test("pinCanonical is a no-op for a language the term does not pin (de keeps Vorstand)", () => {
+  const s = "lerne den Vorstand und andere Mitglieder kennen";
+  assert.equal(pinCanonical(s, "de"), s);
+});
+
+test("postProcess runs pinCanonical after the Serbian Latin conversion", () => {
+  assert.equal(postProcess("обратите се управном одбору", "sr"), "obratite se odboru");
+});
+
+test("the 'upravni odbor' regression that failed meet-and-greet now clears the gate", () => {
+  // What DeepL returns for hr on the Meet & Greet description; before pinCanonical
+  // this tripped `forbidden: ["uprav"]` and the all-or-nothing gate dropped all
+  // four languages.
+  const src = "come meet the board and other members over drinks";
+  const cleaned = postProcess("dođite upoznati upravni odbor i ostale članove uz piće", "hr");
+  assert.deepEqual(errorsOf(checkString(src, cleaned, "meet-and-greet.description", "hr")), []);
 });
 
 test("lostPlaceholders finds a {placeholder} missing from the translation", () => {
