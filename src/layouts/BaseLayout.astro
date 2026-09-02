@@ -140,15 +140,19 @@ const showAlternates = alternates.length > 1 && !noindex;
     // costs zero third-party requests (and leaks no IP to OSM) until someone
     // actually opens a poster. The disclosure itself is native <details>; this
     // only promotes a subresource, so with JS off the panel still opens and its
-    // <noscript> link covers the map. ---
+    // <noscript> link covers the map. The src is set one tick AFTER the open
+    // animation would finish (~280ms) so the third-party fetch and the iframe's
+    // first layout don't land in the middle of the expand and stutter it. ---
     document.querySelectorAll<HTMLDetailsElement>(".uev").forEach((poster) => {
       poster.addEventListener("toggle", () => {
         if (!poster.open) return;
         const frame = poster.querySelector<HTMLIFrameElement>("iframe[data-src]");
-        if (frame) {
-          frame.src = frame.dataset.src ?? "";
+        if (!frame) return;
+        setTimeout(() => {
+          if (!poster.open || !frame.dataset.src) return;
+          frame.src = frame.dataset.src;
           frame.removeAttribute("data-src");
-        }
+        }, 320);
       });
     });
 
