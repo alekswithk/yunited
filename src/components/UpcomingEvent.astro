@@ -1,0 +1,112 @@
+---
+// One upcoming event on the HOME PAGE, as an expanding poster.
+//
+// This is NOT EventCard. EventCard is a compact card, still used for the past
+// teaser here and for the whole of /events. This one is a poster: the
+// photograph carries it, with the date/title/venue set underneath in the
+// poster idiom, and a native <details> that unfolds a venue + map panel on
+// click. Home page only — index.astro uses it, nothing else does — so the
+// motion and the OpenStreetMap embed stay off /events entirely.
+//
+// The markup is a poster face inside <summary> and a panel after it; all the
+// motion (the poster grows into the row on click, the others slim to spines)
+// lives in the `.uev*` block in global.css. Every <details> here shares one
+// `name`, so opening one closes the rest with no JavaScript.
+import { Image } from "astro:assets";
+import { formatEventDate, icsHref, osmEmbed } from "../lib/events.js";
+import { resolveImage } from "../lib/images.js";
+import { localizeEntry } from "../lib/content.js";
+import { defaultLocale, getLocale } from "../i18n/config.js";
+import { useTranslations } from "../i18n/utils.js";
+
+const { event: sourceEvent, locale = defaultLocale } = Astro.props;
+const t = useTranslations(locale);
+const loc = getLocale(locale);
+// Translated title/description when the board's content has been translated
+// into this locale; the authored text otherwise. `location` is never in the
+// i18n block, so it always renders as authored — same as EventCard.
+const event = localizeEntry(sourceEvent, loc.dict);
+
+const image = resolveImage(event.image);
+const timeText = event.time ? " · " + event.time : "";
+const dateText = formatEventDate(event.date, loc.dateLocale) ?? t("events.dateTba");
+
+const hasRsvp = event.rsvpUrl && /^https:\/\//i.test(event.rsvpUrl);
+const calendarHref = icsHref(event);
+
+// The mini-map, only when the board has set coordinates. The "get directions"
+// link works either way: it points at the exact coordinate when we have one,
+// and otherwise hands OpenStreetMap the venue string to search for.
+const embed = osmEmbed(event.mapCoords);
+const directionsHref = embed
+  ? embed.directionsHref
+  : event.location
+    ? `https://www.openstreetmap.org/search?query=${encodeURIComponent(event.location)}`
+    : null;
+---
+
+<details class="uev" name="upcoming-events">
+  <summary>
+    <div class="uev-face">
+      <div class="uev-photo">
+        <Image
+          src={image}
+          alt={t("events.photoAlt", { title: event.title })}
+          width={640}
+          densities={[1, 2]}
+          loading="lazy"
+        />
+      </div>
+      <div class="uev-textblock">
+        <p class="uev-date">{dateText}{timeText}</p>
+        <h3 class="uev-title">{event.title}</h3>
+        <span class="uev-strip" aria-hidden="true"></span>
+        {event.location && <p class="uev-venue">{event.location}</p>}
+      </div>
+      <span class="uev-cue">
+        <span>{t("home.venueMap")}</span>
+        <span class="uev-caret" aria-hidden="true"></span>
+      </span>
+    </div>
+  </summary>
+
+  <div class="uev-panel">
+    <div class="uev-panel-inner">
+      <div class="uev-panel-pad">
+        <p class="uev-desc">{event.description}</p>
+        {event.location && <p class="uev-addr">{event.location}</p>}
+        {embed && (
+          <iframe
+            class="uev-map"
+            data-src={embed.src}
+            title={t("home.mapTitle", { location: event.location ?? event.title })}
+            loading="lazy"
+            referrerpolicy="strict-origin-when-cross-origin"
+          ></iframe>
+        )}
+        <div class="uev-actions">
+          {directionsHref && (
+            <a class="card-link" href={directionsHref} target="_blank" rel="noopener">
+              {t("home.getDirections")}
+            </a>
+          )}
+          {calendarHref && (
+            <a class="card-link" href={calendarHref}>{t("events.addToCalendar")}</a>
+          )}
+          {hasRsvp && (
+            <a class="card-link" href={event.rsvpUrl} target="_blank" rel="noopener">
+              {t("events.rsvpCta")}
+            </a>
+          )}
+        </div>
+        {embed && (
+          <noscript>
+            <a class="card-link" href={embed.src} target="_blank" rel="noopener">
+              {t("home.openMap")}
+            </a>
+          </noscript>
+        )}
+      </div>
+    </div>
+  </div>
+</details>

@@ -144,6 +144,18 @@ export const COLLECTIONS = {
         placeholder: "https://uniclubs.ch/...",
         help: "Paste the whole link, starting with https://. Leave empty and the card shows no button.",
       },
+      {
+        name: "mapCoords",
+        label: "Map coordinates",
+        type: "string",
+        required: false,
+        emptyValue: null,
+        placeholder: "47.4245, 9.3767",
+        help:
+          "Optional. On openstreetmap.org, right-click the venue and choose “Show address”, then copy the " +
+          "“latitude, longitude” pair it shows. This drops a mini-map into the card when someone expands it. " +
+          "Leave empty and the card just shows the venue name and a directions link.",
+      },
     ],
   },
 

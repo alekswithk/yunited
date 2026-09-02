@@ -30,6 +30,22 @@ const time24 = z
   .string()
   .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "must be a 24-hour time in HH:MM form");
 
+// "47.4245, 9.3767" — a latitude,longitude pair for the expanded card's
+// mini-map. Same two-step as isoDate: the regex fixes the shape, then a bounds
+// check rejects e.g. "999, 999" that the regex alone would wave through. Blank
+// is fine (it is wrapped in optional() below) — the card then shows the venue
+// panel with no map.
+const latLng = z
+  .string()
+  .regex(
+    /^-?\d{1,2}(?:\.\d+)?\s*,\s*-?\d{1,3}(?:\.\d+)?$/,
+    'must be a "latitude, longitude" pair, e.g. 47.4245, 9.3767',
+  )
+  .refine((s) => {
+    const [lat, lon] = s.split(",").map((n) => Number(n.trim()));
+    return Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
+  }, "latitude must be within ±90 and longitude within ±180");
+
 // A content-relative image path like "images/events/25_26/x.webp". The file
 // must actually exist under src/ — resolveImage() enforces that separately at
 // render time — so here we only rule out absolute paths and URLs.
@@ -101,6 +117,12 @@ export const eventSchema = z
     description: z.string().min(1, "is required"),
     image: imagePath,
     rsvpUrl: optional(z.url("must be a full URL")),
+    // "lat, lon" for the mini-map inside the expanded event card on the home
+    // page (src/components/UpcomingEvent.astro). Blank/omitted → the card's
+    // panel shows the venue text and a "get directions" link but no map. Never
+    // translated, same as `location`. Placed after rsvpUrl so it lands last but
+    // one in the saved JSON, before the machine-written i18n block.
+    mapCoords: optional(latLng),
     // Title and description only. `location` is deliberately never translated:
     // every value is a venue name or street address ("Déja Vu Bar, St. Gallen",
     // "Zürcherstrasse 162"), and translating those corrupts directions to a

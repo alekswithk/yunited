@@ -135,6 +135,23 @@ const showAlternates = alternates.length > 1 && !noindex;
       });
     }
 
+    // --- Upcoming-event mini-map: load the OpenStreetMap embed only on first
+    // expand. The <iframe> ships with data-src, not src, so a home-page visit
+    // costs zero third-party requests (and leaks no IP to OSM) until someone
+    // actually opens a poster. The disclosure itself is native <details>; this
+    // only promotes a subresource, so with JS off the panel still opens and its
+    // <noscript> link covers the map. ---
+    document.querySelectorAll<HTMLDetailsElement>(".uev").forEach((poster) => {
+      poster.addEventListener("toggle", () => {
+        if (!poster.open) return;
+        const frame = poster.querySelector<HTMLIFrameElement>("iframe[data-src]");
+        if (frame) {
+          frame.src = frame.dataset.src ?? "";
+          frame.removeAttribute("data-src");
+        }
+      });
+    });
+
     // --- Table-of-contents scroll spy ---
     // Marks the entry for the section you are reading. Without JS the links
     // still work as plain anchors; they just don't highlight. aria-current is

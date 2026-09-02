@@ -7,6 +7,7 @@
   "description": "A celebration of the 1st of May with an outdoor barbecue.",
   "image": "images/events/25_26/prvi_maj_2026.webp",
   "rsvpUrl": "https://uniclubs.ch/hsg/clubs/yunited/events/prvi-maj",
+  "mapCoords": "47.4392, 9.3805",
   "i18n": {
     "sourceLang": "en",
     "sourceHash": "b56bbcaceb9736fc",

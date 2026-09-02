@@ -38,7 +38,7 @@ npm run admin:dev  # wrangler dev — the admin panel + its Worker on :8787
 
 ## Deploy
 
-Cloudflare builds the repo with `npm run build` and serves `dist/` (`wrangler.jsonc` sets `assets.directory: "./dist"`). The build command must be configured in the Cloudflare Workers Builds settings — it is not in the repo. `public/_headers` carries the CSP and cache rules and is copied verbatim into `dist/`.
+Cloudflare builds the repo with `npm run build` and serves `dist/` (`wrangler.jsonc` sets `assets.directory: "./dist"`). The build command must be configured in the Cloudflare Workers Builds settings — it is not in the repo. `public/_headers` carries the CSP and cache rules and is copied verbatim into `dist/`. The CSP allows exactly one off-Cloudflare origin: `www.openstreetmap.org` in `frame-src`, for the mini-map `<iframe>` in an expanded event card on the home page (`src/components/UpcomingEvent.astro`). `check:dist` does not parse `_headers`, so that token is verified only by a browser pass — expand a card with devtools open and watch for a `frame-src` violation.
 
 The admin Worker (`worker/`) is part of the **same** Worker: `wrangler.jsonc` sets `main: "worker/index.js"` and `assets.run_worker_first: ["/admin/api/*", "/buddy/api/*"]`, so only those paths invoke code and everything else is served statically exactly as before. It deploys with the site — there is no second deploy. Its `GITHUB_TOKEN` is an encrypted Worker secret set out-of-band; the buddy system adds a `BUDDY_DB` D1 binding and a `RESEND_API_KEY` secret — see [`worker/README.md`](worker/README.md) and [`docs/domains/buddy.md`](docs/domains/buddy.md).
 
@@ -88,8 +88,9 @@ Pages live under `src/pages/[...locale]/` — a **rest parameter that matches ze
   and a `sourceHash` of the source text. `localizeEntry(entry, dict)` in
   `src/lib/content.js` swaps the translated fields in at render time and falls back
   field-by-field to the authored text. **Only an event's `title`/`description`
-  are translated** — its `location` is a venue name or street address and translating it
-  would corrupt directions. The `i18n` block *must* stay listed in the events
+  are translated** — its `location` (a venue name / street address) and
+  `mapCoords` (a lat,lon pair for the card's mini-map) are never translated;
+  translating either would corrupt directions to a real place. The `i18n` block *must* stay listed in the events
   collection's `carry` array in `worker/collections.js`: an editor that commits back
   only the fields it knows about would otherwise strip the translations on every board
   save. `worker/collections.test.js` asserts it is there.

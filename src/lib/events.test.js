@@ -11,7 +11,7 @@
 // deliberately framework-free (see CLAUDE.md), so the tests import it directly.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { splitEvents, hasDate, formatEventDate, eventJsonLd, icsCalendar, icsHref, eventRssItem } from "./events.js";
+import { splitEvents, hasDate, formatEventDate, eventJsonLd, icsCalendar, icsHref, eventRssItem, osmEmbed } from "./events.js";
 
 // `now` is injected into splitEvents precisely so these assertions do not rot:
 // the same input must give the same answer whenever the suite is run.
@@ -294,4 +294,38 @@ test("eventRssItem folds date/location/description together, skipping whatever i
     { link: "/events" },
   );
   assert.equal(noLocation.description, "26 April 2026 — A brunch.");
+});
+
+test("osmEmbed returns null for a blank, missing or malformed coordinate string", () => {
+  // A card with no coordinates renders its venue panel with no map — this is
+  // the signal the component reads to do that, so a wrong non-null here would
+  // ship a broken <iframe>.
+  assert.equal(osmEmbed(null), null);
+  assert.equal(osmEmbed(undefined), null);
+  assert.equal(osmEmbed(""), null);
+  assert.equal(osmEmbed("St. Gallen"), null);
+  assert.equal(osmEmbed("47.4245"), null);
+  assert.equal(osmEmbed("47.4245 9.3767"), null);
+  assert.equal(osmEmbed("100, 9"), null); // latitude out of range
+  assert.equal(osmEmbed("47, 200"), null); // longitude out of range
+});
+
+test("osmEmbed builds a bbox around the point and pins a marker on it", () => {
+  const embed = osmEmbed("47.4245, 9.3767");
+  assert.ok(embed);
+  const url = new URL(embed.src);
+  assert.equal(url.origin + url.pathname, "https://www.openstreetmap.org/export/embed.html");
+  assert.equal(url.searchParams.get("layer"), "mapnik");
+  assert.equal(url.searchParams.get("marker"), "47.4245,9.3767");
+  const [w, s, e, n] = url.searchParams.get("bbox").split(",").map(Number);
+  assert.ok(w < 9.3767 && e > 9.3767, "longitude is inside the bbox");
+  assert.ok(s < 47.4245 && n > 47.4245, "latitude is inside the bbox");
+  assert.ok(w < e && s < n, "bbox is min,min,max,max in lon/lat order");
+  assert.equal(embed.directionsHref, "https://www.openstreetmap.org/directions?to=47.4245,9.3767");
+});
+
+test("osmEmbed tolerates surrounding and inner whitespace", () => {
+  const embed = osmEmbed("  47.4245 , 9.3767  ");
+  assert.ok(embed);
+  assert.equal(new URL(embed.src).searchParams.get("marker"), "47.4245,9.3767");
 });
