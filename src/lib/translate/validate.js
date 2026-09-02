@@ -49,8 +49,25 @@ import { splitSentenceGroups } from "./flat.js";
 // class is correct where \b is not: it is what stops the Bosnian marker "ko"
 // from matching inside the perfectly good Croatian "tko".
 const LETTER = "a-zA-Z\\u00c0-\\u024f";
-const notPrecededByLetter = (stem) =>
-  new RegExp(`(?<![${LETTER}])${stem.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "iu");
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const notPrecededByLetter = (stem) => new RegExp(`(?<![${LETTER}])${escapeRe(stem)}`, "iu");
+
+/**
+ * A regional-variant marker, compiled.
+ *
+ * Most markers are matched as a PREFIX so inflections are caught too — Ekavian
+ * "mest-" is diagnostic in "mesto", "mestu", "mesta" alike. A few are only
+ * diagnostic as a WHOLE WORD, because the marker is a strict prefix of oblique
+ * forms that BOTH variants share: "vrijeme"/"vreme" decline to "vremena",
+ * "vremenu", "vremenom" in Croatian, Bosnian AND Serbian — the jat reflex only
+ * shows in the nominative/accusative. Prefix-matching "vreme" there flags
+ * correct Croatian. A trailing "$" in the marker asks for the tighter match.
+ */
+const variantMarkerRe = (marker) => {
+  const wholeWord = marker.endsWith("$");
+  const stem = escapeRe(wholeWord ? marker.slice(0, -1) : marker);
+  return new RegExp(`(?<![${LETTER}])${stem}${wholeWord ? `(?![${LETTER}])` : ""}`, "iu");
+};
 
 const problem = (severity, key, message, detail) => ({ severity, key, message, detail });
 
@@ -181,9 +198,10 @@ export function checkString(source, translated, key, code) {
   // Ekavian/Ijekavian consistency is one of the two things the old pipeline got
   // right. This is here to keep it through a rewrite.
   for (const set of FORBIDDEN_VARIANTS[code] ?? []) {
-    for (const stem of VARIANT_FORMS[set]) {
-      if (notPrecededByLetter(stem.trim()).test(out)) {
-        found.push(problem("error", key, `wrong variant for ${code}: "${stem.trim()}" is ${set}`, out));
+    for (const marker of VARIANT_FORMS[set]) {
+      const stem = marker.trim();
+      if (variantMarkerRe(stem).test(out)) {
+        found.push(problem("error", key, `wrong variant for ${code}: "${stem.replace(/\$$/, "")}" is ${set}`, out));
       }
     }
   }

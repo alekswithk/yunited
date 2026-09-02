@@ -3,8 +3,28 @@
   "date": "2026-10-07",
   "time": null,
   "location": null,
-  "description": "A casual night of games with Yunited — bowling, pool, and more, depending on where we end up. Come hang out, play a few rounds, and enjoy some downtime with the community. Details (venue and games) to be confirmed soon.",
+  "description": "A casual night of games with YUnited — bowling, pool, and more, depending on where we end up. Come hang out, play a few rounds, and enjoy some downtime with the community. Details (venue and games) to be confirmed soon.",
   "image": "images/events/26_27/game_night_2026.jpg",
   "rsvpUrl": null,
-  "mapCoords": null
+  "mapCoords": null,
+  "i18n": {
+    "sourceLang": "en",
+    "sourceHash": "841c523bf3020781",
+    "de": {
+      "title": "Spieleabend 🎳",
+      "description": "Ein lockerer Spieleabend mit YUnited – Bowling, Billard und mehr, je nachdem, wo wir landen. Kommt vorbei, spielt ein paar Runden und geniesst die entspannte Zeit mit der Community. Details (Veranstaltungsort und Spiele) werden in Kürze bekannt gegeben."
+    },
+    "hr": {
+      "title": "Večer igara 🎳",
+      "description": "Opuštena večer igara s YUnited — kuglanje, bilijar i još mnogo toga, ovisno o tome gdje završimo. Dođite se družiti, odigrati nekoliko partija i uživati u slobodnom vremenu s zajednicom. Detalji (lokacija i igre) bit će uskoro potvrđeni."
+    },
+    "bs": {
+      "title": "Večer igara 🎳",
+      "description": "Opuštena večer igara s YUnited — kuglanje, bilijar i još mnogo toga, ovisno o tome gdje završimo. Dođite da se družimo, odigramo nekoliko partija i uživamo u slobodnom vremenu s zajednicom. Detalji (lokacija i igre) bit će uskoro potvrđeni."
+    },
+    "sr": {
+      "title": "Veče igara 🎳",
+      "description": "Opuštena noć igara sa YUnited — kuglanje, bilijar i još mnogo toga, u zavisnosti od toga gde se nađemo. Dođite da se družimo, odigramo nekoliko partija i uživamo u slobodnom vremenu sa zajednicom. Detalji (lokacija i igre) biće uskoro potvrđeni."
+    }
+  }
 }

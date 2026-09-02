@@ -175,6 +175,22 @@ test("Ekavian in Croatian and Ijekavian in Serbian are both caught", () => {
   assert.equal(errs("Exchange", "Razmena", "nav.exchange", "sr").length, 0);
 });
 
+test("the Ekavian 'vreme' marker does not false-positive on the shared oblique 'vremenu'", () => {
+  // "vrijeme"/"vreme" decline identically in Croatian, Bosnian and Serbian —
+  // "vremena", "vremenu", "vremenom" — so a bare "vreme" prefix flagged the
+  // correct Croatian "u slobodnom vremenu" and blocked a Game Night save.
+  assert.equal(
+    errorsOf(errs("some downtime", "uživati u slobodnom vremenu", "event.description", "hr")).length,
+    0,
+  );
+  assert.equal(
+    errorsOf(errs("some downtime", "uživamo u slobodnom vremenu", "event.description", "bs")).length,
+    0,
+  );
+  // The nominative "vreme" is still Ekavian and still caught in hr/bs.
+  assert.match(messages(errs("time", "Sada je vreme", "x.y", "hr")), /wrong variant for hr/);
+});
+
 test("Croatian-only lexis is rejected in Bosnian, and vice versa", () => {
   // bcs.json served BOTH languages and mixed them: the same university appeared
   // as "Sveučilištu u St. Gallenu" x3 and "Univerzitetu St. Gallen" x3.

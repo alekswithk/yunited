@@ -3,8 +3,28 @@
   "date": "2026-11-12",
   "time": null,
   "location": null,
-  "description": "Join Yunited for a karaoke night open to all HSG students. Sing your favorite hits from the Balkans, grab a drink, and enjoy a relaxed night with the community.",
+  "description": "Join YUnited for a karaoke night open to all HSG students. Sing your favorite hits from the Balkans, grab a drink, and enjoy a relaxed night with the community.",
   "image": "images/events/26_27/karaoke_2026_2.jpeg",
   "rsvpUrl": null,
-  "mapCoords": null
+  "mapCoords": null,
+  "i18n": {
+    "sourceLang": "en",
+    "sourceHash": "82f679b08e45c65e",
+    "de": {
+      "title": "Karaoke 🎤🎵",
+      "description": "Kommt zu YUnited und erlebt einen Karaoke-Abend, der allen Studierenden der HSG offensteht. Singt eure Lieblingshits aus dem Balkan, holt euch einen Drink und geniesst einen entspannten Abend mit der Community."
+    },
+    "hr": {
+      "title": "Karaoke 🎤🎵",
+      "description": "Pridružite se YUnitedu na karaoke večeri otvorenoj svim studentima HSGa. Pjevajte svoje omiljene hitove s Balkana, uzmite piće i uživajte u opuštenoj večeri s zajednicom."
+    },
+    "bs": {
+      "title": "Karaoke 🎤🎵",
+      "description": "Pridružite se YUnited-u na karaoke večeri otvorenoj za sve studente HSG. Pjevajte svoje omiljene hitove s Balkana, uzmite piće i uživajte u opuštenoj večeri s zajednicom."
+    },
+    "sr": {
+      "title": "Karaoke 🎤🎵",
+      "description": "Pridružite se YUnited na karaoke večeri otvorenoj za sve studente HSG. Otpevajte svoje omiljene hitove sa Balkana, uzmite piće i uživajte u opuštenoj večeri sa zajednicom."
+    }
+  }
 }
