@@ -3,28 +3,28 @@
   "date": "2026-12-09",
   "time": null,
   "location": null,
-  "description": "Yunited's Christmas Dinner: great food, festive vibes, and a night to celebrate the year together before the holidays kick in.",
+  "description": "YUnited's Christmas Dinner: great food, festive vibes, and a night to celebrate the year together before the holidays kick in.",
   "image": "images/events/26_27/christmas_dinner_2026.jpg",
   "rsvpUrl": null,
   "mapCoords": null,
   "i18n": {
     "sourceLang": "en",
-    "sourceHash": "04760f516491a765",
+    "sourceHash": "1e0f1022471ee8b0",
     "de": {
       "title": "Weihnachtsessen 🎄⛄",
-      "description": "Das Weihnachtsessen von Yunited: leckeres Essen, festliche Stimmung und ein Abend, an dem wir gemeinsam das Jahr ausklingen lassen, bevor die Feiertage beginnen."
+      "description": "Das Weihnachtsessen von YUnited: leckeres Essen, festliche Stimmung und ein Abend, um gemeinsam das Jahr ausklingen zu lassen, bevor die Feiertage beginnen."
     },
     "hr": {
       "title": "Božićna večera 🎄⛄",
-      "description": "Yunitedova božićna večera: odlična hrana, svečana atmosfera i večer za zajedničko proslavljanje godine prije početka blagdana."
+      "description": "Božićna večera YUniteda: odlična hrana, svečana atmosfera i večer za zajedničko proslavljanje godine prije nego što počnu blagdani."
     },
     "bs": {
       "title": "Božićna večera 🎄⛄",
-      "description": "Yunitedova božićna večera: odlična hrana, svečana atmosfera i noć za zajedničko proslavljanje godine prije nego što počnu praznici."
+      "description": "Božićna večera YUniteda: odlična hrana, svečana atmosfera i noć za zajedničko proslavljanje godine prije nego što počnu praznici."
     },
     "sr": {
       "title": "Božićna večera 🎄⛄",
-      "description": "Junajtedova božićna večera: odlična hrana, praznična atmosfera i noć za zajedničko proslavljanje godine pre početka praznika."
+      "description": "Božićna večera YUnited-a: odlična hrana, praznična atmosfera i noć za zajedničko proslavljanje godine pre početka praznika."
     }
   }
 }

@@ -384,8 +384,12 @@ export const CYRILLIC_RE = /[Ѐ-ӿ]/;
 export const VARIANT_FORMS = {
   // Ijekavian markers — wrong in Serbian.
   ijekavian: ["mjesto", "gdje", "vrijeme", "lijep", "razmjen", "prije", "korijen", "ovdje", "poslije", "smjer", "vjera", "uvijek", "čovjek", "djec", "sljedeć", "vrijedn", "zabiljež", "tjedan"],
-  // Ekavian markers — wrong in Croatian and Bosnian.
-  ekavian: ["mesto", "gde", "vreme", "razmen", "koren", "ovde", "posle", "smer", "uvek", "čovek", "sledeć", "vrednost", "zabelež"],
+  // Ekavian markers — wrong in Croatian and Bosnian. A trailing "$" means the
+  // marker is only diagnostic as a WHOLE WORD: "vrijeme"/"vreme" share every
+  // oblique case ("vremena", "vremenu", "vremenom") in all three standards — the
+  // jat reflex only surfaces in the nominative/accusative — so a bare "vreme"
+  // prefix would flag the perfectly correct Croatian "u slobodnom vremenu".
+  ekavian: ["mesto", "gde", "vreme$", "razmen", "koren", "ovde", "posle", "smer", "uvek", "čovek", "sledeć", "vrednost", "zabelež"],
   // Croatian-only lexis — wrong in Bosnian.
   croatianOnly: ["sveučilišt", "inozemstv", "tisuć", "tjedan", "tko ", "svibnj", "lipnj", "srpnj", "sustav"],
   // Bosnian/Serbian lexis — wrong in Croatian.
