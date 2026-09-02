@@ -211,6 +211,36 @@ export function icsHref(event) {
   return hasDate(event) ? `/events/${event.id}.ics` : null;
 }
 
+// "47.4245, 9.3767" -> the OpenStreetMap embed URL for the mini-map in an
+// expanded event card, plus a "get directions" deep link. Null when the board
+// has not set coordinates (or set something malformed) — the caller then
+// renders the venue panel with no map. Framework- and schema-free like the rest
+// of this module: it only shapes strings.
+//
+// The bbox is a small box around the point (~0.9 km E-W, ~0.9 km N-S at St.
+// Gallen's latitude); `marker` drops a pin at the exact coordinate. The
+// directions link is left without a `from`, so OSM asks the visitor for their
+// start. `layer=mapnik` is the standard OSM raster style.
+/**
+ * @param {string | null | undefined} mapCoords
+ * @returns {{ src: string, directionsHref: string } | null}
+ */
+export function osmEmbed(mapCoords) {
+  if (typeof mapCoords !== "string") return null;
+  const m = mapCoords.match(/^\s*(-?\d{1,2}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)\s*$/);
+  if (!m) return null;
+  const lat = Number(m[1]);
+  const lon = Number(m[2]);
+  if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+  const dLat = 0.0045;
+  const dLon = 0.007;
+  const bbox = [lon - dLon, lat - dLat, lon + dLon, lat + dLat].join(",");
+  return {
+    src: `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lon}`,
+    directionsHref: `https://www.openstreetmap.org/directions?to=${lat},${lon}`,
+  };
+}
+
 // One RSS <item> per event, for /events.xml. Pure and framework-free, like the
 // rest of this module: the caller sorts and supplies the page url, this just
 // shapes one event. `pubDate` is omitted for a TBA event — there is nothing to

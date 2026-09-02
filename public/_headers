@@ -24,7 +24,14 @@
   # static.cloudflareinsights.com is the Cloudflare Web Analytics beacon.
   # formspree.io needs both connect-src (the contact form's fetch submit) and
   # form-action (the no-JS fallback, which posts the form natively).
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://static.cloudflareinsights.com https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://cloudflareinsights.com https://formspree.io; form-action 'self' https://formspree.io; frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'
+  # www.openstreetmap.org is the ONLY off-Cloudflare content on the site: the
+  # mini-map inside an expanded event card on the home page is an
+  # openstreetmap.org/export/embed.html <iframe> (frame-src only — the map tiles
+  # it loads are governed by OSM's own page, not ours, so img-src/connect-src
+  # stay untouched). check:dist does not parse this file, so a wrong or missing
+  # frame-src token shows up only as a console CSP violation on first expand —
+  # check it in the browser after touching this line.
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://static.cloudflareinsights.com https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://cloudflareinsights.com https://formspree.io; form-action 'self' https://formspree.io; frame-src 'self' https://challenges.cloudflare.com https://www.openstreetmap.org; frame-ancestors 'none'; base-uri 'self'; object-src 'none'
 
 # Astro fingerprints everything it emits here — the stylesheet, optimized
 # images, page scripts — with a content hash in the filename, so a given URL
