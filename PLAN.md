@@ -252,6 +252,42 @@ implement *from* it. Roughly ordered by impact ÷ effort.
   inbox fills up or Formspree's quota is exhausted. (If the buddy-signup item
   above brings Turnstile in anyway, reconsider adding it here in the same pass.)
 
+- **Add a `Strict-Transport-Security` header** *(S).* `public/_headers`' global
+  `/*` block sets `X-Content-Type-Options`, `X-Frame-Options`,
+  `Referrer-Policy` and `Permissions-Policy`, but no HSTS header at all —
+  checked, it is not there. Nothing else supplies it either: the site is a
+  Cloudflare Worker serving static assets directly, not behind the Pages HTTPS
+  proxy layer that sometimes adds this on its own, so a client that has never
+  visited `yunited.ch` before has no reason to skip a plaintext first request.
+  Add `Strict-Transport-Security: max-age=63072000; includeSubDomains;
+  preload` to the `/*` block; `check:dist` would need no change. Touches
+  `public/_headers`, so human review either way (§6). Submitting the domain at
+  hstspreload.org is then a separate, human, one-time step.
+
+- **Unit-test `localizeEntry` in `src/lib/content.js`** *(S).* It is exactly
+  the class of build-time logic `CLAUDE.md` singles out for testing — get its
+  field-by-field fallback wrong and every command still passes while a page
+  quietly shows English text under a `hr`/`bs`/`sr` URL, or drops a field
+  entirely — yet it has no test file and isn't exercised by `events.test.js`
+  either (checked). Worth covering explicitly: a partially-translated entry
+  falls back per field rather than all-or-nothing; a translated field that is
+  an empty string or whitespace-only does *not* overwrite the source text; and
+  an entry with no matching `i18n[dict]` is returned unchanged. Pure function,
+  no `import.meta.glob` needed to reach it — a plain object literal exercises
+  it directly.
+
+- **Guard the case-collision in `src/lib/images.js`'s image lookup** *(S).*
+  `resolveImage`'s lookup `Map` is keyed by the *lowercased* path so that
+  `IMG_1234.PNG` resolves like `img_1234.png` — deliberate, per the comment at
+  the top of the file. The gap: if two distinct files in `src/images/` differ
+  only by case (e.g. a board member re-uploads `Photo.jpg` next to an existing
+  `photo.jpg`), `import.meta.glob`'s enumeration order silently decides which
+  one every reference resolves to, with no error and no warning — the build
+  stays green and `check:dist` stays clean while an event or member ships the
+  wrong photo. Detect the collision when building `byKey` (the two original,
+  differently-cased paths are both known at that point) and throw a clear
+  build error naming both files, the same way a missing image already does.
+
 ---
 
 ## 5. Everyday commands
