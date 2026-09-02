@@ -1121,8 +1121,7 @@ main { position: relative; }
     align-items: stretch;
     transition:
       flex-grow var(--dur-base) var(--ease-out),
-      grid-template-columns var(--dur-base) var(--ease-out),
-      max-width var(--dur-base) var(--ease-out);
+      grid-template-columns var(--dur-base) var(--ease-out);
   }
   .uev[open] {
     flex-grow: 6;
@@ -1130,24 +1129,34 @@ main { position: relative; }
   }
   /* Opening a <details> unskips ::details-content in the SAME frame the
      `.uev[open]` rules take effect, and Chrome will not run a transition on the
-     grid/flex/max-width of `.uev` across that reveal unless the open state has
-     an explicit first frame. Without this the panel snapped open instead of
-     growing (it shipped that way in the first cut). These are the closed values;
-     a browser without @starting-style just opens instantly, same as reduced
-     motion. */
+     grid/flex of `.uev` across that reveal unless the open state has an explicit
+     first frame. Without this the panel snapped open instead of growing (it
+     shipped that way in the first cut). These are the closed values; a browser
+     without @starting-style just opens instantly, same as reduced motion. */
   @starting-style {
     .uev[open] {
       flex-grow: 1;
       grid-template-columns: minmax(0, 1fr) 0rem;
-      max-width: 34rem;
     }
   }
   /* One lone poster: don't stretch to the full page width, and when it opens
      widen the cap by exactly the panel's width so the poster BODY holds its
      size and the panel unfurls to its right — rather than the photo and title
-     squeezing to make room. */
-  .uev-row > .uev:only-child { max-width: 34rem; }
+     squeezing to make room. `max-width` is scoped to this case ONLY: a poster
+     in a multi-poster row has no `max-width` (resting value `none`), and
+     `34rem → none` is not interpolable, so letting it into the shared
+     transition/@starting-style made every card in a 2–3 row jump on open. */
+  .uev-row > .uev:only-child {
+    max-width: 34rem;
+    transition:
+      flex-grow var(--dur-base) var(--ease-out),
+      grid-template-columns var(--dur-base) var(--ease-out),
+      max-width var(--dur-base) var(--ease-out);
+  }
   .uev-row > .uev:only-child[open] { max-width: 52rem; }
+  @starting-style {
+    .uev-row > .uev:only-child[open] { max-width: 34rem; }
+  }
 
   .uev-row:has(.uev[open]) .uev:not([open]) { flex-grow: 0.55; }
   .uev-row:has(.uev[open]) .uev:not([open]) .uev-face {
