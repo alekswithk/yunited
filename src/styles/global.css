@@ -938,13 +938,12 @@ main { position: relative; }
   rotate: var(--uev-tilt);
   translate: 0 0;
   transition:
-    rotate var(--dur-base) var(--ease-snap),
-    translate var(--dur-base) var(--ease-snap),
-    box-shadow var(--dur-base) var(--ease-out),
+    rotate var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
     opacity var(--dur-base) var(--ease-out);
 }
 .uev > summary:hover .uev-face { rotate: 0deg; box-shadow: 6px 6px 0 var(--rule-strong); }
-.uev[open] .uev-face { rotate: 0deg; translate: 0 -3px; box-shadow: 6px 6px 0 var(--rule-strong); }
+.uev[open] .uev-face { rotate: 0deg; box-shadow: 6px 6px 0 var(--rule-strong); }
 
 /* The photograph fills whatever height the face has spare, so the picture is
    the focus at rest and when open. Same positioned-img trick as .card-image. */
@@ -1062,16 +1061,15 @@ main { position: relative; }
   border: 1px solid var(--rule-strong);
   border-top: 0;
 }
-/* The panel's contents ease in just after the box has opened. */
+/* The panel's contents ease in as one block, a beat after the box starts to
+   open — no per-child stagger, which made the panel finish well after the
+   frame it sits in and read as sluggish. */
 .uev-panel-pad > * {
   opacity: 0;
-  translate: 0 8px;
+  translate: 0 6px;
   transition: opacity var(--dur-base) var(--ease-out), translate var(--dur-base) var(--ease-out);
 }
-.uev[open] .uev-panel-pad > * { opacity: 1; translate: 0 0; }
-.uev[open] .uev-panel-pad > :nth-child(2) { transition-delay: 0.05s; }
-.uev[open] .uev-panel-pad > :nth-child(3) { transition-delay: 0.1s; }
-.uev[open] .uev-panel-pad > :nth-child(4) { transition-delay: 0.14s; }
+.uev[open] .uev-panel-pad > * { opacity: 1; translate: 0 0; transition-delay: 0.08s; }
 
 .uev-desc { margin: 0; font-size: 1rem; color: var(--color-ink); }
 .uev-addr {
@@ -1096,11 +1094,17 @@ main { position: relative; }
 
 /* Desktop: the row goes horizontal and the open poster grows via flex-grow
    (basis pinned at 0, so each width is a clean ratio of the grow values, which
-   interpolates smoothly). The panel opens as a second grid column AND its rows
-   run 0fr→1fr on the same duration, so width and height grow together as one
-   coordinated move — not a two-stage wipe. A closed panel contributes NOTHING:
-   its column is zero-width and its rows are zero-height, so the poster sits at
-   its own `min-height`, not stretched to a hidden panel's size. */
+   interpolates smoothly); the others slim to spines. The panel unfurls as a
+   second grid column whose width runs 0 → 18rem — a PLAIN LENGTH on both ends,
+   never an `fr`, because interpolating `0fr`→`18rem` inside `minmax()` is what
+   made the open lurch. The panel body is a fixed 18rem wide and clipped by that
+   growing column, so the description text and the map <iframe> never reflow
+   frame-by-frame as it opens; only the column width animates. The panel's own
+   `grid-template-rows` 0fr→1fr trick is for the phone stack (it unfolds
+   downward) — here it is pinned open and its transition killed, so the panel
+   is not doing a width AND a height animation at once. A closed panel
+   contributes nothing: its column is zero-width, so the poster sits at its
+   own `min-height`. */
 @media (min-width: 640px) {
   .uev-row { flex-direction: row; align-items: stretch; }
 
@@ -1113,29 +1117,47 @@ main { position: relative; }
   .uev {
     flex: 1 1 0;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0fr);
+    grid-template-columns: minmax(0, 1fr) 0rem;
     align-items: stretch;
     transition:
       flex-grow var(--dur-base) var(--ease-out),
-      grid-template-columns var(--dur-base) var(--ease-out);
+      grid-template-columns var(--dur-base) var(--ease-out),
+      max-width var(--dur-base) var(--ease-out);
   }
   .uev[open] {
     flex-grow: 6;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 18rem);
+    grid-template-columns: minmax(0, 1fr) 18rem;
   }
-  /* One lone poster shouldn't stretch to the full page width — it still grows
-     (keep flex-grow), just no further than this. */
+  /* Opening a <details> unskips ::details-content in the SAME frame the
+     `.uev[open]` rules take effect, and Chrome will not run a transition on the
+     grid/flex/max-width of `.uev` across that reveal unless the open state has
+     an explicit first frame. Without this the panel snapped open instead of
+     growing (it shipped that way in the first cut). These are the closed values;
+     a browser without @starting-style just opens instantly, same as reduced
+     motion. */
+  @starting-style {
+    .uev[open] {
+      flex-grow: 1;
+      grid-template-columns: minmax(0, 1fr) 0rem;
+      max-width: 34rem;
+    }
+  }
+  /* One lone poster: don't stretch to the full page width, and when it opens
+     widen the cap by exactly the panel's width so the poster BODY holds its
+     size and the panel unfurls to its right — rather than the photo and title
+     squeezing to make room. */
   .uev-row > .uev:only-child { max-width: 34rem; }
+  .uev-row > .uev:only-child[open] { max-width: 52rem; }
 
   .uev-row:has(.uev[open]) .uev:not([open]) { flex-grow: 0.55; }
   .uev-row:has(.uev[open]) .uev:not([open]) .uev-face {
     rotate: 0deg;
-    opacity: 0.62;
-    -webkit-mask-image: linear-gradient(90deg, #000 45%, transparent);
-    mask-image: linear-gradient(90deg, #000 45%, transparent);
+    opacity: 0.55;
   }
 
   .uev-face { min-height: 18rem; height: 100%; }
+  .uev-panel { grid-template-rows: 1fr; overflow: clip; transition: none; }
+  .uev-panel-inner { width: 18rem; }
   .uev-panel-pad { border-left: 0; height: 100%; align-content: start; }
 
   /* The empty state, when there is no upcoming event, fills the row. */
