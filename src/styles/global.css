@@ -1189,6 +1189,29 @@ main { position: relative; }
   .uev::details-content { min-width: 0; overflow: clip; }
   .uev:not([open])::details-content { height: 0; min-height: 0; }
 
+  /* End-of-open jump on posters 2 and 3. `.uev-row` is `align-items: stretch`,
+     so every poster is stretched to the tallest one. When a poster opens, the
+     two closed siblings slim to `flex-grow: 0.55` spines; a spine that narrow
+     wraps its title down to one word per line and wants to be ~800px tall, and
+     the stretch hands that height to the OPEN poster. The spine only reaches
+     full narrowness as the `flex-grow` / `grid-template-columns` transition
+     finishes, so the extra height lands in one step at the end of the open —
+     the jump. It hits 2 and 3 hard and 1 barely, because 1's venue/map panel
+     already sets a tall open height that the spine can't beat.
+       (a) cap the spines at their resting height while any poster is open, so
+           the stretch has nothing tall to propagate. Reverts on close — the
+           selector stops matching the moment `[open]` is gone.
+       (b) pin the open height of 2 and 3 to poster 1's (`34.5rem`, measured
+           across 640/900/1132px; it must clear their panel content, which runs
+           ~260px, translations included). Now their height comes from this
+           rule, not from the spine stretch, so it can't move mid-transition
+           and all three open to the same height. `:nth-child(1)` is never
+           matched — poster 1 is untouched. The photo (`flex: 1 1 auto`) takes
+           up the slack, so `min-height: 0` lets it. */
+  .uev-row:has(.uev[open]) > .uev:not([open]) { max-height: 28rem; overflow: clip; }
+  .uev-row > .uev:nth-child(n + 2)[open] { height: 34.5rem; }
+  .uev-row > .uev:nth-child(n + 2)[open] .uev-photo { min-height: 0; }
+
   /* The empty state, when there is no upcoming event, fills the row. */
   .uev-row > .empty-lead { flex: 1 1 auto; }
 }
