@@ -4,9 +4,12 @@
 // This is NOT EventCard. EventCard is a compact card, still used for the past
 // teaser here and for the whole of /events. This one is a poster: the
 // photograph carries it, with the date/title/venue set underneath in the
-// poster idiom, and a native <details> that unfolds a venue + map panel on
-// click. Home page only — index.astro uses it, nothing else does — so the
-// motion and the OpenStreetMap embed stay off /events entirely.
+// poster idiom, and a native <details> that unfolds a panel with the
+// description and (when the board has set them) the venue + map on click. The
+// cue reads "More" because not every event has a venue or coordinates yet, but
+// they all have a description. Home page only — index.astro uses it, nothing
+// else does — so the motion and the OpenStreetMap embed stay off /events
+// entirely.
 //
 // The markup is a poster face inside <summary> and a panel after it; all the
 // motion (the poster grows into the row on click, the others slim to spines)
@@ -64,7 +67,7 @@ const directionsHref = embed
         {event.location && <p class="uev-venue">{event.location}</p>}
       </div>
       <span class="uev-cue">
-        <span>{t("home.venueMap")}</span>
+        <span>{t("home.expandCue")}</span>
         <span class="uev-caret" aria-hidden="true"></span>
       </span>
     </div>
