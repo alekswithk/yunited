@@ -1035,7 +1035,9 @@ main { position: relative; }
   border-top: 4px solid transparent;
   border-bottom: 4px solid transparent;
   border-left: 5px solid currentColor;
-  transition: transform var(--dur-fast) var(--ease-out);
+  /* Rotates only on .uev[open] — a state change, not a hover affordance — so it
+     rides --dur-base and settles with the poster rather than snapping ahead. */
+  transition: transform var(--dur-base) var(--ease-out);
 }
 .uev[open] .uev-caret { transform: rotate(90deg); }
 
@@ -1165,9 +1167,27 @@ main { position: relative; }
   }
 
   .uev-face { min-height: 18rem; height: 100%; }
-  .uev-panel { grid-template-rows: 1fr; overflow: clip; transition: none; }
+  .uev-panel { grid-template-rows: 1fr; overflow: clip; transition: none; min-width: 0; }
   .uev-panel-inner { width: 18rem; }
   .uev-panel-pad { border-left: 0; height: 100%; align-content: start; }
+
+  /* The panel is the native ::details-content — the grid's 2nd column. Two
+     things stopped it collapsing WITH its track on close, so the card animated
+     to the wrong size and then snapped the rest when the browser discretely
+     hid the panel at the end of the `content-visibility` transition:
+       1. default `min-width: auto` (a content-based grid minimum) plus the
+          fixed `18rem` on .uev-panel-inner kept the column ~150px wide however
+          far `grid-template-columns` ran toward 0rem — so `min-width: 0` here,
+          and `overflow: clip` so the shrinking track actually crops the panel;
+       2. `.uev-panel-pad` is ~553px tall — between the closed and open card
+          heights — and `overflow: clip` only zeroes a grid item's automatic
+          minimum, not its max-content contribution, so the panel kept flooring
+          the row height until it was hidden. `height: 0` removes that floor,
+          but ONLY while :not([open]) — at close frame 0 `[open]` is already
+          gone, so the row eases down on the face height alone; while open the
+          rule doesn't match and the panel keeps its full height (never clipped). */
+  .uev::details-content { min-width: 0; overflow: clip; }
+  .uev:not([open])::details-content { height: 0; min-height: 0; }
 
   /* The empty state, when there is no upcoming event, fills the row. */
   .uev-row > .empty-lead { flex: 1 1 auto; }
