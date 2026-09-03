@@ -511,7 +511,9 @@ main { position: relative; }
 .lang-switch[open] > summary { border-color: var(--color-ink); }
 .lang-switch > summary:focus-visible { outline: 2px solid var(--color-red); outline-offset: 2px; }
 
-/* Caret drawn from borders — no icon font, no SVG request. */
+/* Caret drawn from borders — no icon font, no SVG request. Shared with the
+   "More" nav disclosure below; points down (the way the menu opens) and flips
+   up while open. */
 .lang-caret {
   width: 0;
   height: 0;
@@ -519,7 +521,8 @@ main { position: relative; }
   border-right: 4px solid transparent;
   border-top: 5px solid currentColor;
 }
-.lang-switch[open] .lang-caret { transform: rotate(180deg); }
+.lang-switch[open] .lang-caret,
+.nav-more[open] .nav-more-caret { transform: rotate(180deg); }
 
 .lang-menu {
   position: absolute;
@@ -561,6 +564,54 @@ main { position: relative; }
   .lang-menu { position: static; box-shadow: none; border: 0; padding: var(--space-1) 0 0; }
   .lang-menu a { padding-left: 0; }
 }
+
+/* "More" nav disclosure — folds the three secondary pages off the desktop bar.
+   Same primitive and look as the language switcher above; the summary reads as
+   a plain nav link with the shared caret. On mobile it is undone entirely (see
+   the drawer media query further down). */
+.nav-more { position: relative; }
+
+.nav-more > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  cursor: pointer;
+  list-style: none; /* Firefox */
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  padding-bottom: 2px;
+  border-bottom: 2px solid transparent;
+}
+.nav-more > summary::-webkit-details-marker { display: none; } /* Safari */
+.nav-more > summary:hover { border-bottom-color: var(--color-gold); }
+.nav-more > summary:focus-visible { outline: 2px solid var(--color-red); outline-offset: 2px; }
+/* The current page can live inside the menu — mark the summary like an active link. */
+.nav-more > summary[aria-current] { border-bottom-color: var(--color-gold); font-weight: 700; }
+
+.nav-more-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 30;
+  min-width: 100%;
+  margin: 0;
+  padding: var(--space-1);
+  list-style: none;
+  background: var(--color-paper);
+  border: var(--border);
+}
+.nav-more-menu li { margin: 0; }
+.nav-more-menu a {
+  display: block;
+  padding: 0.45rem 0.9rem;
+  border-bottom: 0;
+  white-space: nowrap;
+}
+.nav-more-menu a:hover { background: var(--color-ink); color: var(--color-paper); }
+.nav-more-menu a[aria-current="page"] { color: var(--color-red); font-weight: 700; }
 
 /* The base button is the quiet one: a hairline outline, flat, no shadow. Only
    .btn-gold — the primary call to action — carries the hard offset, and there
@@ -643,6 +694,35 @@ main { position: relative; }
     gap: var(--space-3);
   }
   .main-nav.is-open { display: flex; }
+
+  /* Undo the "More" disclosure in the drawer: no nested tap to reach Contact.
+     The summary is hidden and the three links sit in the column exactly as
+     they did before this grouping existed. The script in BaseLayout forces the
+     <details> open at this width; these two lines are the belt-and-braces for
+     if that script never runs — reveal the closed <details>'s content on the
+     engines that allow it (`::details-content`, and older Firefox via the
+     `.main-nav`-scoped `display` below). */
+  .nav-more::details-content { content-visibility: visible; }
+  .nav-more {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+  .nav-more > summary { display: none; }
+  .main-nav .nav-more-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    position: static;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  .nav-more-menu a { padding: 0; border-bottom: 2px solid transparent; }
+  .nav-more-menu a:hover { background: none; color: var(--color-ink); border-bottom-color: var(--color-gold); }
 }
 
 /* ---------- Hero (dark, big editorial type) ---------- */

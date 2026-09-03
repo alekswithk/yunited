@@ -112,27 +112,61 @@ const showAlternates = alternates.length > 1 && !noindex;
       });
     }
 
-    // --- Language switcher: close on outside click and on Escape ---
-    // <details> handles opening, focus and keyboard activation itself; these are
-    // the only two behaviours it doesn't provide. With JS off the menu still
-    // opens and closes on click, which is why it's a disclosure and not a
-    // scripted dropdown.
-    const langSwitch = document.querySelector<HTMLDetailsElement>(".lang-switch");
+    // --- Header disclosures: close on outside click and on Escape ---
+    // The language switcher and the "More" nav group are both native <details>:
+    // opening, focus and keyboard activation are handled for free, and with JS
+    // off each still opens and closes on click. These are the only two
+    // behaviours <details> doesn't provide. Clicking one summary counts as an
+    // outside click for the other, so opening one closes the other too.
+    //
+    // "More" is a disclosure only on the desktop bar. In the mobile drawer its
+    // summary is hidden (CSS) and it is forced open here so <details> can't hide
+    // the three links — reaching Contact stays one tap. The drawer already
+    // depends on this script (the hamburger above), so this is no new gate.
+    const drawer = window.matchMedia("(max-width: 768px)");
+    const navMore = document.querySelector<HTMLDetailsElement>(".nav-more");
 
-    if (langSwitch) {
+    const syncNavMore = () => {
+      if (navMore) navMore.open = drawer.matches;
+    };
+    syncNavMore();
+    drawer.addEventListener("change", syncNavMore);
+
+    // While the drawer is showing, "More" is not a dismissable disclosure.
+    const navMoreIsDisclosure = (el: Element | null) =>
+      !(el === navMore && drawer.matches);
+
+    const headerDisclosures = Array.from(
+      document.querySelectorAll<HTMLDetailsElement>(".lang-switch, .nav-more"),
+    );
+
+    if (headerDisclosures.length) {
       document.addEventListener("click", (event) => {
         const target = event.target as Node | null;
-        if (langSwitch.open && target && !langSwitch.contains(target)) {
-          langSwitch.open = false;
+        for (const disclosure of headerDisclosures) {
+          if (
+            navMoreIsDisclosure(disclosure) &&
+            disclosure.open &&
+            target &&
+            !disclosure.contains(target)
+          ) {
+            disclosure.open = false;
+          }
         }
       });
 
-      langSwitch.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && langSwitch.open) {
-          langSwitch.open = false;
-          langSwitch.querySelector("summary")?.focus();
-        }
-      });
+      for (const disclosure of headerDisclosures) {
+        disclosure.addEventListener("keydown", (event) => {
+          if (
+            event.key === "Escape" &&
+            disclosure.open &&
+            navMoreIsDisclosure(disclosure)
+          ) {
+            disclosure.open = false;
+            disclosure.querySelector("summary")?.focus();
+          }
+        });
+      }
     }
 
     // --- Upcoming-event mini-map: load the OpenStreetMap embed only on first
