@@ -288,6 +288,49 @@ implement *from* it. Roughly ordered by impact ÷ effort.
   differently-cased paths are both known at that point) and throw a clear
   build error naming both files, the same way a missing image already does.
 
+- **A Playwright screenshot pass for the two known-fragile layouts** *(M).*
+  `CLAUDE.md` names this exact gap repeatedly — overlap, wrapping and sticky
+  behaviour are invisible to `test`, `build`, `check` and `check:dist`, so
+  today it depends on a human remembering to open a browser at the named
+  breakpoints in hr/bs before every layout PR (the `--toc-width` incident in
+  PR #55 is the fossil record of that failing once). `/about` and
+  `/buddy/pair` are the two pages CLAUDE.md and PLAN.md §4 flag as fragile —
+  the TOC rail against the 17ch `hr` "Sustav/Sistem prijatelja" label, and
+  the pair page at the 33rem phone breakpoint. A script that boots
+  `npm run preview`, opens both pages in Playwright's pre-installed Chromium
+  at the widths their breakpoints name, and diffs against a checked-in
+  baseline PNG would catch a regression automatically instead of relying on
+  someone doing the manual pass. Keep it non-blocking in CI at first (font
+  rendering/anti-aliasing differences between machines make pixel diffs
+  noisy) — a warning artifact on the PR, not a required check, until it's
+  proven stable enough to gate on.
+
+- **An accessibility smoke test against the built `dist/` pages** *(S/M).*
+  Nothing in `check:dist` or CI checks accessibility today — no
+  color-contrast, landmark, alt-text or ARIA check exists anywhere in the
+  pipeline (checked `scripts/check-dist.mjs` and `.github/workflows/ci.yml`).
+  Running `axe-core` against a handful of representative built pages (home,
+  events, about, buddy sign-up) in one Node script, with Playwright's
+  pre-installed Chromium loading the static HTML, would surface regressions
+  like a card missing an accessible name or insufficient text contrast on
+  `--color-paper`/`--color-red` combinations for free. Start non-blocking (a
+  reported list, not a failing check) since a full WCAG pass isn't a goal —
+  catching an accidental regression on a handful of key pages is.
+
+- **Surface the nightly cron sweeps' health in `/admin`** *(S).* The
+  translate sweep and `purgeStaleBuddySignups` (`worker/index.js`
+  `scheduled`) only report through `npx wrangler tail` or the Workers
+  observability logs — nobody sees an outage until a board member notices
+  missing translations or a growing pile of unverified buddy signups weeks
+  later, the same "nobody has an account for that surface" problem
+  `CLAUDE.md` describes for the retired GitHub Actions translate workflow.
+  The Translations tab already stores structured state in the
+  `ADMIN_SETTINGS` KV (`worker/translate.js`); writing a small
+  `{ranAt, ok, detail}` record there after each sweep (translate and buddy
+  purge, one key each) and showing "last run: <time>, <ok/failed>" next to
+  the existing DeepL key status would close that gap with the storage
+  mechanism the panel already has, not a new one.
+
 ---
 
 ## 5. Everyday commands
