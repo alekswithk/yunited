@@ -4,7 +4,7 @@
     "home": "Home",
     "about": "About",
     "events": "Events",
-    "members": "Members",
+    "members": "Board",
     "exchange": "Exchange",
     "partners": "Partners",
     "contact": "Contact",
@@ -28,7 +28,7 @@
     "who": "Who we are"
   },
   "footer": {
-    "tagline": "HSG student club connecting students with Balkan and ex-Yugoslav roots — and everyone curious about the culture — since 2013.",
+    "tagline": "HSG student club connecting students with Balkan and ex-Yugoslav roots, and everyone curious about the culture, since 2013.",
     "pages": "Pages",
     "connect": "Connect",
     "exchangeLink": "Exchange students",
@@ -37,7 +37,7 @@
   },
   "meta": {
     "home": {
-      "title": "YUnited — Balkan & ex-Yu student club at HSG",
+      "title": "YUnited — Balkan & ex-Yugoslav student club at HSG",
       "description": "YUnited connects students with roots from former Yugoslavia socially and professionally while fostering cultural exchange at the University of St. Gallen."
     },
     "about": {
@@ -46,15 +46,15 @@
     },
     "events": {
       "title": "Events — YUnited",
-      "description": "Upcoming events and past-event recaps from YUnited, the Balkan & ex-Yu student club at HSG."
+      "description": "Upcoming events and past-event recaps from YUnited, the Balkan & ex-Yugoslav student club at HSG."
     },
     "members": {
       "title": "Members & Board — YUnited",
-      "description": "Meet the board of YUnited, the Balkan & ex-Yu student club at HSG."
+      "description": "Meet the board of YUnited, the Balkan & ex-Yugoslav student club at HSG."
     },
     "exchange": {
       "title": "Exchange Students — YUnited",
-      "description": "What YUnited offers incoming exchange students at HSG — and how outgoing HSG students can stay connected while abroad."
+      "description": "What YUnited offers incoming exchange students at HSG, and how outgoing HSG students can stay connected while abroad."
     },
     "partners": {
       "title": "Partners — YUnited",
@@ -62,11 +62,11 @@
     },
     "join": {
       "title": "Join — YUnited",
-      "description": "Become a YUnited member via uniclubs.ch — CHF 30 per year for access to all events."
+      "description": "Become a YUnited member via uniclubs.ch: CHF 30 per year for access to all events."
     },
     "contact": {
       "title": "Contact — YUnited",
-      "description": "Get in touch with YUnited, the Balkan & ex-Yu student club at HSG."
+      "description": "Get in touch with YUnited, the Balkan & ex-Yugoslav student club at HSG."
     },
     "buddy": {
       "title": "Buddy system — YUnited",
@@ -82,9 +82,9 @@
     }
   },
   "home": {
-    "heroTitleMain": "The Balkan & ex-Yu community",
+    "heroTitleMain": "The Balkan & ex-Yugoslav community",
     "heroTitleAccent": "at HSG.",
-    "heroLede": "YUnited is a student club at the University of St. Gallen connecting students with roots from former Yugoslavia — and anyone curious about the culture — socially and professionally. Since 2013.",
+    "heroLede": "YUnited is a student club at the University of St. Gallen connecting students with roots from former Yugoslavia, and anyone curious about the culture, socially and professionally. Since 2013.",
     "heroJoin": "Join YUnited",
     "heroEvents": "See our events",
     "upcomingEyebrow": "What's next",
@@ -98,12 +98,12 @@
     "allEvents": "All events & recaps",
     "whoEyebrow": "Who we are",
     "whoHeading": "Culture, community, connections.",
-    "whoBody": "From Prvi Maj barbecues to karaoke nights and career networks — YUnited hosts social and professional events that help students feel at home in St. Gallen and build friendships that last well beyond graduation.",
+    "whoBody": "From Prvi Maj barbecues to karaoke nights and career networks: YUnited hosts social and professional events that help students feel at home in St. Gallen and build friendships that last well beyond graduation.",
     "whoCta": "More about the club"
   },
   "events": {
     "heroTitle": "Events",
-    "heroLede": "Brunches, barbecues, karaoke, casino nights and career events — this is what we get up to. Members get access to all events via uniclubs.",
+    "heroLede": "Brunches, barbecues, karaoke, casino nights and career events: this is what we get up to. Members get access to all events via uniclubs.",
     "upcomingEyebrow": "Save the date",
     "upcomingHeading": "Upcoming events",
     "pastEyebrow": "Recaps",
@@ -123,24 +123,24 @@
   },
   "about": {
     "heroTitle": "About YUnited",
-    "heroLede": "Fostering cultural exchange between students from former Yugoslavia at the University of St. Gallen — since 2013.",
+    "heroLede": "Fostering cultural exchange between students from former Yugoslavia at the University of St. Gallen, since 2013.",
     "missionEyebrow": "Our mission",
     "missionHeading": "What we do",
     "missionP1": "YUnited connects students with roots from former Yugoslavia socially and professionally while fostering cultural exchange at the University of St. Gallen.",
-    "missionP2": "We host a variety of social and professional events for students from ex-Yugoslav countries to aid in their personal and professional development during and after their studies at HSG — and everyone interested in the culture is welcome, whether or not your roots are in the region.",
+    "missionP2": "We host a variety of social and professional events for students from ex-Yugoslav countries to aid in their personal and professional development during and after their studies at HSG. Everyone interested in the culture is welcome, whether or not your roots are in the region.",
     "missionP3": "Beyond campus, YUnited builds a network between students, supports their academic development, acts as a bridge to companies and organisations with an ex-Yugoslav background, and supports and promotes fundraising campaigns.",
     "missionP4": "Our buddy-system offers guidance for assessment and exchange students while fostering connections across all majors and semesters.",
     "buddyEyebrow": "Buddy system",
     "buddyHeading": "Someone to ask, from day one",
-    "buddyLede": "Starting at HSG is a lot at once — a new city, a new system, a lot of new people. Our buddy system pairs you with someone who has already been through it. It is open to every YUnited member, not only to students arriving on exchange.",
+    "buddyLede": "Starting at HSG is a lot at once: a new city, a new system, a lot of new people. Our buddy system pairs you with someone who has already been through it. It is open to every YUnited member, not only to students arriving on exchange.",
     "buddyStudentsTitle": "For HSG students",
-    "buddyStudentsBody": "Assessment-year students get a first point of contact for the things no handbook covers — how to plan a semester, which courses go well together, where to find things. It also connects students across majors and year groups, from assessment through to master's.",
+    "buddyStudentsBody": "Assessment-year students get a first point of contact for the things no handbook covers: how to plan a semester, which courses go well together, where to find things. It also connects students across majors and year groups, from assessment through to master's.",
     "buddyExchangeTitle": "For exchange students",
-    "buddyExchangeBody": "Here for a semester? Your buddy is a friendly first contact for questions about HSG and everyday life in St. Gallen — no Balkan roots required.",
+    "buddyExchangeBody": "Here for a semester? Your buddy is a friendly first contact for questions about HSG and everyday life in St. Gallen. No Balkan roots required.",
     "buddyMorePre": "There is more detail on what we offer incoming and outgoing students on the ",
     "buddyMoreLink": "exchange page",
     "buddyMorePost": ".",
-    "buddyTeaser": "Starting at HSG is a lot at once. Our buddy system pairs you with another member who has already been through it — sign up, and the board matches everyone at the start of term.",
+    "buddyTeaser": "Starting at HSG is a lot at once. Our buddy system pairs you with another member who has already been through it. Sign up, and the board matches everyone at the start of term.",
     "buddyCta": "Read about the buddy system",
     "storyEyebrow": "Since 2013",
     "storyHeading": "Our story",
@@ -150,13 +150,13 @@
     "valueCommunityTitle": "Community",
     "valueCommunityBody": "A home away from home: friendships across all majors and semesters, from the Assessment year to Master's and beyond.",
     "valueCultureTitle": "Culture",
-    "valueCultureBody": "Keeping the food, music, humour and traditions of the region alive in St. Gallen — and sharing them with everyone who's curious.",
+    "valueCultureBody": "Keeping the food, music, humour and traditions of the region alive in St. Gallen, and sharing them with everyone who's curious.",
     "valueCareersTitle": "Careers",
     "valueCareersBody": "Professional events and a bridge to companies and organisations with ex-Yugoslav roots, during your studies and after them."
   },
   "members": {
     "heroTitle": "Members & board",
-    "heroLede": "The people who keep YUnited running — organising events, building partnerships and welcoming new members every semester.",
+    "heroLede": "The people who keep YUnited running: organising events, building partnerships and welcoming new members every semester.",
     "boardEyebrow": "Board",
     "boardHeading": "Current board",
     "boardEmpty": "The board for this semester is being confirmed. Check back shortly.",
@@ -168,27 +168,27 @@
   },
   "exchange": {
     "heroTitle": "Exchange students",
-    "heroLede": "Whether you're arriving at HSG for a semester or heading abroad yourself — here's how YUnited fits into your exchange.",
+    "heroLede": "Whether you're arriving at HSG for a semester or heading abroad yourself, here's how YUnited fits into your exchange.",
     "incomingEyebrow": "Coming to HSG",
     "incomingHeading": "Incoming exchange students",
-    "incomingLede": "Spending a semester in St. Gallen? You're warmly invited — no Balkan roots required.",
-    "incomingBuddy": "<strong>Buddy-system:</strong> our buddy-system offers guidance for assessment and exchange students — a friendly first contact for questions about HSG and life in St. Gallen.",
+    "incomingLede": "Spending a semester in St. Gallen? You're warmly invited. No Balkan roots required.",
+    "incomingBuddy": "<strong>Buddy-system:</strong> our buddy-system offers guidance for assessment and exchange students: a friendly first contact for questions about HSG and life in St. Gallen.",
     "incomingEvents": "<strong>Events:</strong> join our brunches, barbecues, karaoke and party nights from week one. Membership (via uniclubs) gives access to all events.",
     "incomingHome": "<strong>A taste of home:</strong> if your roots are in the region, we're a way to stay connected to the culture while abroad. If not, we're a fun way to discover it.",
     "incomingCta": "Ask us anything",
     "outgoingEyebrow": "Going abroad",
     "outgoingHeading": "Outgoing HSG students",
-    "outgoingLede": "Off on exchange — to Rotterdam, Vienna, Singapore or anywhere else? Here's the honest picture:",
+    "outgoingLede": "Off on exchange, to Rotterdam, Vienna, Singapore or anywhere else? Here's the honest picture:",
     "outgoingItem1": "YUnited doesn't currently run a formal programme for students abroad.",
-    "outgoingItem2": "Members often stay in the loop informally — follow <a href=\"https://www.instagram.com/yunited.unisg\" target=\"_blank\" rel=\"noopener\">@yunited.unisg</a> to keep up with the community while you're away.",
-    "outgoingItem3Pre": "Happy to share tips: if a YUnited member has studied at your destination, we'll gladly connect you — just ",
+    "outgoingItem2": "Members often stay in the loop informally: follow <a href=\"https://www.instagram.com/yunited.unisg\" target=\"_blank\" rel=\"noopener\">@yunited.unisg</a> to keep up with the community while you're away.",
+    "outgoingItem3Pre": "Happy to share tips: if a YUnited member has studied at your destination, we'll gladly connect you: just ",
     "outgoingItem3Link": "reach out",
     "outgoingItem3Post": ".",
     "outgoingCta": "Stay in touch"
   },
   "partners": {
     "heroTitle": "Partner with YUnited",
-    "heroLede": "We connect HSG students with roots from former Yugoslavia — and everyone curious about the culture — socially and professionally. Here's how a partnership works.",
+    "heroLede": "We connect HSG students with roots from former Yugoslavia, and everyone curious about the culture, socially and professionally. Here's how a partnership works.",
     "whyEyebrow": "Why partner with us",
     "whyHeading": "What a partnership offers",
     "reachTitle": "Community",
@@ -206,7 +206,7 @@
   },
   "join": {
     "heroTitle": "Join YUnited",
-    "heroLede": "Membership is handled entirely on uniclubs.ch — the official HSG club platform. Sign up there in a couple of minutes; this website is just here to tell you why it's worth it.",
+    "heroLede": "Membership is handled entirely on uniclubs.ch, the official HSG club platform. Sign up there in a couple of minutes; this website is just here to tell you why it's worth it.",
     "getEyebrow": "Membership",
     "getHeading": "What you get",
     "semesterTitle": "Annual membership — CHF 30",
@@ -214,17 +214,17 @@
     "freeTitle": "Free tier",
     "freeBody": "Not sure yet? The free option on uniclubs gives you access to the <strong>opening event</strong> so you can meet us first.",
     "cta": "Become a member on uniclubs.ch →",
-    "note": "You'll need to sign in with your uniclubs account. Payment and membership administration all happen on uniclubs — we never handle it on this site.",
+    "note": "You'll need to sign in with your uniclubs account. Payment and membership administration all happen on uniclubs. We never handle it on this site.",
     "questionsHeading": "Questions before joining?",
     "questionsBody": "Not sure if the club is for you, or want to know what's planned this semester? Just ask.",
     "questionsCta": "Contact us"
   },
   "contact": {
     "heroTitle": "Get in touch",
-    "heroLede": "Questions about membership, events, partnerships or anything else — we're happy to hear from you.",
+    "heroLede": "Questions about membership, events, partnerships or anything else: we're happy to hear from you.",
     "formEyebrow": "Message us",
     "formHeading": "Contact form",
-    "formSuccess": "Thanks — your message is on its way to the board. We usually reply within a few days.",
+    "formSuccess": "Thanks, your message is on its way to the board. We usually reply within a few days.",
     "labelName": "Name *",
     "labelEmail": "Email *",
     "labelTopic": "Topic *",
@@ -238,14 +238,14 @@
     "formError": "Please fill in all fields (with a valid email) before sending.",
     "formSend": "Send message",
     "formSending": "Sending…",
-    "formFallback": "Sorry — sending failed. Please email us directly at yunited@shsg.ch.",
-    "formNote": "Your message goes straight to the YUnited board inbox (yunited@shsg.ch) and is only used to reply to you — nothing else.",
-    "plainEmail": "Prefer plain email? Write to <a href=\"mailto:yunited@shsg.ch\">yunited@shsg.ch</a> — or DM us on <a href=\"https://www.instagram.com/yunited.unisg\" target=\"_blank\" rel=\"noopener\">Instagram</a>."
+    "formFallback": "Sorry, sending failed. Please email us directly at yunited@shsg.ch.",
+    "formNote": "Your message goes straight to the YUnited board inbox (yunited@shsg.ch) and is only used to reply to you. Nothing else.",
+    "plainEmail": "Prefer plain email? Write to <a href=\"mailto:yunited@shsg.ch\">yunited@shsg.ch</a>, or DM us on <a href=\"https://www.instagram.com/yunited.unisg\" target=\"_blank\" rel=\"noopener\">Instagram</a>."
   },
   "buddy": {
     "heroScript": "Kumstvo · Кумство · Buddy system",
     "heroTitle": "Someone to ask, from day one",
-    "heroLede": "Starting at HSG is a lot at once — a new city, a new system, a lot of new people. A buddy is someone who has already been through it. Open to every YUnited member, not only students arriving on exchange.",
+    "heroLede": "Starting at HSG is a lot at once: a new city, a new system, a lot of new people. A buddy is someone who has already been through it. Open to every YUnited member, not only students arriving on exchange.",
     "tocWhat": "What it is",
     "tocWho": "Who it's for",
     "tocHow": "How matching works",
@@ -253,15 +253,15 @@
     "tocFaq": "Questions",
     "whatEyebrow": "What it is",
     "whatHeading": "One person to point you in the right direction",
-    "whatLede": "We pair you with another member — by chance, not by algorithm — who answers the questions no handbook covers and introduces you to a few people.",
-    "whatP1": "<strong>For HSG students.</strong> Assessment-year students get a first point of contact for planning a semester, choosing courses that go together, and finding their way around campus — across majors and year groups, from the Assessment year through to Master's.",
+    "whatLede": "We pair you with another member (by chance, not by algorithm) who answers the questions no handbook covers and introduces you to a few people.",
+    "whatP1": "<strong>For HSG students.</strong> Assessment-year students get a first point of contact for planning a semester, choosing courses that go together, and finding their way around campus, across majors and year groups, from the Assessment year through to Master's.",
     "whatP2": "<strong>For exchange students.</strong> Here for a semester? Your buddy is a friendly first contact for questions about HSG and everyday life in St. Gallen. No Balkan roots required.",
-    "whatP3": "<strong>How the match is made.</strong> You sign up and confirm your email. At the start of term the board runs a matching round over everyone in the pool — usually once, with a second round for later signups.",
+    "whatP3": "<strong>How the match is made.</strong> You sign up and confirm your email. At the start of term the board runs a matching round over everyone in the pool, usually once, with a second round for later signups.",
     "whatP4": "<strong>By chance, with a fallback.</strong> Everyone is paired at random. If there aren't enough buddies, the ones who offered to take an extra person get one. Anyone still unmatched is held for the next round, never forced onto an unwilling buddy.",
-    "whatP5": "<strong>Then it's yours.</strong> You both get an email with a private link to your pair page — names, contact details and a short checklist to get the first meeting to happen.",
+    "whatP5": "<strong>Then it's yours.</strong> You both get an email with a private link to your pair page: names, contact details and a short checklist to get the first meeting to happen.",
     "whoEyebrow": "Two audiences",
     "studentsTitle": "Assessment & degree students",
-    "studentsBody": "A first person to ask about course planning, campus and how things actually work — well beyond what any handbook covers.",
+    "studentsBody": "A first person to ask about course planning, campus and how things actually work, well beyond what any handbook covers.",
     "exchangeTitle": "Incoming exchange students",
     "exchangeBody": "A friendly contact for HSG and daily life in St. Gallen, for the one semester you're here.",
     "promptTitle": "Read enough? Add yourself to the pool.",
@@ -300,7 +300,7 @@
     "submit": "Add me to the pool",
     "submitNote": "Confirm your email and you're in until the next round. One-click unsubscribe in every message.",
     "formError": "Please fill in the highlighted fields before sending.",
-    "formFallback": "Sorry — something went wrong. Please email us at yunited@shsg.ch and we'll add you by hand.",
+    "formFallback": "Sorry, something went wrong. Please email us at yunited@shsg.ch and we'll add you by hand.",
     "formSending": "Adding you…",
     "formSuccessTitle": "Check your inbox.",
     "formSuccessBody": "We've sent a confirmation link to {email}. Click it and you're in the pool for the next round. The link works once and expires in 48 hours. If it's not there in a minute, check your spam or junk folder.",
@@ -309,16 +309,16 @@
     "faqEyebrow": "Questions",
     "faqHeading": "Good to know",
     "faqQ1": "Do I have to be a member?",
-    "faqA1": "The buddy system is for YUnited members. Joining takes a couple of minutes on uniclubs.ch — there is a free tier if you just want to try us out first.",
+    "faqA1": "The buddy system is for YUnited members. Joining takes a couple of minutes on uniclubs.ch. There is a free tier if you just want to try us out first.",
     "faqQ2": "When will I hear back?",
     "faqA2": "The board runs a matching round at the start of each semester, and a smaller one a few weeks later for anyone who signed up late. You will get an email the moment you are paired.",
     "faqQ3": "What if the match is not a fit?",
-    "faqA3": "Your pair page has a “something's not working” button. Tell us and we will re-pair you in the next round — no awkwardness needed.",
+    "faqA3": "Your pair page has a “something's not working” button. Tell us and we will re-pair you in the next round. No awkwardness needed.",
     "faqQ4": "Can I change my mind?",
     "faqA4": "Every email we send has a one-click link to leave the pool. Your details are deleted when you do.",
     "confirmedScript": "Kumstvo · Buddy system",
     "confirmedTitle": "You're in the pool.",
-    "confirmedBody": "Your email is confirmed. The next matching round runs at the start of term — you'll get an email the moment you're paired. Nothing else to do.",
+    "confirmedBody": "Your email is confirmed. The next matching round runs at the start of term. You'll get an email the moment you're paired. Nothing else to do.",
     "confirmedBack": "Back to the buddy page",
     "removedTitle": "You've been removed.",
     "removedBody": "You're no longer in the buddy pool and won't get any more emails. Changed your mind? Just sign up again.",
@@ -327,7 +327,7 @@
     "pairLoading": "Loading your pairing…",
     "pairError": "This link didn't work. It may have expired, or been mistyped. Check the most recent email we sent you, or get in touch.",
     "pairRoleBuddy": "Your buddy",
-    "pairRoleSeeker": "Your buddy (looking for one — that's you helping!)",
+    "pairRoleSeeker": "Your buddy (looking for one, that's you helping!)",
     "pairRoleYou": "You",
     "pairLabelEmail": "Email",
     "pairLabelStudies": "Studies",
@@ -343,7 +343,7 @@
     "pairConfirmText": "Been in touch? Let the board know it's working.",
     "pairConfirmBtn": "We've connected",
     "pairFlagBtn": "Something's not working",
-    "pairConfirmDone": "Thanks — noted.",
+    "pairConfirmDone": "Thanks, noted.",
     "pairFlagDone": "Thanks for telling us. We'll re-pair you in the next round."
   }
 }
