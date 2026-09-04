@@ -4,28 +4,28 @@
   "date": "2026-09-23",
   "time": null,
   "location": "Caffe Van Gogh, Lämmlisbrunnenstrasse 45, 9000 St. Gallen",
-  "description": "Our first casual get-together of the semester — come meet the board and other members over drinks, no agenda. Date to be announced soon; follow @yunited.unisg to be first to know.",
+  "description": "Our first casual get-together of the semester — come meet the board and other members over drinks, no agenda. Time to be announced soon; follow @yunited.unisg to be first to know.",
   "image": "images/events/26_27/meet_and_greet_2026.webp",
   "rsvpUrl": "https://uniclubs.ch/hsg/clubs/yunited/events/meet-greet",
   "mapCoords": "47.4249, 9.3796",
   "i18n": {
     "sourceLang": "en",
-    "sourceHash": "d044e711cb52ba26",
+    "sourceHash": "a50b0cb3053a1961",
     "de": {
       "title": "Meet & Greet",
-      "description": "Unser erstes zwangloses Treffen in diesem Semester – komm vorbei und lerne den Vorstand und andere Mitglieder bei einem Drink kennen, ganz ohne Tagesordnung. Der Termin wird in Kürze bekannt gegeben; folge @yunited.unisg, um zuerst davon zu erfahren."
+      "description": "Unser erstes zwangloses Treffen in diesem Semester – lernt den Vorstand und andere Mitglieder bei einem Drink kennen, ganz ohne Tagesordnung. Der Termin wird bald bekannt gegeben; folgt @yunited.unisg, um als Erste/r davon zu erfahren."
     },
     "hr": {
       "title": "Meet & Greet",
-      "description": "Naše prvo neformalno druženje u semestru — dođi upoznati odbor i ostale članove uz piće, bez ikakvog programa. Datum će uskoro biti objavljen; prati @yunited.unisg da prvi doznaš."
+      "description": "Naš prvi neformalni susret u semestru — dođite upoznati odbor i ostale članove uz piće, bez dnevnog reda. Vrijeme će uskoro biti objavljeno; pratite @yunited.unisg da prvi saznate."
     },
     "bs": {
       "title": "Meet & Greet",
-      "description": "Naše prvo neformalno druženje u semestru — dođi da upoznaš odbor i ostale članove uz piće, bez ikakvog programa. Datum će uskoro biti objavljen; prati @yunited.unisg da prvi saznaš."
+      "description": "Naše prvo neformalno druženje u semestru — dođite upoznati odbor i ostale članove uz piće, bez dnevnog reda. Vrijeme će uskoro biti objavljeno; pratite @yunited.unisg da prvi saznate."
     },
     "sr": {
       "title": "Meet & Greet",
-      "description": "Naše prvo neformalno druženje u semestru — dođi da upoznaš odbor i ostale članove uz piće, bez ikakvog programa. Datum će uskoro biti objavljen; prati @yunited.unisg da prvi saznaš."
+      "description": "Naše prvo neformalno okupljanje u semestru — dođite da upoznate odbor i druge članove uz piće, bez dnevnog reda. Vreme će biti uskoro objavljeno; pratite @yunited.unisg da prvi saznate."
     }
   }
 }
