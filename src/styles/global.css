@@ -2136,8 +2136,12 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
   text-align: center;
 }
 /* A call-to-action closing a section. A class rather than an inline style —
-   PLAN.md §4 is trying to drop style-src 'unsafe-inline', not add to it. */
-.section-cta { margin-top: var(--space-4); }
+   PLAN.md §4 is trying to drop style-src 'unsafe-inline', not add to it.
+   Flex + gap so a second button (e.g. exchange.astro's external-link CTA)
+   sits beside the first with even spacing instead of the bare inline gap
+   between two anchors; a single button is unaffected since a one-item flex
+   row lays out identically to the block it replaced. */
+.section-cta { margin-top: var(--space-4); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
 /* The same, but closing a panel grid, which needs more air than a list does.
    The footnote under it needs no rule: `p + p` already spaces it. */
 .section-cta-lg { margin-top: var(--space-5); }

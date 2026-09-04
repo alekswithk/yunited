@@ -10,6 +10,14 @@ const t = useTranslations(locale);
 
 const title = t("meta.exchange.title");
 const description = t("meta.exchange.description");
+
+// HSG's own incoming-exchange page. German gets HSG's German version; every
+// other locale (including English) gets the English one — HSG doesn't
+// publish this page in hr/bs/sr, and there is no reason to send those
+// readers to a German-only page when English is right there.
+const officialInfoUrl = locale === "de"
+  ? "https://www.unisg.ch/de/studium/austauschprogramm/incoming-gaststudierende/"
+  : "https://www.unisg.ch/en/studying/exchange-programme/incoming-guest-students/";
 ---
 
 <BaseLayout locale={locale} title={title} description={description} path="/exchange">
@@ -38,6 +46,7 @@ const description = t("meta.exchange.description");
             <li set:html={t("exchange.incomingHome")}></li>
           </ul>
           <p class="section-cta">
+            <a class="btn btn-gold" href={officialInfoUrl} target="_blank" rel="noopener">{t("exchange.incomingOfficialCta")}</a>
             <a class="btn btn-red" href={localizePath("/contact", locale)}>{t("exchange.incomingCta")}</a>
           </p>
         </div>
