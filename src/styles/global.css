@@ -2206,7 +2206,10 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
   grid-template-columns: 1fr 1fr;
   gap: var(--space-3);
 }
-@media (max-width: 560px) { .buddy-role-choice { grid-template-columns: 1fr; } }
+/* Stays two-up even at phone width: with .rc-sub hidden below (see the
+   compact-hint rule further down) the title alone is short in every locale
+   ("da me upare s kumom" / "be matched with a buddy"), so a stacked single
+   column would waste height for nothing. */
 .buddy-role-choice label {
   font-family: var(--font-body);
   font-weight: 400;
@@ -2278,6 +2281,38 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
   align-items: flex-start;
 }
 .buddy-check input { width: auto; margin-top: 0.3rem; flex: none; }
+
+.buddy-capacity-row { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+.buddy-consent-row { display: grid; gap: var(--space-3); }
+.buddy-submit-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); }
+.buddy-submit-row .form-note { margin: 0; }
+
+/* Phone: the two role cards keep their sentence-long .rc-sub in a two-up
+   grid below 560px and read as tall. Below that width the card shows only
+   its title and a single shared hint line takes over underneath, picked by
+   :has() against whichever radio is checked — no script needed, and with
+   no :has() support both hints simply stay hidden, which only costs the
+   sentence, never the choice itself. */
+.buddy-role-hint { display: none; font-size: 0.85rem; color: var(--color-muted); margin: var(--space-2) 0 0; }
+@media (max-width: 560px) {
+  .buddy-role-choice .rc-sub { display: none; }
+  .buddy-role-choice label { padding: var(--space-2) var(--space-3); }
+  .buddy-roles:has(#buddy-role-buddy:checked) .buddy-role-hint-buddy { display: block; }
+  .buddy-roles:has(#buddy-role-seeker:checked) .buddy-role-hint-seeker { display: block; }
+}
+
+/* Desktop: the form widens out of its narrow column into a 3-up grid, so
+   the same fields it always had read in five or six rows instead of one
+   tall single-file list. .buddy-field-wide/-full are the only two spans it
+   needs — everything else is naturally one column, and the two role-fields
+   blocks are `hidden` (never both in flow at once) so plain grid
+   auto-placement is enough, no explicit row assignment required. */
+@media (min-width: 760px) {
+  .buddy-form { max-width: 860px; grid-template-columns: repeat(3, 1fr); }
+  .buddy-field-wide { grid-column: span 2; }
+  .buddy-field-full { grid-column: 1 / -1; }
+  .buddy-consent-row { grid-template-columns: 1fr 1fr; }
+}
 
 .buddy-faq { display: grid; gap: var(--space-4); margin-top: var(--space-4); }
 .buddy-faq h3 { margin-bottom: var(--space-2); }

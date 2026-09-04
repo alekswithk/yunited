@@ -100,24 +100,29 @@ const sections = [
       >
         <input type="hidden" name="locale" value={locale ?? "en"} />
 
-        <fieldset class="buddy-roles">
+        <fieldset class="buddy-roles buddy-field-full">
           <legend>{t("buddy.roleLegend")}</legend>
           <div class="buddy-role-choice">
             <label>
-              <input type="radio" name="role" value="buddy" required />
+              <input id="buddy-role-buddy" type="radio" name="role" value="buddy" required />
               <span>
                 <span class="rc-title">{t("buddy.roleBuddy")}</span>
                 <span class="rc-sub">{t("buddy.roleBuddyHint")}</span>
               </span>
             </label>
             <label>
-              <input type="radio" name="role" value="seeker" required />
+              <input id="buddy-role-seeker" type="radio" name="role" value="seeker" required />
               <span>
                 <span class="rc-title">{t("buddy.roleSeeker")}</span>
                 <span class="rc-sub">{t("buddy.roleSeekerHint")}</span>
               </span>
             </label>
           </div>
+          <!-- Shown only under the compact-phone breakpoint, where .rc-sub is
+               hidden inside the cards to keep each pill to one line; picked
+               with :has() so the right hint shows with no script involved. -->
+          <p class="buddy-role-hint buddy-role-hint-buddy">{t("buddy.roleBuddyHint")}</p>
+          <p class="buddy-role-hint buddy-role-hint-seeker">{t("buddy.roleSeekerHint")}</p>
         </fieldset>
 
         <div>
@@ -125,7 +130,7 @@ const sections = [
           <input id="buddy-name" name="name" type="text" required autocomplete="name" />
         </div>
 
-        <div>
+        <div class="buddy-field-wide">
           <label for="buddy-email">{t("buddy.fieldEmail")}</label>
           <input id="buddy-email" name="email" type="email" required autocomplete="email"
             placeholder="you@student.unisg.ch" />
@@ -159,47 +164,51 @@ const sections = [
           <p class="form-note">{t("buddy.fieldLanguagesHelp")}</p>
         </div>
 
-        <div class="buddy-role-fields" id="buddy-fields-buddy" hidden>
+        <div class="buddy-role-fields buddy-field-full" id="buddy-fields-buddy" hidden>
           <span class="buddy-sublabel">{t("buddy.fieldCapacity")}</span>
-          <div class="buddy-capacity" role="radiogroup" aria-label={t("buddy.fieldCapacity")}>
-            <label><input type="radio" name="capacity" value="1" checked /> 1</label>
-            <label><input type="radio" name="capacity" value="2" /> 2</label>
-            <label><input type="radio" name="capacity" value="3" /> 3</label>
+          <div class="buddy-capacity-row">
+            <div class="buddy-capacity" role="radiogroup" aria-label={t("buddy.fieldCapacity")}>
+              <label><input type="radio" name="capacity" value="1" checked /> 1</label>
+              <label><input type="radio" name="capacity" value="2" /> 2</label>
+              <label><input type="radio" name="capacity" value="3" /> 3</label>
+            </div>
+            <label class="buddy-check">
+              <input type="checkbox" name="openToExtra" value="on" />
+              <span>{t("buddy.fieldExtra")}</span>
+            </label>
           </div>
-          <label class="buddy-check">
-            <input type="checkbox" name="openToExtra" value="on" />
-            <span>{t("buddy.fieldExtra")}</span>
-          </label>
         </div>
 
-        <div class="buddy-role-fields" id="buddy-fields-seeker" hidden>
+        <div class="buddy-role-fields buddy-field-full" id="buddy-fields-seeker" hidden>
           <label for="buddy-note">{t("buddy.fieldNote")} <span class="buddy-opt">({t("buddy.optional")})</span></label>
           <textarea id="buddy-note" name="note" rows="4"
             placeholder={t("buddy.fieldNotePlaceholder")}></textarea>
           <p class="form-note">{t("buddy.fieldNoteHelp")}</p>
         </div>
 
-        <label class="buddy-check">
-          <input type="checkbox" name="isMember" value="on" />
-          <span>{t("buddy.consentMember")}</span>
-        </label>
-        <label class="buddy-check">
-          <input type="checkbox" name="consent" value="on" required />
-          <span>{t("buddy.consentShare")}</span>
-        </label>
+        <div class="buddy-consent-row buddy-field-full">
+          <label class="buddy-check">
+            <input type="checkbox" name="isMember" value="on" />
+            <span>{t("buddy.consentMember")}</span>
+          </label>
+          <label class="buddy-check">
+            <input type="checkbox" name="consent" value="on" required />
+            <span>{t("buddy.consentShare")}</span>
+          </label>
+        </div>
 
         <!-- Honeypot: real people never see it; a bot that fills it in is dropped. -->
         <input class="honeypot" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
 
         <!-- Turnstile bot challenge — resolved automatically with the test key in dev -->
-        <div class="cf-turnstile" data-sitekey={siteKey} data-theme="auto"></div>
+        <div class="cf-turnstile buddy-field-full" data-sitekey={siteKey} data-theme="auto"></div>
 
-        <p class="form-error" id="buddy-error" role="alert"></p>
+        <p class="form-error buddy-field-full" id="buddy-error" role="alert"></p>
 
-        <div>
+        <div class="buddy-submit-row buddy-field-full">
           <button class="btn btn-gold" type="submit" id="buddy-submit">{t("buddy.submit")}</button>
+          <p class="form-note">{t("buddy.submitNote")}</p>
         </div>
-        <p class="form-note">{t("buddy.submitNote")}</p>
       </form>
     </div>
   </section>
