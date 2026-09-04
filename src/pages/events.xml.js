@@ -19,7 +19,7 @@ export async function GET(context) {
   return rss({
     title: "YUnited events",
     description:
-      "Upcoming and past events from YUnited, the Balkan & ex-Yu student club at HSG.",
+      "Upcoming and past events from YUnited, the Balkan & ex-Yugoslav student club at HSG.",
     site: context.site,
     items: [...undated, ...dated].map((event) => eventRssItem(event, { link: "/events" })),
   });
