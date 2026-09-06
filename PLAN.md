@@ -15,10 +15,12 @@ the archive in the same PR — do not let this file grow a history section again
   admin panel → [`docs/ADMIN.md`](docs/ADMIN.md); maintaining the Worker →
   [`worker/README.md`](worker/README.md); succession → [`docs/HANDOVER.md`](docs/HANDOVER.md).
 
-**Health at last check (2026-08-29):** `npm test` 201/201 · `npm run build` 66
+**Health at last check (2026-09-06):** `npm test` 217/217 · `npm run build` 66
 pages · `npm run check` 0/0/0 · `npm run check:dist` clean · `npm audit` 0
-vulnerabilities · working tree clean. There is one dated upcoming event
-(*Meet & Greet*, 2026-09-23), so the empty-calendar warning is not firing.
+vulnerabilities · working tree clean. Four dated upcoming events (*Meet & Greet*
+2026-09-23, *Game Night* 2026-10-07, *Karaoke* 2026-11-12, *Christmas Dinner*
+2026-12-09), so the empty-calendar warning is not firing; spring 2027 is still
+thin.
 
 ---
 
@@ -26,7 +28,7 @@ vulnerabilities · working tree clean. There is one dated upcoming event
 
 ```
 content/                 CONTENT LAYER — one JSON file per entry (board's edit surface)
-  events/<id>.json          9 events (8 past, 1 upcoming); filename = the event id
+  events/<id>.json          12 events (8 past, 4 upcoming); filename = the event id
   members/<role>.json       6 board members; each has an `order` (1 = lead card)
   partners/<name>.json      0 partners — empty on purpose; the logo strip on
                             /partners appears as soon as there is one
@@ -38,8 +40,9 @@ src/
   pages/404.astro           not-found page (not localized)
   pages/events.xml.js       RSS feed at /events.xml (build-time, non-localized)
   pages/events/[id].ics.js  one real .ics file per dated event (build-time)
-  components/*.astro        EventCard, EmptyUpcoming, MemberLead, MemberRow, Portrait,
-                            PageToc, Header, Footer
+  components/*.astro        EventCard, UpcomingEvent (home expanding poster + OSM
+                            mini-map), EmptyUpcoming, MemberLead, MemberRow,
+                            Portrait, PageToc, Header (desktop "More" disclosure), Footer
   layouts/BaseLayout.astro  single source of <head> (canonical + hreflang) + chrome + script
   i18n/                     locale registry (config.js), t()/fallback (utils.js), {en,de,
                             hr,bs,sr}.json dictionaries; en.json is the source of truth
@@ -111,18 +114,20 @@ Account / dashboard steps. The code is in place; these need a person.
   2. ~~**Set the Resend key** and add its SPF/DKIM records for `yunited.ch`~~ ✅ done — `RESEND_API_KEY` set.
   3. **Set the Turnstile secret** to activate the signup-abuse protection: create
      a widget at Cloudflare dashboard → Turnstile → Add site (Managed mode,
-     `yunited.ch`); set the secret key with `npx wrangler secret put
-     TURNSTILE_SECRET_KEY`; set the public site key as `PUBLIC_TURNSTILE_SITE_KEY`
-     in Workers Build environment variables. Full recipe in
-     `worker/README.md` → "The buddy system" → "One-time setup" step 3.
+     `yunited.ch`), then `npx wrangler secret put TURNSTILE_SECRET_KEY`. The
+     public site key is baked into `buddy.astro` as the default (#88), so no
+     Workers Build env var is needed unless it changes. Without the secret the
+     widget renders but the token is never verified — a known safe fallback.
+     Full recipe in `worker/README.md` → "The buddy system" → "One-time setup" step 3.
   4. Once live: decide the **round cadence** (assume term-start + one straggler
      round) and whether the optional **UniClubs member-list cross-check** is
      worth doing (export a CSV each term).
 
-- [ ] **Add the 26/27 events as dates are set** — 🧑 board, in `/admin`. Only one
-      dated upcoming event exists right now (*Meet & Greet*, 2026-09-23); the
-      calendar is thin for the year. The build warns whenever no upcoming event
-      has a date, so a fully empty calendar cannot go unnoticed again.
+- [ ] **Add the spring-2027 events as dates are set** — 🧑 board, in `/admin`.
+      Autumn 2026 now has four dated events (*Meet & Greet*, *Game Night*,
+      *Karaoke*, *Christmas Dinner*), but nothing is on the calendar past
+      2026-12-09. The build warns whenever no upcoming event has a date, so a
+      fully empty calendar cannot go unnoticed again.
 
 - [ ] **A standing "grab a coffee & talk" meetup** — 🧑 board; venue and cadence
       to decide. It can go up **now** as a TBA-dated event (floats to the top of
@@ -151,8 +156,8 @@ Account / dashboard steps. The code is in place; these need a person.
 
 - [ ] **Issue the club's keys from a club-owned identity** (`yunited@shsg.ch`),
       not a personal account: `DEEPL_API_KEY`, `GITHUB_TOKEN`, `CF_API_TOKEN`,
-      and the Resend key above. Then a handover is a password change instead of a
-      re-issue. See [`docs/HANDOVER.md`](docs/HANDOVER.md).
+      `RESEND_API_KEY` and `TURNSTILE_SECRET_KEY`. Then a handover is a password
+      change instead of a re-issue. See [`docs/HANDOVER.md`](docs/HANDOVER.md).
 
 _On demand (not a task): board members add/remove each other in the `Access` tab
 at `/admin`; a change takes effect in seconds. Break-glass, if nobody can get in:
@@ -205,8 +210,8 @@ implement *from* it. Roughly ordered by impact ÷ effort.
 - **Decide the "casino nights" wording in `events.heroLede`** *(S, board
   decision).* #71/#73 changed "casino nights" → "adventures"/"avanture"/"Abenteuer"
   on `/join` but not `/events`. `events.heroLede` still says "casino
-  nights"/"casino večeri" in en/hr/bs/sr (de lacks the key). Pick a word, update
-  all five, mirror the #71/#73 edits.
+  nights"/"casino večeri"/"Casino-Abende" in all five locales. Pick a word,
+  update all five, mirror the #71/#73 edits.
 
 - **A phone-width pass on `/admin` and `/buddy/pair`** *(S).* Neither has been
   rendered at the 33rem breakpoint. `/admin` is board-facing; `/buddy/pair` is

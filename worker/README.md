@@ -470,7 +470,7 @@ every round it commits.
 
 ### One-time setup
 
-Both are maintainer steps, out of band, like `wrangler secret put`:
+All three are maintainer steps, out of band, like `wrangler secret put`:
 
 1. **Create the database and apply the schema.**
    ```bash
@@ -512,13 +512,16 @@ Both are maintainer steps, out of band, like `wrangler secret put`:
    ```
    Create a **Turnstile widget** at **Cloudflare dashboard → Turnstile → Add site**:
    pick "Managed" mode for `yunited.ch`. You get two values:
-   - **Site key** (public) → set as `PUBLIC_TURNSTILE_SITE_KEY` in the Cloudflare
-     Workers Build environment variables (same place as other build-time vars).
+   - **Site key** (public) → the real production key `0x4AAAAAAEiJ4FmgBclbap5B`
+     is already baked into `buddy.astro` as the default (#88), so you normally do
+     **not** need to set anything. Set `PUBLIC_TURNSTILE_SITE_KEY` in the
+     Cloudflare Workers Build environment variables only if the widget is
+     recreated and the key changes.
    - **Secret key** → paste into `wrangler secret put TURNSTILE_SECRET_KEY`.
 
    **Without this secret the server-side check is skipped** — a known safe
-   fallback, not a silent failure. The widget still renders using the test key
-   (the build default), but the token is never verified. Set the secret before
+   fallback, not a silent failure. The widget still renders (using the baked-in
+   production site key), but the token is never verified. Set the secret before
    announcing `/buddy` widely.
 
 ### Retention
