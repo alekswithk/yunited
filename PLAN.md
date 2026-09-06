@@ -336,6 +336,73 @@ implement *from* it. Roughly ordered by impact ÷ effort.
   the existing DeepL key status would close that gap with the storage
   mechanism the panel already has, not a new one.
 
+- **Preload the hero's critical webfonts to cut the FOIT/LCP flash** *(S).*
+  `Fraunces`, `Newsreader` and `Space Mono` are already self-hosted under
+  `assets/fonts/` (moved off `fonts.gstatic.com` for FADP/GDPR, per the
+  comment at the top of `global.css`), each split into `latin` /
+  `latin-ext` subsets with `font-display: swap` — but nothing `<link
+  rel="preload">`s any of them (checked: no `rel="preload"` anywhere in
+  `src`). The hero `<h1>` is the page's largest text block and, on most
+  pages, its LCP candidate; today it paints in a fallback serif, then
+  reflows into Fraunces once the CSS file is parsed and the font request
+  starts — a flash that preloading the one weight/subset the hero actually
+  needs would remove. `BaseLayout.astro` already knows the active locale
+  at render time, so the preload can pick `latin` vs `latin-ext` per page
+  rather than shipping both unconditionally (which would trade the flash
+  for extra bytes on every load). Worth confirming the win in a Lighthouse
+  trace before committing to it — self-hosted `font-display: swap` may
+  already be small enough that this is not worth the added `<head>` weight.
+
+- **Flag images in `src/images/` that nothing references** *(S/M).* The
+  build already fails loudly on the opposite mistake — a content entry
+  naming an image that does not exist (`src/lib/images.js` throws) — but
+  there is no check the other way: a photo left behind after an event's
+  entry is deleted by hand, or an upload that never got wired into a JSON
+  file, sits in the tree (and gets mirrored to `public/images/` by
+  `scripts/mirror-media.mjs` for `/admin`) forever, silently growing the
+  repo and the admin thumbnail list. A script — run alongside
+  `check:dist` — that collects every `images/…` string referenced from
+  `content/**/*.json` plus every `images/…` path imported directly by a
+  `.astro`/`.js` file (hero art, icons, OG image, portraits not tied to a
+  member entry) and diffs that set against `import.meta.glob("src/images/**")`
+  would catch the drift. False positives are the risk to design out before
+  landing this: anything referenced only through a dynamic path (there
+  should be none today, but worth grepping for) would need an explicit
+  allow-list entry rather than a permanent false alarm.
+
+- **A non-blocking external-link liveness check in CI** *(M).* `check:dist`
+  verifies every internal image and (per the internal-link-integrity idea
+  above, once built) every internal href, but nothing checks the handful
+  of external URLs the site depends on for real: each upcoming event's
+  `rsvpUrl` (an Eventbrite/Google Form link a board member typed by hand —
+  the RSVP button on a live event pointing at a 404 is the one broken link
+  a visitor would actually hit), plus the hardcoded social links in
+  `Footer.astro` and `EmptyUpcoming.astro` (Instagram, LinkedIn,
+  `uniclubs.ch`). A small script hitting each with `HEAD` (falling back to
+  `GET` where a host rejects `HEAD`) and reporting non-2xx/3xx as a
+  warning — never a failing check, since an external host's transient
+  hiccup is not this repo's bug to block a merge over — would surface link
+  rot that otherwise waits for a student to click it. Keep it out of
+  `npm test` (which is deliberately network-free per `CLAUDE.md`); run it
+  as its own `npm run check:links`, non-blocking in CI, perhaps only on a
+  schedule rather than every PR so a flaky third-party host doesn't add
+  noise to unrelated diffs.
+
+- **Track Core Web Vitals in CI as a non-blocking artifact** *(M).*
+  Playwright's Chromium is already pre-installed for the (still proposed)
+  screenshot-diff and axe-core ideas above, and it exposes the same
+  `PerformanceNavigationTiming`/paint-timing entries a Lighthouse run
+  would, via `page.evaluate(() => performance.getEntriesByType(...))`
+  against `npm run preview` — no new dependency, unlike adding `lighthouse`
+  itself. Recording LCP/CLS/TBB-ish timing for the home page and one
+  content-heavy page (`/events`) on every PR as a non-blocking artifact
+  would make a regression (an unbudgeted third-party script, an
+  unoptimized image, a font added without `font-display: swap`) visible
+  in review instead of only noticeable to a visitor on a slow connection.
+  Start non-blocking, the same caveat as the a11y/screenshot ideas above —
+  machine-to-machine timing noise makes a hard gate premature until the
+  numbers are watched for a few weeks first.
+
 ---
 
 ## 5. Everyday commands
