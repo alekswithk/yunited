@@ -125,6 +125,7 @@ The Zod schemas in `src/lib/schema.js` are authoritative. In brief:
 | `description` | ✓ | |
 | `image` | ✓ | path relative to `src/`, e.g. `images/events/25_26/x.webp` |
 | `rsvpUrl` | — | full URL to the uniclubs event page |
+| `mapCoords` | — | `lat,lon` pair; drives the OpenStreetMap mini-map in an expanded card on the home page. Never translated (it points at a real place) |
 | `i18n` | — | **auto-managed** — filled by the Worker as the entry is saved, and corrected by the board on the entry's Translations page in `/admin`. Don't hand-edit the file; a correction there survives until the English text changes |
 
 **Board member** (`content/members/<role>.json`): `role` (required), `name`
@@ -218,8 +219,11 @@ nobody can get in at all, is the Cloudflare Zero Trust dashboard — see
 copied verbatim into `dist/`. The public site's CSP is strict — `script-src`
 and `style-src` are `'self'` with **no `'unsafe-inline'`**, and fonts are
 self-hosted — so don't add `style="…"` attributes or `<script is:inline>` to a
-page; put the rules in `global.css` and let Astro bundle the script. `/admin` has
-its own policy scoped to that path, equally strict.
+page; put the rules in `global.css` and let Astro bundle the script. The only
+external origins it allows are `www.openstreetmap.org` (the home page's mini-map
+`<iframe>`), `formspree.io` (the contact form) and Cloudflare's own
+`challenges.cloudflare.com` (Turnstile on the buddy sign-up). `/admin` has its
+own policy scoped to that path, equally strict.
 
 ### Repository map
 
@@ -228,7 +232,8 @@ content/          one JSON file per event / board member / partner (the edit sur
 src/
   pages/          one .astro per page; [...locale] emits /events and /de/events
   layouts/        BaseLayout.astro — <head>, header, footer, once
-  components/     EventCard, MemberLead, MemberRow, Portrait, PageToc, EmptyUpcoming, Header, Footer
+  components/     EventCard, UpcomingEvent (home expanding poster + OSM mini-map), MemberLead,
+                  MemberRow, Portrait, PageToc, EmptyUpcoming, Header, Footer
   lib/            build-time logic: content loading, Zod schema, event/date helpers
     translate/    ISOMORPHIC translation core — glossary, DeepL client, the gate,
                   and the one answer to "does this need translating?";

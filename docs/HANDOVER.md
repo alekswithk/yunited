@@ -71,6 +71,22 @@ one credential on this page that does not need a maintainer at all. The
 Receives what the public contact form sends. If it lapses, the form stops
 delivering, quietly. Worth testing once a year by sending yourself a message.
 
+### Resend — the buddy-system emails
+
+Sends the three transactional emails in the buddy / kumstvo flow (verify your
+address, you've been paired, you've been removed). Free tier. If it lapses,
+signups still work — the board confirms and pairs people by hand from the Buddy
+tab, which says so — but no email goes out. Its key and the SPF/DKIM records for
+`yunited.ch` are covered under the credentials below.
+
+### Cloudflare D1 — the buddy signups
+
+The one database in the project: per-student buddy signups, matching rounds and
+pairs, reached only through the Worker (`BUDDY_DB` binding in `wrangler.jsonc`,
+schema in `worker/migrations/`). Part of the Cloudflare account above; nothing
+separate to own, but a fresh Cloudflare project must recreate it and re-run the
+migrations — see [`worker/README.md`](../worker/README.md) → "The buddy system".
+
 ### The domain
 
 `yunited.ch` — registered and paid for somewhere. **Find out where, write it
@@ -81,7 +97,7 @@ this page whose failure is not recoverable in an afternoon.
 
 ## The credentials
 
-All three are **encrypted Worker secrets**, set with `npx wrangler secret put
+All five are **encrypted Worker secrets**, set with `npx wrangler secret put
 <NAME>`. None is in the repository; none reaches the browser. Full detail, and
 what each failure looks like from the board's side, is in
 [`worker/README.md`](../worker/README.md).
@@ -91,6 +107,8 @@ what each failure looks like from the board's side, is in
 | `GITHUB_TOKEN` | lets `/admin` commit | every save fails, with a message naming this token | new fine-grained PAT, `Contents: Read and write` on this repo only |
 | `CF_API_TOKEN` | lets the board edit their own access list | the Access tab stops working; add and remove people in the Zero Trust dashboard instead | new API token with `Access: Organizations, Identity Providers, and Groups: Edit` |
 | `DEEPL_API_KEY` | translates events | events save untranslated; the panel says so | a free key from deepl.com/pro-api — **or let the board paste one in the Translations tab** |
+| `RESEND_API_KEY` | sends the buddy-system emails (verify, pairing, removal) | signups still work — the board confirms and pairs people by hand from the Buddy tab — but no email goes out | a key from resend.com; re-add the SPF/DKIM records it gives for `yunited.ch` |
+| `TURNSTILE_SECRET_KEY` | verifies the buddy sign-up's anti-bot token server-side | the check is skipped (safe fallback); the widget still renders via the site key baked into `buddy.astro` | a widget at Cloudflare dashboard → Turnstile (Managed mode, `yunited.ch`) |
 
 Two things worth knowing:
 
