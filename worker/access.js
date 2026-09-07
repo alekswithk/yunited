@@ -8,7 +8,7 @@
 // Cloudflare dashboard. Adding or removing a board member is an edit to that
 // list — no code change, no deploy, no GitHub account.
 //
-// This module does two separate things, and it is worth keeping them apart:
+// This module does four things, and it is worth keeping them apart:
 //
 //   1. `identity()` reads the email Access forwards, purely so the panel can
 //      say "Signed in as …". It grants nothing.
@@ -28,6 +28,27 @@
 //
 //      With the two values unset the check skips itself with a warning, which
 //      is how it behaved before they were filled in. Don't rely on that.
+//
+//   3. `crossOriginRefusal()` rejects a state-changing request whose `Origin`
+//      is another site. `verifyAccessJwt()` proves Access issued the token, not
+//      that our own page made the request: Access attaches the JWT to a forged
+//      cross-site form POST just the same, because the CF_Authorization cookie
+//      rides along and `multipart/form-data` needs no CORS preflight. `Origin`
+//      is the one part of that request the browser sets and script cannot.
+//
+//   4. `boardMember()` checks the caller is on the `yunited-board` allow-list.
+//      The Access JWT carries no group claim, so "Access let this through" only
+//      means the caller passed *some* policy on the /admin application. Board
+//      membership was implied by that policy including the board rule group and
+//      never checked here. It is now, on the write routes — see index.js
+//      `handle()`. (`GET state` is exempt: loading the panel must not depend on
+//      a second service. Access is still the door in front of it.)
+//
+// Callers 3 and 4 are wired in `handle()` for every POST. Narrowing the Access
+// application's path scope so it no longer fronts `/admin/api/*` still needs a
+// matching code change — these checks are defence in depth, not the door.
+
+import { accessGroup } from "./board-access.js";
 
 const ACCESS_EMAIL_HEADER = "Cf-Access-Authenticated-User-Email";
 const ACCESS_JWT_HEADER = "Cf-Access-Jwt-Assertion";
@@ -162,4 +183,87 @@ function base64UrlToBytes(segment) {
 
 function decodeSegment(segment) {
   return new TextDecoder().decode(base64UrlToBytes(segment));
+}
+
+/**
+ * Refuse a request that came from another site.
+ *
+ * Returns null to allow, or a sentence to refuse with a 403. Only ever consulted
+ * for state-changing requests (`handle()` calls it for every POST).
+ *
+ * A request with no `Origin` header at all is allowed: `Origin` is evidence only
+ * when it is present and points elsewhere. Same-origin `fetch` from our own page
+ * always sends it; a curl or a health check may not, and neither is a CSRF
+ * vector. `wrangler dev` serves the page and the API from one localhost origin,
+ * so this only diverges under a genuine cross-site request.
+ *
+ * @param {Request} request
+ * @param {URL} url  the parsed request URL (so the check works on any hostname)
+ * @returns {string | null}
+ */
+export function crossOriginRefusal(request, url) {
+  const origin = request.headers.get("Origin");
+  if (!origin) return null;
+
+  let originUrl;
+  try {
+    originUrl = new URL(origin);
+  } catch {
+    return "This request's Origin header is not a valid origin, so it was refused.";
+  }
+
+  if (originUrl.origin === url.origin) return null;
+  return "This request came from another site, so it was refused.";
+}
+
+// The board allow-list, cached per isolate.
+//
+// `boardMember()` reads it via board-access.js — the same list `/admin`'s Access
+// tab edits. One Cloudflare API call, so it is cached for a minute: long enough
+// that a burst of saves costs one call, short enough that removing someone takes
+// effect while they are still deciding what to break. Access's own login is the
+// real-time boundary; this is the check behind it.
+let boardCache = { emails: /** @type {string[] | null} */ (null), at: 0 };
+const BOARD_TTL_MS = 60 * 1000;
+
+const normEmail = (value) => (typeof value === "string" ? value.trim().toLowerCase() : "");
+
+async function cachedBoardEmails(env) {
+  if (!boardCache.emails || Date.now() - boardCache.at >= BOARD_TTL_MS) {
+    const { emails } = await accessGroup(env).read();
+    boardCache = { emails: emails.map(normEmail), at: Date.now() };
+  }
+  return boardCache.emails;
+}
+
+/**
+ * Is `email` on the `yunited-board` allow-list?
+ *
+ *   { ok: true }                 — yes
+ *   { ok: true, skipped: true }  — this deployment cannot check (no CF_API_TOKEN
+ *                                  / CF_ACCOUNT_ID / CF_ACCESS_GROUP_ID); it
+ *                                  relies on the Access policy alone, as before
+ *   { ok: false, reason }        — not on the list, or no verified email
+ *
+ * A thrown Cloudflare error (bad token, rate limit) propagates to the catch in
+ * index.js, which already phrases those. Failing a save closed when the list is
+ * unreadable is the right call for a mutating route.
+ *
+ * @param {Record<string, string>} env
+ * @param {string | null | undefined} email  the VERIFIED email (jwt payload), not the header
+ * @param {{ read: () => Promise<{ emails: string[] }> }} [group]  injectable for tests; bypasses the cache
+ * @returns {Promise<{ ok: true, skipped?: boolean } | { ok: false, reason: string }>}
+ */
+export async function boardMember(env, email, group = null) {
+  if (!env.CF_API_TOKEN || !env.CF_ACCOUNT_ID || !env.CF_ACCESS_GROUP_ID) {
+    return { ok: true, skipped: true };
+  }
+
+  const who = normEmail(email);
+  if (!who) return { ok: false, reason: "no verified email on the request" };
+
+  const emails = group ? (await group.read()).emails.map(normEmail) : await cachedBoardEmails(env);
+  return emails.includes(who)
+    ? { ok: true }
+    : { ok: false, reason: `${who} is not on the board access list` };
 }

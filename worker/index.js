@@ -19,7 +19,9 @@
 // which covers /admin/api/* because Access matches on path prefix. There is no
 // login code here on purpose — see worker/access.js. Every route below also
 // re-checks the signed Access token when CF_ACCESS_TEAM_DOMAIN / CF_ACCESS_AUD
-// are configured.
+// are configured. Every POST additionally has to carry a same-origin `Origin`
+// header (a forged cross-site form POST cannot) and be made by an email on the
+// board allow-list (the Access JWT does not prove that on its own).
 //
 // THE ONE ROUTE THAT IS NOT ABOUT CONTENT is /admin/api/access, which reads and
 // rewrites the email allow-list Access checks against — so the board can add a
@@ -39,7 +41,7 @@ import {
   publicShape,
 } from "./collections.js";
 import { github } from "./github.js";
-import { identity, verifyAccessJwt } from "./access.js";
+import { identity, verifyAccessJwt, crossOriginRefusal, boardMember } from "./access.js";
 import {
   accessGroup,
   conflict,
@@ -312,6 +314,35 @@ async function handle(request, env, url) {
       },
       403,
     );
+  }
+
+  // A state-changing request has to come from our own page AND be made by
+  // someone on the board. Access gates the path, but the JWT it forwards
+  // authenticates the browser, not the page that made the request: a hostile
+  // page can auto-submit a multipart form to /admin/api/save carrying the
+  // victim's cookie, and Access attaches the token to it anyway. `Origin` is the
+  // header that request cannot fake. The board check is the one the Access
+  // policy has always implied and this code never actually made — see
+  // boardMember in access.js. Both run for every POST (content, access, buddy);
+  // GET state stays off boardMember so loading the panel needs no second service.
+  if (request.method === "POST") {
+    const foreign = crossOriginRefusal(request, url);
+    if (foreign) return json({ ok: false, error: foreign }, 403);
+
+    if (!verified.skipped) {
+      const member = await boardMember(env, verified.email ?? identity(request).email);
+      if (!member.ok) {
+        return json(
+          {
+            ok: false,
+            error:
+              `Not authorised: ${member.reason}. If you were added to the board ` +
+              "recently, ask whoever added you to check the change saved.",
+          },
+          403,
+        );
+      }
+    }
   }
 
   const route = url.pathname.slice("/admin/api/".length);

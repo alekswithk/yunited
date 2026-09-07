@@ -641,6 +641,46 @@ but the whole site is then duplicated on a public hostname again.
 With the two values unset the Worker logs a warning and skips the check, which is
 how it behaved before they were filled in. Don't rely on that.
 
+### Two more checks on every POST
+
+The signed-token check proves Access issued the token. It does **not** prove our
+own page made the request, and it does **not** prove the caller is on the board.
+`handle()` closes both gaps for every `POST` (content, access, buddy):
+
+1. **Same-origin only.** `crossOriginRefusal()` (`access.js`) rejects a POST whose
+   `Origin` header names another site. Access forwards its JWT on a forged
+   cross-site form submit just the same — the `CF_Authorization` cookie rides
+   along and `multipart/form-data` needs no CORS preflight — so without this a
+   hostile page open in a board member's browser could commit to the repo.
+   `Origin` is the one part of that request the browser sets and script cannot.
+   A request with no `Origin` at all is allowed (same-origin `fetch` always sends
+   it; curl and health checks are not a CSRF vector).
+
+2. **Board membership.** `boardMember()` (`access.js`) checks the verified email
+   against the `yunited-board` list — the same list the Access tab edits, read
+   through `board-access.js` and cached for a minute. "Access let this through"
+   only means the caller passed *some* policy on the `/admin` application; if that
+   policy is ever widened, this is what still says no. Needs `CF_API_TOKEN` /
+   `CF_ACCOUNT_ID` / `CF_ACCESS_GROUP_ID`; without them it skips, and the Access
+   policy is the only gate, as before. `GET state` is deliberately exempt so
+   loading the panel never waits on the Cloudflare API.
+
+`GET` reads that carry data (`GET access`, `GET buddy/export.csv`) are still
+gated by Access alone — tightening those is a sensible follow-up, not part of
+this change.
+
+**Manual check after deploy** (there is no unit test for the Access edge —
+`worker/access.test.js` covers the two functions, not Cloudflare's behaviour).
+Record status and content-type for each:
+
+```
+curl -i https://yunited.ch/admin/api/state                       # no cookie
+curl -i -H 'Cookie: CF_Authorization=<expired>' …/admin/api/state
+# signed in as a Cloudflare identity that is NOT on the board, then POST:
+curl -i -X POST -H 'Cookie: CF_Authorization=<valid non-board>' …/admin/api/save
+curl -i -X POST -H 'Origin: https://evil.example' … …/admin/api/save
+```
+
 ---
 
 ## Things worth knowing before you change something
