@@ -71,6 +71,7 @@ import {
 } from "./translate.js";
 import { gate } from "../src/lib/translate/content.js";
 import { handleBuddyPublic, handleBuddyAdmin, purgeStaleBuddySignups } from "./buddy.js";
+import { postCopy, getCopy, deReviewList, editModeEnabled } from "./copy.js";
 
 export default {
   /**
@@ -383,6 +384,10 @@ async function handle(request, env, url) {
     "POST save": { handler: postSave, needs: "github" },
     "POST delete": { handler: postDelete, needs: "github" },
     "POST translate": { handler: postTranslate, needs: "github" },
+    // The inline copy editor: edit an About/home string in place, regenerate
+    // hr/bs/sr in the same commit. See worker/copy.js.
+    "GET copy": { handler: getCopy, needs: "github" },
+    "POST copy": { handler: postCopy, needs: "github" },
     "GET access": { handler: getAccess, needs: "cloudflare" },
     "POST access": { handler: postAccess, needs: "cloudflare" },
     // "none" because this pair is how a deployment with nothing configured
@@ -482,7 +487,17 @@ async function getState(request, env) {
       // so the same rule as above is not broken. The DeepL usage call that
       // proves the key still WORKS stays out of here and runs when the tab is
       // opened, because loading Events must not wait on deepl.com.
-      translations: { enabled: true, configured: Boolean(await resolveKey(env)) },
+      //
+      // `deReview` is the list of English strings edited inline since German was
+      // last checked (German is never auto-regenerated); the Translations tab
+      // shows it. `editMode` is the inline-editor kill switch. Both are KV reads
+      // — bindings, not a second service — and both degrade to a safe default.
+      translations: {
+        enabled: true,
+        configured: Boolean(await resolveKey(env)),
+        editMode: await editModeEnabled(env),
+        deReview: await deReviewList(env),
+      },
       // The buddy tab appears only where the D1 store is bound. Like access
       // above, this is a binding check, not a query.
       buddy: { enabled: Boolean(env.BUDDY_DB) },
@@ -1065,9 +1080,9 @@ async function postDelete(request, env) {
  * Returns either the commit or a ready-made Response for the caller to hand
  * back.
  */
-async function commitOrConflict(gh, changes, message) {
+async function commitOrConflict(gh, changes, message, options = {}) {
   try {
-    return await gh.commit(message, changes);
+    return await gh.commit(message, changes, options);
   } catch (error) {
     if (error?.status === 422 || error?.status === 409) {
       return json(

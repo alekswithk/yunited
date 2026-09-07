@@ -436,12 +436,44 @@ function checkClippedStrips() {
 
 const escapeForRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+// Every `data-i18n-key` in the built pages must name a key that exists in
+// en.json AND is editable per src/lib/copy/editable.js — the SAME predicate the
+// Worker enforces on POST /admin/api/copy. A template that passes a key which
+// has drifted, or points EditableCopy at an HTML / split-sentence / meta key,
+// would let the inline editor offer an edit the Worker then refuses (or worse,
+// one that breaks a rail). Invisible to build and check.
+async function checkInlineCopyKeys() {
+  const { flatten } = await import("../src/lib/translate/flat.js");
+  const { isEditableCopyKey } = await import("../src/lib/copy/editable.js");
+  const en = flatten(
+    JSON.parse(readFileSync(new URL("../src/i18n/en.json", import.meta.url), "utf8")),
+  );
+
+  const problems = [];
+  for (const file of htmlFiles(DIST)) {
+    const rel = relative(DIST, file);
+    const html = readFileSync(file, "utf8").replace(HTML_COMMENT, "");
+    for (const [, key] of html.matchAll(/data-i18n-key="([^"]+)"/g)) {
+      if (!(key in en)) problems.push(`${rel}: data-i18n-key="${key}" is not a key in en.json`);
+      else if (!isEditableCopyKey(key, en[key]))
+        problems.push(`${rel}: data-i18n-key="${key}" is not editable copy (markup, a {slot}, a split sentence, or an off-limits prefix)`);
+    }
+  }
+
+  if (problems.length === 0) return 0;
+  console.error("✗ dist/ — an inline-editable string points at a key it should not");
+  for (const p of [...new Set(problems)].slice(0, 8)) console.error(`    ${p}`);
+  console.error("    Fix the key in the .astro template, or widen src/lib/copy/editable.js deliberately.");
+  return problems.length;
+}
+
 failures += checkAdminIsFirstParty();
 failures += checkAdminWiring();
 failures += checkLinkSpacing();
 failures += checkAnimationShorthands();
 failures += checkClippedStrips();
 failures += checkMediaMirror();
+failures += await checkInlineCopyKeys();
 
 if (failures > 0) {
   console.error(

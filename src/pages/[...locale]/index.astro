@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PageToc from "../../components/PageToc.astro";
+import EditableCopy from "../../components/EditableCopy.astro";
 import EventCard from "../../components/EventCard.astro";
 import UpcomingEvent from "../../components/UpcomingEvent.astro";
 import EmptyUpcoming from "../../components/EmptyUpcoming.astro";
@@ -65,8 +66,8 @@ const orgSchema = {
   <section class="hero">
     <div class="container">
       <p class="hero-script">Dobrodošli · Добродошли · Welcome</p>
-      <h1>{t("home.heroTitleMain")} <span class="accent">{t("home.heroTitleAccent")}</span></h1>
-      <p class="lede">{t("home.heroLede")}</p>
+      <h1><EditableCopy as="span" key="home.heroTitleMain" locale={locale} /> <EditableCopy as="span" class="accent" key="home.heroTitleAccent" locale={locale} /></h1>
+      <EditableCopy as="p" class="lede" key="home.heroLede" locale={locale} />
       <div class="hero-actions">
         <a class="btn btn-gold" href={localizePath("/join", locale)}>{t("home.heroJoin")}</a>
         <a class="btn btn-red" href={localizePath("/events", locale)}>{t("home.heroEvents")}</a>
@@ -79,8 +80,8 @@ const orgSchema = {
   <!-- Upcoming events teaser (max 3 expanding posters, from content/events/*.json) -->
   <section id="upcoming">
     <div class="container">
-      <p class="eyebrow">{t("home.upcomingEyebrow")}</p>
-      <h2>{t("home.upcomingHeading")}</h2>
+      <EditableCopy as="p" class="eyebrow" key="home.upcomingEyebrow" locale={locale} />
+      <EditableCopy as="h2" key="home.upcomingHeading" locale={locale} />
       <div class="uev-row" id="upcoming-events">
         {upcomingTeaser.length > 0 ? (
           upcomingTeaser.map((event) => <UpcomingEvent event={event} locale={locale} />)
@@ -94,8 +95,8 @@ const orgSchema = {
   <!-- Recent past-event highlights (max 2, same JSON, same card) -->
   <section id="recent">
     <div class="container">
-      <p class="eyebrow">{t("home.pastEyebrow")}</p>
-      <h2>{t("home.pastHeading")}</h2>
+      <EditableCopy as="p" class="eyebrow" key="home.pastEyebrow" locale={locale} />
+      <EditableCopy as="h2" key="home.pastHeading" locale={locale} />
       <div class="card-grid" id="past-events">
         {pastTeaser.length > 0 ? (
           pastTeaser.map((event) => <EventCard event={event} isPast={true} locale={locale} />)
@@ -112,9 +113,9 @@ const orgSchema = {
   <!-- Short "what we stand for" teaser linking to About -->
   <section id="who" class="section-dark">
     <div class="container">
-      <p class="eyebrow">{t("home.whoEyebrow")}</p>
-      <h2>{t("home.whoHeading")}</h2>
-      <p class="section-intro">{t("home.whoBody")}</p>
+      <EditableCopy as="p" class="eyebrow" key="home.whoEyebrow" locale={locale} />
+      <EditableCopy as="h2" key="home.whoHeading" locale={locale} />
+      <EditableCopy as="p" class="section-intro" key="home.whoBody" locale={locale} />
       <a class="btn btn-gold" href={localizePath("/about", locale)}>{t("home.whoCta")}</a>
     </div>
   </section>
