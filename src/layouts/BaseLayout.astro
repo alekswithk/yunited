@@ -5,6 +5,7 @@
 // tags such as JSON-LD.
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
+import EditMode from "../components/EditMode.astro";
 import { defaultLocale, getLocale, localizePath, publishedLocales } from "../i18n/config.js";
 import { useTranslations } from "../i18n/utils.js";
 import "../styles/global.css";
@@ -292,5 +293,10 @@ const showAlternates = alternates.length > 1 && !noindex;
       document.fonts?.ready.then(sync);
     }
   </script>
+
+  {/* Board-only inline "Edit" links. Renders no markup; its script reveals the
+      hidden .edit-affordance links when GET /admin/api/whoami says the viewer is
+      signed in. Left off 404 (noindex); silent on pages with nothing editable. */}
+  {!noindex && <EditMode />}
 </body>
 </html>

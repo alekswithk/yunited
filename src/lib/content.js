@@ -41,9 +41,19 @@ const memberModules = import.meta.glob("/content/members/*.json", { eager: true 
 // so this costs nothing until the board adds its first partner.
 const partnerModules = import.meta.glob("/content/partners/*.json", { eager: true });
 
+/** "/content/members/president.json" (or "content/…") -> "president" */
+const filenameStem = (file) => file.replace(/^\/?content\/[^/]+\//, "").replace(/\.json$/, "");
+
 // Validate each file against `schema`, collecting every problem across the
 // whole collection before throwing, so one build shows all the fixes needed.
-function loadCollection(modules, schema, extraChecks = () => []) {
+//
+// `withSlug` attaches the filename stem as `slug`. Members and partners carry no
+// id of their own (events derive one from the filename, see below), and the
+// inline "Edit" links on the public pages need that stem to open the right entry
+// in /admin. It is added here rather than mutated onto `data` after safeParse so
+// the .strict() member/partner schemas never see an unknown key; it is
+// render-only and is never written back (postSave in worker/ ignores it).
+function loadCollection(modules, schema, extraChecks = () => [], { withSlug = false } = {}) {
   const entries = [];
   const errors = [];
 
@@ -68,7 +78,7 @@ function loadCollection(modules, schema, extraChecks = () => []) {
         `Fix the field(s) above and rebuild.`
     );
   }
-  return entries.map((e) => e.data);
+  return entries.map((e) => (withSlug ? { ...e.data, slug: filenameStem(e.file) } : e.data));
 }
 
 /**
@@ -146,8 +156,8 @@ const uniqueOrder = (entries) => {
   return errors;
 };
 
-/** @type {import("./schema.js").Member[]} */
-export const members = loadCollection(memberModules, memberSchema, uniqueOrder)
+/** @type {(import("./schema.js").Member & { slug: string })[]} */
+export const members = loadCollection(memberModules, memberSchema, uniqueOrder, { withSlug: true })
   .sort((a, b) => a.order - b.order); // lowest order first; [0] is the lead
 
 /**
@@ -155,7 +165,7 @@ export const members = loadCollection(memberModules, memberSchema, uniqueOrder)
  * `/partners` renders its pitch either way and simply omits the logo strip, so
  * an empty collection is a normal state, not a missing-content error.
  *
- * @type {import("./schema.js").Partner[]}
+ * @type {(import("./schema.js").Partner & { slug: string })[]}
  */
-export const partners = loadCollection(partnerModules, partnerSchema, uniqueOrder)
+export const partners = loadCollection(partnerModules, partnerSchema, uniqueOrder, { withSlug: true })
   .sort((a, b) => a.order - b.order);

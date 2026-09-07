@@ -146,6 +146,7 @@ async function boot() {
 
     renderTabs();
     openSection();
+    openFromHash();
   } catch (error) {
     el.loading.hidden = true;
     showBanner(
@@ -153,6 +154,34 @@ async function boot() {
       false,
     );
   }
+}
+
+/**
+ * A deep link from an "Edit" affordance on the public site.
+ *
+ * `/admin#events/casino-night-2026.json` selects that collection's tab and opens
+ * the entry's form straight away. Anything unrecognised is ignored; the hash is
+ * cleared either way, so a reload does not reopen the form and a stale link does
+ * not linger in the address bar.
+ */
+function openFromHash() {
+  const raw = decodeURIComponent(location.hash.replace(/^#/, ""));
+  history.replaceState(null, "", location.pathname + location.search);
+  if (!raw) return;
+
+  const slash = raw.indexOf("/");
+  if (slash === -1) return;
+  const name = raw.slice(0, slash);
+  const file = raw.slice(slash + 1);
+
+  const known = state.collections.some((c) => c.name === name);
+  const item = state.entries[name]?.find((entry) => entry.file === file);
+  if (!known || !item) return;
+
+  state.active = name;
+  renderTabs();
+  openSection();
+  openForm(item);
 }
 
 /**

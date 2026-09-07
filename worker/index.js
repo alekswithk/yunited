@@ -41,7 +41,7 @@ import {
   publicShape,
 } from "./collections.js";
 import { github } from "./github.js";
-import { identity, verifyAccessJwt, crossOriginRefusal, boardMember } from "./access.js";
+import { identity, verifyAccessJwt, crossOriginRefusal, boardMember, whoami } from "./access.js";
 import {
   accessGroup,
   conflict,
@@ -375,6 +375,10 @@ async function handle(request, env, url) {
   // this was a single unconditional GITHUB_TOKEN check, which would have answered
   // "there is no GitHub token" to a request that never wanted GitHub.
   const match = {
+    // A public page probes this to decide whether to reveal its "Edit" links.
+    // No upstream, no board check (like GET state — a page view must not wait on
+    // the Cloudflare API); it only reports the identity Access already verified.
+    "GET whoami": { handler: () => json(whoami(request, verified)), needs: "none" },
     "GET state": { handler: getState, needs: "github" },
     "POST save": { handler: postSave, needs: "github" },
     "POST delete": { handler: postDelete, needs: "github" },
