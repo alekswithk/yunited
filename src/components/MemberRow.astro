@@ -15,6 +15,7 @@ const name = displayName(member) ?? t("members.tba");
 ---
 
 <article class="roster-row">
+  <a class="edit-affordance" hidden href={`/admin#members/${member.slug}.json`}>Edit</a>
   <p class="roster-role">{member.role}</p>
   <div class="roster-person">
     <Portrait member={member} locale={locale} />

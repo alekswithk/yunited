@@ -67,6 +67,25 @@ export function identity(request) {
   return { email: request.headers.get(ACCESS_EMAIL_HEADER) };
 }
 
+/**
+ * Who is signed in, for a public page deciding whether to reveal its board-only
+ * "Edit" links.
+ *
+ * Grants nothing. The write routes are gated in handle() (Origin + board
+ * membership); this only says whether the affordances appear. It returns the
+ * verified email — the JWT payload, not the spoofable header — and { ok: false }
+ * when token verification is skipped, so a deployment with CF_ACCESS_AUD unset
+ * does not advertise the editor to every visitor.
+ *
+ * @param {Request} request
+ * @param {{ ok: boolean, skipped?: boolean, email?: string }} verified  a verifyAccessJwt result
+ * @returns {{ ok: true, email: string | null } | { ok: false }}
+ */
+export function whoami(request, verified) {
+  if (!verified.ok || verified.skipped) return { ok: false };
+  return { ok: true, email: verified.email ?? identity(request).email };
+}
+
 // The JWKS is fetched once and reused. Access rotates its signing keys and
 // publishes the previous one for seven days after, so a cached set stays valid
 // well past this TTL; an hour simply bounds how long a rotation takes to be

@@ -17,6 +17,7 @@ const name = displayName(member) ?? t("members.tba");
 ---
 
 <article class="masthead-lead">
+  <a class="edit-affordance" hidden href={`/admin#members/${member.slug}.json`}>Edit</a>
   <Portrait member={member} locale={locale} />
   <div class="masthead-body">
     <p class="masthead-role">{member.role}</p>

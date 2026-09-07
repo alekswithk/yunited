@@ -2552,3 +2552,92 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
     border-bottom: var(--border);
   }
 }
+
+/* ==========================================================================
+   Inline edit mode — board only.
+
+   src/components/EditMode.astro adds `editmode` to <body> and un-hides the
+   `.edit-affordance` links that the card / member components render (hidden) for
+   every visitor. None of this exists for a signed-out visitor: the links carry
+   the `hidden` attribute, and `body.editmode` never appears.
+
+   No inline style is set anywhere (style-src 'self'); no transition, so it is
+   the same with or without prefers-reduced-motion. Azure, the site's
+   punctuation colour, marks it as an editor's annotation rather than content.
+   ========================================================================== */
+
+.edit-affordance { display: none; }
+
+body.editmode .card,
+body.editmode .uev,
+body.editmode .masthead-lead,
+body.editmode .roster-row {
+  position: relative; /* containing block for the absolutely-placed link below */
+}
+
+/* :not([hidden]) so a link stays gone until the script reveals it; the author
+   rule also beats the UA `details:not([open]) > :not(summary)` hide, so the tag
+   on a collapsed .uev poster still shows. */
+body.editmode a.edit-affordance:not([hidden]) {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3em 0.7em;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--color-paper);
+  background: var(--color-azure);
+  border: 1px solid var(--color-azure-dark);
+}
+
+body.editmode a.edit-affordance:not([hidden]):hover,
+body.editmode a.edit-affordance:not([hidden]):focus-visible {
+  background: var(--color-azure-dark);
+}
+
+.editmode-bar {
+  position: fixed;
+  left: var(--space-3);
+  bottom: var(--space-3);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-paper);
+  background: var(--color-ink);
+  border: 1px solid var(--color-ink);
+}
+
+.editmode-bar-label { letter-spacing: 0.04em; }
+
+.editmode-bar-done {
+  font: inherit;
+  padding: 0.25em 0.7em;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border: 1px solid var(--color-paper);
+  cursor: pointer;
+}
+
+.editmode-bar-done:hover,
+.editmode-bar-done:focus-visible { background: var(--color-paper-soft); }
+
+@media (max-width: 480px) {
+  .editmode-bar {
+    left: var(--space-2);
+    right: var(--space-2);
+    bottom: var(--space-2);
+    justify-content: space-between;
+  }
+}

@@ -73,6 +73,11 @@ const directionsHref = embed
     </div>
   </summary>
 
+  {/* Revealed only in edit mode (body.editmode), and pulled visually onto the
+      poster face by the .edit-affordance rule in global.css — a direct child of
+      <details> so it never fights the summary's toggle. */}
+  <a class="edit-affordance" hidden href={`/admin#events/${sourceEvent.id}.json`}>Edit</a>
+
   <div class="uev-panel">
     <div class="uev-panel-inner">
       <div class="uev-panel-pad">

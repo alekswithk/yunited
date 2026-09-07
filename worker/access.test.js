@@ -11,11 +11,33 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { crossOriginRefusal, boardMember } from "./access.js";
+import { crossOriginRefusal, boardMember, whoami } from "./access.js";
 
 const post = (headers = {}) =>
   new Request("https://yunited.ch/admin/api/save", { method: "POST", headers });
 const reqUrl = new URL("https://yunited.ch/admin/api/save");
+
+const get = (headers = {}) => new Request("https://yunited.ch/admin/api/whoami", { headers });
+
+test("whoami: returns the verified JWT email", () => {
+  assert.deepEqual(
+    whoami(get(), { ok: true, email: "board@hsg.ch" }),
+    { ok: true, email: "board@hsg.ch" },
+  );
+});
+
+test("whoami: falls back to the forwarded header when the payload has no email", () => {
+  const req = get({ "Cf-Access-Authenticated-User-Email": "board@hsg.ch" });
+  assert.deepEqual(whoami(req, { ok: true }), { ok: true, email: "board@hsg.ch" });
+});
+
+test("whoami: reports not-signed-in when token verification is skipped", () => {
+  assert.deepEqual(whoami(get(), { ok: true, skipped: true }), { ok: false });
+});
+
+test("whoami: reports not-signed-in when verification failed", () => {
+  assert.deepEqual(whoami(get(), { ok: false, reason: "no Access token" }), { ok: false });
+});
 
 test("crossOriginRefusal: allows a same-origin request", () => {
   assert.equal(crossOriginRefusal(post({ Origin: "https://yunited.ch" }), reqUrl), null);

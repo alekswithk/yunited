@@ -1,0 +1,120 @@
+---
+// The inline "Edit" affordance for board members. Renders no markup.
+//
+// Its script asks GET /admin/api/whoami whether the viewer is a signed-in board
+// member. If so it reveals the `.edit-affordance` links that every EventCard,
+// UpcomingEvent, MemberLead and MemberRow already carries (hidden), and shows a
+// small "Editing … · Done" bar. Each link is a deep link into /admin
+// (`#events/<file>.json` etc.) — nothing is edited on this page, so there is no
+// form renderer, no <dialog>, no field logic here.
+//
+// The write side is gated in the Worker (Origin check + board-list membership,
+// see worker/access.js). This only decides whether the links are shown.
+//
+// BaseLayout renders this on every page except those marked `noindex` (404). On
+// a page with no editable content (the buddy flow) the script finds no
+// `.edit-affordance` elements and stays completely silent.
+---
+
+<script>
+  type Who = { ok: true; email: string | null } | { ok: false };
+
+  const CACHE_KEY = "yu-whoami"; // per-tab, so navigation within a session probes once
+  const PREVIEW_KEY = "yu-edit-preview"; // dev-only bypass for local layout work
+
+  const affordances = () =>
+    Array.from(document.querySelectorAll<HTMLAnchorElement>("a.edit-affordance"));
+
+  // Nothing to edit on this page → no probe, no bar.
+  if (affordances().length > 0) {
+    const idle: (cb: () => void) => void =
+      typeof window.requestIdleCallback === "function"
+        ? (cb) => window.requestIdleCallback(cb)
+        : (cb) => window.setTimeout(cb, 200);
+    idle(() => {
+      void start();
+    });
+  }
+
+  async function start() {
+    let who = cachedWho();
+    if (!who) {
+      who = await probeWhoami();
+      try {
+        sessionStorage.setItem(CACHE_KEY, JSON.stringify(who));
+      } catch {
+        // private mode / storage disabled — just don't cache
+      }
+    }
+
+    const forced = import.meta.env.DEV && safeLocal(PREVIEW_KEY) === "1";
+    if (who.ok) enter(who.email);
+    else if (forced) enter("preview");
+  }
+
+  function cachedWho(): Who | null {
+    try {
+      const raw = sessionStorage.getItem(CACHE_KEY);
+      return raw ? (JSON.parse(raw) as Who) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function probeWhoami(): Promise<Who> {
+    try {
+      const res = await fetch("/admin/api/whoami", {
+        redirect: "manual",
+        headers: { accept: "application/json" },
+      });
+      // A cross-origin Access redirect for a signed-out visitor is an opaque
+      // response: res.ok is false. An Access HTML login page fails the
+      // content-type check below.
+      if (!res.ok) return { ok: false };
+      if (!(res.headers.get("content-type") ?? "").includes("application/json")) {
+        return { ok: false };
+      }
+      const body = (await res.json()) as { ok?: boolean; email?: string | null };
+      return body.ok ? { ok: true, email: body.email ?? null } : { ok: false };
+    } catch {
+      return { ok: false };
+    }
+  }
+
+  function enter(label: string | null) {
+    document.body.classList.add("editmode");
+    for (const link of affordances()) link.hidden = false;
+    if (document.querySelector(".editmode-bar")) return;
+
+    const bar = document.createElement("div");
+    bar.className = "editmode-bar";
+
+    const text = document.createElement("span");
+    text.className = "editmode-bar-label";
+    text.textContent = label ? `Editing as ${label}` : "Edit mode";
+    bar.appendChild(text);
+
+    const done = document.createElement("button");
+    done.type = "button";
+    done.className = "editmode-bar-done";
+    done.textContent = "Done";
+    done.addEventListener("click", exit);
+    bar.appendChild(done);
+
+    document.body.appendChild(bar);
+  }
+
+  function exit() {
+    document.body.classList.remove("editmode");
+    for (const link of affordances()) link.hidden = true;
+    document.querySelector(".editmode-bar")?.remove();
+  }
+
+  function safeLocal(key: string): string | null {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
+</script>
