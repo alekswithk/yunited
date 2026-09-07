@@ -44,6 +44,7 @@ import { requireApiKey } from "./lib/require-api-key.mjs";
 import { LANGUAGES } from "../src/lib/translate/glossary.js";
 import { flatten, splitSentenceGroups, unflatten } from "../src/lib/translate/flat.js";
 import { checkDictionary, errorsOf, formatFindings } from "../src/lib/translate/validate.js";
+import { NOTES } from "../src/lib/translate/notes.js";
 
 const I18N_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "i18n");
 
@@ -72,23 +73,6 @@ const readDict = (name) => JSON.parse(readFileSync(pathFor(name), "utf8"));
 
 const enFlat = flatten(readDict("en"));
 const groups = splitSentenceGroups(enFlat);
-
-/**
- * Context notes attached to individual keys.
- *
- * A key name and an English string are not always enough to disambiguate.
- * `formSending` is the case that proves it: "Sending…" is a status, not a
- * command, and nothing in the string says so.
- */
-const NOTES = {
-  "contact.formSending": "Status label shown ON the submit button while the request is in flight. A STATE, never an imperative — it must read differently from contact.formSend.",
-  "contact.formSend": "The submit button's resting label. This one IS an imperative.",
-  "events.dateTba": "A short badge on an event card whose date is not set yet. Keep it badge-length.",
-  "toc.upcoming": "A table-of-contents section label, not a time adverb.",
-  "toc.recent": "A table-of-contents section label for recent events.",
-  "nav.members": "Nav label for the page listing club members AND the board. It is not the name of the governing body.",
-  "footer.connect": "Footer column heading for social links. Must read differently from nav.contact.",
-};
 
 const report = [];
 let changedFiles = 0;

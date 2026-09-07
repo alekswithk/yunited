@@ -1,39 +1,38 @@
 ---
-// The inline "Edit" affordance for board members. Renders no markup.
+// The inline edit surface for board members. Renders no markup.
 //
-// Its script asks GET /admin/api/whoami whether the viewer is a signed-in board
-// member. If so it reveals the `.edit-affordance` links that every EventCard,
-// UpcomingEvent, MemberLead and MemberRow already carries (hidden), and shows a
-// small "Editing … · Done" bar. Each link is a deep link into /admin
-// (`#events/<file>.json` etc.) — nothing is edited on this page, so there is no
-// form renderer, no <dialog>, no field logic here.
+// Its script asks GET /admin/api/whoami whether the viewer is signed in. If so
+// it reveals the two things every page already carries, hidden:
 //
-// The write side is gated in the Worker (Origin check + board-list membership,
-// see worker/access.js). This only decides whether the links are shown.
+//   1. `.edit-affordance` deep links on cards / members (Phase 1) — jump to
+//      /admin with that entry open.
+//   2. `[data-i18n-key]` elements (EditableCopy) — click to edit that string in
+//      place; edits collect and save as one POST /admin/api/copy.
 //
-// BaseLayout renders this on every page except those marked `noindex` (404). On
-// a page with no editable content (the buddy flow) the script finds no
-// `.edit-affordance` elements and stays completely silent.
+// Plus a small "Editing as … · Done" bar. The write side is gated in the Worker
+// (Origin + board membership + the per-key allow-list). This only decides
+// whether the affordances show.
+//
+// BaseLayout renders this on every page except `noindex` (404). On a page with
+// neither affordance the script stays silent.
 ---
 
 <script>
   type Who = { ok: true; email: string | null } | { ok: false };
 
-  const CACHE_KEY = "yu-whoami"; // per-tab, so navigation within a session probes once
-  const PREVIEW_KEY = "yu-edit-preview"; // dev-only bypass for local layout work
+  const CACHE_KEY = "yu-whoami";
+  const PREVIEW_KEY = "yu-edit-preview";
 
-  const affordances = () =>
-    Array.from(document.querySelectorAll<HTMLAnchorElement>("a.edit-affordance"));
+  const links = () => Array.from(document.querySelectorAll<HTMLAnchorElement>("a.edit-affordance"));
+  const copyTargets = () =>
+    Array.from(document.querySelectorAll<HTMLElement>("[data-i18n-key]"));
 
-  // Nothing to edit on this page → no probe, no bar.
-  if (affordances().length > 0) {
+  if (links().length > 0 || copyTargets().length > 0) {
     const idle: (cb: () => void) => void =
       typeof window.requestIdleCallback === "function"
         ? (cb) => window.requestIdleCallback(cb)
         : (cb) => window.setTimeout(cb, 200);
-    idle(() => {
-      void start();
-    });
+    idle(() => void start());
   }
 
   async function start() {
@@ -43,10 +42,9 @@
       try {
         sessionStorage.setItem(CACHE_KEY, JSON.stringify(who));
       } catch {
-        // private mode / storage disabled — just don't cache
+        /* storage off — don't cache */
       }
     }
-
     const forced = import.meta.env.DEV && safeLocal(PREVIEW_KEY) === "1";
     if (who.ok) enter(who.email);
     else if (forced) enter("preview");
@@ -67,13 +65,8 @@
         redirect: "manual",
         headers: { accept: "application/json" },
       });
-      // A cross-origin Access redirect for a signed-out visitor is an opaque
-      // response: res.ok is false. An Access HTML login page fails the
-      // content-type check below.
       if (!res.ok) return { ok: false };
-      if (!(res.headers.get("content-type") ?? "").includes("application/json")) {
-        return { ok: false };
-      }
+      if (!(res.headers.get("content-type") ?? "").includes("application/json")) return { ok: false };
       const body = (await res.json()) as { ok?: boolean; email?: string | null };
       return body.ok ? { ok: true, email: body.email ?? null } : { ok: false };
     } catch {
@@ -81,33 +74,208 @@
     }
   }
 
+  // --- the bar + the two affordances -------------------------------------
+
+  let bar: HTMLDivElement | null = null;
+  let barMessage: HTMLSpanElement | null = null;
+  let saveButton: HTMLButtonElement | null = null;
+
   function enter(label: string | null) {
     document.body.classList.add("editmode");
-    for (const link of affordances()) link.hidden = false;
-    if (document.querySelector(".editmode-bar")) return;
+    for (const link of links()) link.hidden = false;
 
-    const bar = document.createElement("div");
-    bar.className = "editmode-bar";
+    if (!bar) {
+      bar = document.createElement("div");
+      bar.className = "editmode-bar";
 
-    const text = document.createElement("span");
-    text.className = "editmode-bar-label";
-    text.textContent = label ? `Editing as ${label}` : "Edit mode";
-    bar.appendChild(text);
+      const who = document.createElement("span");
+      who.className = "editmode-bar-label";
+      who.textContent = label ? `Editing as ${label}` : "Edit mode";
+      bar.appendChild(who);
 
-    const done = document.createElement("button");
-    done.type = "button";
-    done.className = "editmode-bar-done";
-    done.textContent = "Done";
-    done.addEventListener("click", exit);
-    bar.appendChild(done);
+      barMessage = document.createElement("span");
+      barMessage.className = "editmode-bar-msg";
+      barMessage.hidden = true;
+      bar.appendChild(barMessage);
 
-    document.body.appendChild(bar);
+      saveButton = document.createElement("button");
+      saveButton.type = "button";
+      saveButton.className = "editmode-bar-save";
+      saveButton.hidden = true;
+      saveButton.addEventListener("click", saveCopy);
+      bar.appendChild(saveButton);
+
+      const done = document.createElement("button");
+      done.type = "button";
+      done.className = "editmode-bar-done";
+      done.textContent = "Done";
+      done.addEventListener("click", exit);
+      bar.appendChild(done);
+
+      document.body.appendChild(bar);
+    }
+
+    wireCopyEditor();
   }
 
   function exit() {
     document.body.classList.remove("editmode");
-    for (const link of affordances()) link.hidden = true;
-    document.querySelector(".editmode-bar")?.remove();
+    for (const link of links()) link.hidden = true;
+    bar?.remove();
+    bar = barMessage = saveButton = null;
+    for (const el of copyTargets()) el.classList.remove("i18n-dirty");
+  }
+
+  // --- the in-place copy editor ----------------------------------------
+
+  const pending = new Map<string, string>(); // key -> new English value
+  let englishSource: Record<string, string> | null = null;
+  const localized = document.documentElement.lang !== "en";
+
+  function wireCopyEditor() {
+    const targets = copyTargets();
+    if (targets.length === 0) return;
+    for (const el of targets) {
+      el.classList.add("i18n-target");
+      el.addEventListener("click", onTargetClick);
+    }
+  }
+
+  async function ensureSource(): Promise<Record<string, string>> {
+    if (englishSource) return englishSource;
+    const keys = copyTargets()
+      .map((el) => el.dataset.i18nKey)
+      .filter((k): k is string => Boolean(k));
+    try {
+      const res = await fetch(`/admin/api/copy?keys=${encodeURIComponent(keys.join(","))}`, {
+        headers: { accept: "application/json" },
+      });
+      const body = (await res.json()) as { ok?: boolean; en?: Record<string, string> };
+      englishSource = body.ok && body.en ? body.en : {};
+    } catch {
+      englishSource = {};
+    }
+    return englishSource;
+  }
+
+  async function onTargetClick(event: Event) {
+    if (!document.body.classList.contains("editmode")) return;
+    const el = event.currentTarget as HTMLElement;
+    if (el.dataset.editing === "1") return;
+    event.preventDefault();
+
+    const key = el.dataset.i18nKey!;
+    const source = await ensureSource();
+    const current = pending.get(key) ?? source[key] ?? (el.textContent ?? "").trim();
+
+    el.dataset.editing = "1";
+    const original = el.textContent ?? "";
+
+    const box = document.createElement("div");
+    box.className = "i18n-editbox";
+
+    const area = document.createElement("textarea");
+    area.className = "i18n-editarea";
+    area.value = current;
+    area.rows = Math.min(8, Math.max(2, Math.ceil(current.length / 60)));
+    box.appendChild(area);
+
+    if (localized) {
+      const note = document.createElement("p");
+      note.className = "i18n-editnote";
+      note.textContent = "Editing the English source — every language regenerates on save.";
+      box.appendChild(note);
+    }
+
+    const row = document.createElement("div");
+    row.className = "i18n-editrow";
+    const set = button("Set", "i18n-editset", () => finish(area.value));
+    const cancel = button("Cancel", "i18n-editcancel", () => finish(null));
+    row.append(set, cancel);
+    box.appendChild(row);
+
+    el.hidden = true;
+    el.after(box);
+    area.focus();
+    area.setSelectionRange(area.value.length, area.value.length);
+
+    area.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") finish(null);
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) finish(area.value);
+    });
+
+    function finish(next: string | null) {
+      box.remove();
+      el.hidden = false;
+      delete el.dataset.editing;
+
+      if (next === null) return;
+      const value = next.trim();
+      const base = source[key] ?? original.trim();
+      if (value === "" || value === base) {
+        pending.delete(key);
+        el.textContent = original;
+        el.classList.remove("i18n-dirty");
+      } else {
+        pending.set(key, value);
+        el.textContent = value; // optimistic; the rebuilt page is authoritative
+        el.classList.add("i18n-dirty");
+      }
+      refreshSaveButton();
+    }
+  }
+
+  function refreshSaveButton() {
+    if (!saveButton) return;
+    saveButton.hidden = pending.size === 0;
+    saveButton.textContent = `Save copy (${pending.size})`;
+    setMessage(null);
+  }
+
+  async function saveCopy() {
+    if (!saveButton || pending.size === 0) return;
+    const edits = [...pending].map(([key, value]) => ({ key, value }));
+    saveButton.disabled = true;
+    setMessage("Saving…");
+    try {
+      const res = await fetch("/admin/api/copy", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ edits }),
+      });
+      const body = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      if (res.status === 409) {
+        setMessage("Someone else just saved. Reload to get the latest.", true);
+      } else if (res.ok && body.ok) {
+        pending.clear();
+        for (const el of copyTargets()) el.classList.remove("i18n-dirty");
+        englishSource = null; // re-fetch next time
+        setMessage("Saved — live on the site in a minute or two.");
+        saveButton.hidden = true;
+      } else {
+        setMessage(body.error ?? "That didn't save. Try again.", true);
+      }
+    } catch {
+      setMessage("Couldn't reach the server. Try again.", true);
+    } finally {
+      saveButton.disabled = false;
+    }
+  }
+
+  function setMessage(text: string | null, isError = false) {
+    if (!barMessage) return;
+    barMessage.hidden = !text;
+    barMessage.textContent = text ?? "";
+    barMessage.classList.toggle("is-error", isError);
+  }
+
+  function button(label: string, className: string, onClick: () => void) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = className;
+    b.textContent = label;
+    b.addEventListener("click", onClick);
+    return b;
   }
 
   function safeLocal(key: string): string | null {

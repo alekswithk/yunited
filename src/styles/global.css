@@ -2619,7 +2619,8 @@ body.editmode a.edit-affordance:not([hidden]):focus-visible {
 
 .editmode-bar-label { letter-spacing: 0.04em; }
 
-.editmode-bar-done {
+.editmode-bar-done,
+.editmode-bar-save {
   font: inherit;
   padding: 0.25em 0.7em;
   text-transform: uppercase;
@@ -2630,14 +2631,73 @@ body.editmode a.edit-affordance:not([hidden]):focus-visible {
   cursor: pointer;
 }
 
+.editmode-bar-save { background: var(--color-gold); border-color: var(--color-gold-dark); }
 .editmode-bar-done:hover,
 .editmode-bar-done:focus-visible { background: var(--color-paper-soft); }
+.editmode-bar-save:hover,
+.editmode-bar-save:focus-visible { background: var(--color-gold-dark); }
+.editmode-bar-save[disabled] { opacity: 0.6; cursor: progress; }
+
+.editmode-bar-msg { max-width: 22rem; }
+.editmode-bar-msg.is-error { color: var(--color-gold); }
+
+/* In-place copy editing: a click on a [data-i18n-key] element swaps it for a
+   textarea. Only styled under body.editmode, so a signed-out visitor's page is
+   untouched. */
+body.editmode .i18n-target {
+  cursor: text;
+  outline: 1px dashed var(--rule-strong);
+  outline-offset: 3px;
+}
+body.editmode .i18n-target.i18n-dirty {
+  outline-style: solid;
+  outline-color: var(--color-azure);
+}
+
+.i18n-editbox { margin: var(--space-2) 0; }
+
+.i18n-editarea {
+  width: 100%;
+  font: inherit;
+  padding: var(--space-2);
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border: 1px solid var(--color-azure);
+  resize: vertical;
+}
+
+.i18n-editnote {
+  margin: var(--space-1) 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-muted);
+}
+
+.i18n-editrow {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.i18n-editset,
+.i18n-editcancel {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.3em 0.8em;
+  cursor: pointer;
+  border: 1px solid var(--color-ink);
+}
+.i18n-editset { color: var(--color-paper); background: var(--color-azure); border-color: var(--color-azure-dark); }
+.i18n-editcancel { color: var(--color-ink); background: transparent; }
 
 @media (max-width: 480px) {
   .editmode-bar {
     left: var(--space-2);
     right: var(--space-2);
     bottom: var(--space-2);
+    flex-wrap: wrap;
     justify-content: space-between;
   }
 }

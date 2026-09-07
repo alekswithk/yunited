@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PageToc from "../../components/PageToc.astro";
+import EditableCopy from "../../components/EditableCopy.astro";
 import { localePaths, localizePath } from "../../i18n/config.js";
 import { useTranslations } from "../../i18n/utils.js";
 
@@ -27,8 +28,8 @@ const sections = [
   <section class="page-hero">
     <div class="container">
       <p class="hero-script">O nama · О нама · About us</p>
-      <h1>{t("about.heroTitle")}</h1>
-      <p>{t("about.heroLede")}</p>
+      <EditableCopy as="h1" key="about.heroTitle" locale={locale} />
+      <EditableCopy as="p" key="about.heroLede" locale={locale} />
     </div>
   </section>
 
@@ -36,22 +37,22 @@ const sections = [
 
   <section id="mission">
     <div class="container">
-      <p class="eyebrow">{t("about.missionEyebrow")}</p>
-      <h2>{t("about.missionHeading")}</h2>
+      <EditableCopy as="p" class="eyebrow" key="about.missionEyebrow" locale={locale} />
+      <EditableCopy as="h2" key="about.missionHeading" locale={locale} />
       <div class="prose-column">
-        <p>{t("about.missionP1")}</p>
-        <p>{t("about.missionP2")}</p>
-        <p>{t("about.missionP3")}</p>
-        <p>{t("about.missionP4")}</p>
+        <EditableCopy as="p" key="about.missionP1" locale={locale} />
+        <EditableCopy as="p" key="about.missionP2" locale={locale} />
+        <EditableCopy as="p" key="about.missionP3" locale={locale} />
+        <EditableCopy as="p" key="about.missionP4" locale={locale} />
       </div>
     </div>
   </section>
 
   <section id="buddy">
     <div class="container">
-      <p class="eyebrow">{t("about.buddyEyebrow")}</p>
-      <h2>{t("about.buddyHeading")}</h2>
-      <p class="section-intro">{t("about.buddyTeaser")}</p>
+      <EditableCopy as="p" class="eyebrow" key="about.buddyEyebrow" locale={locale} />
+      <EditableCopy as="h2" key="about.buddyHeading" locale={locale} />
+      <EditableCopy as="p" class="section-intro" key="about.buddyTeaser" locale={locale} />
       <p class="section-cta">
         <a class="btn btn-gold" href={localizePath("/buddy", locale)}>{t("about.buddyCta")}</a>
       </p>
@@ -60,28 +61,28 @@ const sections = [
 
   <section id="story" class="section-dark">
     <div class="container">
-      <p class="eyebrow">{t("about.storyEyebrow")}</p>
-      <h2>{t("about.storyHeading")}</h2>
-      <p class="section-intro">{t("about.storyIntro")}</p>
+      <EditableCopy as="p" class="eyebrow" key="about.storyEyebrow" locale={locale} />
+      <EditableCopy as="h2" key="about.storyHeading" locale={locale} />
+      <EditableCopy as="p" class="section-intro" key="about.storyIntro" locale={locale} />
     </div>
   </section>
 
   <section id="values">
     <div class="container">
-      <p class="eyebrow">{t("about.valuesEyebrow")}</p>
-      <h2>{t("about.valuesHeading")}</h2>
+      <EditableCopy as="p" class="eyebrow" key="about.valuesEyebrow" locale={locale} />
+      <EditableCopy as="h2" key="about.valuesHeading" locale={locale} />
       <div class="split-grid">
         <div class="info-panel panel-red">
-          <h3>{t("about.valueCommunityTitle")}</h3>
-          <p>{t("about.valueCommunityBody")}</p>
+          <EditableCopy as="h3" key="about.valueCommunityTitle" locale={locale} />
+          <EditableCopy as="p" key="about.valueCommunityBody" locale={locale} />
         </div>
         <div class="info-panel">
-          <h3>{t("about.valueCultureTitle")}</h3>
-          <p>{t("about.valueCultureBody")}</p>
+          <EditableCopy as="h3" key="about.valueCultureTitle" locale={locale} />
+          <EditableCopy as="p" key="about.valueCultureBody" locale={locale} />
         </div>
         <div class="info-panel panel-gold">
-          <h3>{t("about.valueCareersTitle")}</h3>
-          <p>{t("about.valueCareersBody")}</p>
+          <EditableCopy as="h3" key="about.valueCareersTitle" locale={locale} />
+          <EditableCopy as="p" key="about.valueCareersBody" locale={locale} />
         </div>
       </div>
     </div>

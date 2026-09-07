@@ -102,20 +102,59 @@ export function github(env) {
     },
 
     /**
+     * Read a handful of files at the current branch head, and report that head.
+     *
+     * Used by the inline copy editor, which reads the four i18n dictionaries,
+     * changes one key, and writes them back. Returning `headSha` lets the
+     * follow-up `commit()` reject (409) if the branch moved in between —
+     * `commit()`'s own fast-forward check does not catch that, because it would
+     * layer the stale blob onto whatever tree is current and fast-forward
+     * cleanly, silently reverting someone else's edit to a different key.
+     *
+     * Each path segment is encoded separately: `encodeURIComponent` on the whole
+     * path would turn the slashes into %2F and 404.
+     *
+     * @param {string[]} paths  repo-relative
+     * @returns {Promise<{ files: Record<string, string>, headSha: string }>}
+     */
+    async readFilesAtHead(paths) {
+      const ref = await api(`/git/ref/heads/${branch}`);
+      const headSha = ref.object.sha;
+      const files = {};
+      await Promise.all(
+        paths.map(async (path) => {
+          const encoded = path.split("/").map(encodeURIComponent).join("/");
+          const res = await api(`/contents/${encoded}?ref=${headSha}`);
+          files[path] = new TextDecoder().decode(base64ToBytes(res.content));
+        }),
+      );
+      return { files, headSha };
+    },
+
+    /**
      * Commit a set of changes as one commit on `branch`.
      *
      * @param {string} message
      * @param {{ path: string, content?: string | Uint8Array, remove?: boolean }[]} changes
      *        `path` is repo-relative. Give `content` to write, or `remove: true`
      *        to delete.
+     * @param {{ expectedHeadSha?: string }} [options]
+     *        When given, the commit is refused (409) if the branch has moved off
+     *        `expectedHeadSha` since it was read — see readFilesAtHead.
      * @returns {Promise<{ sha: string, url: string }>}
      */
-    async commit(message, changes) {
+    async commit(message, changes, { expectedHeadSha } = {}) {
       // 1. Where the branch is now. This sha becomes the new commit's parent,
       //    and the fast-forward check in step 5 is what makes a concurrent save
       //    fail loudly instead of silently overwriting.
       const ref = await api(`/git/ref/heads/${branch}`);
       const parentSha = ref.object.sha;
+      if (expectedHeadSha && parentSha !== expectedHeadSha) {
+        throw Object.assign(
+          new Error(`branch moved: read ${expectedHeadSha}, now ${parentSha}`),
+          { status: 409 },
+        );
+      }
       const parent = await api(`/git/commits/${parentSha}`);
 
       // 2. Upload the new file contents as blobs. Base64 for everything,

@@ -68,6 +68,8 @@ const el = {
   translationsSaveBtn: $("translations-save-btn"),
   translationsRemoveBtn: $("translations-remove-btn"),
   translationsError: $("translations-error"),
+  deReview: $("translations-de-review"),
+  deReviewList: $("translations-de-review-list"),
   editTabs: $("edit-tabs"),
   tabContent: $("tab-content"),
   tabTranslations: $("tab-translations"),
@@ -1005,6 +1007,58 @@ function renderTranslations() {
   // to type into would be a lie.
   el.translationsKeyForm.hidden = !deepl.editable;
   el.translationsRemoveBtn.hidden = deepl.source !== "kv";
+
+  renderDeReview();
+}
+
+/**
+ * The About / home strings edited from the page since German was last checked.
+ * German is never auto-translated, so this is the only prompt a board member
+ * gets that /de is now behind the English. The list comes from
+ * /admin/api/state (sections.translations.deReview); "mark done" clears one via
+ * POST /admin/api/copy { reviewed: [...] }.
+ */
+function renderDeReview() {
+  const rows = state.sections.translations?.deReview ?? [];
+  el.deReview.hidden = rows.length === 0;
+  el.deReviewList.replaceChildren(
+    ...rows.map((row) => {
+      const li = document.createElement("li");
+
+      const key = document.createElement("code");
+      key.textContent = row.key;
+      li.append(key);
+
+      const text = document.createElement("span");
+      text.className = "de-review-text";
+      text.textContent = row.en;
+      li.append(text);
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn";
+      btn.textContent = "Mark done";
+      btn.addEventListener("click", () =>
+        run(
+          btn,
+          "Saving…",
+          async () => {
+            const result = await api("/admin/api/copy", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ reviewed: [row.key] }),
+            });
+            state.sections.translations.deReview = result.deReview ?? [];
+            renderDeReview();
+          },
+          (message) => showBanner(message, false),
+        ),
+      );
+      li.append(btn);
+
+      return li;
+    }),
+  );
 }
 
 el.translationsKeyForm.addEventListener("submit", async (event) => {

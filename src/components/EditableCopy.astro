@@ -1,0 +1,26 @@
+---
+// A dictionary string that a board member can edit in place.
+//
+// Renders the real element (an <p>, <h2>, <span> …) with the localized text,
+// and adds `data-i18n-key` only when the key is editable copy — the same
+// predicate the Worker enforces on save and check-dist enforces on the build
+// (src/lib/copy/editable.js). The edit UI itself is wired by EditMode.astro's
+// script for anyone the whoami probe says is signed in.
+//
+// Props: as (tag name, default "p"), key (dotted dictionary key), class, locale.
+import enJson from "../i18n/en.json";
+import { useTranslations } from "../i18n/utils.js";
+import { isEditableCopyKey } from "../lib/copy/editable.js";
+
+const en = enJson as Record<string, any>;
+
+const { as: Tag = "p", key, class: className, locale } = Astro.props;
+const t = useTranslations(locale);
+
+const source = String(key)
+  .split(".")
+  .reduce((node: any, part: string) => (node == null ? undefined : node[part]), en);
+const editable = isEditableCopyKey(key, source);
+---
+
+<Tag class={className} data-i18n-key={editable ? key : undefined}>{t(key)}</Tag>
