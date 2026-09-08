@@ -599,14 +599,19 @@ export async function handleBuddyAdmin(route, request, env, deps = {}) {
  * throws — nobody is watching a cron.
  */
 export async function purgeStaleBuddySignups(env, deps = {}) {
-  if (!env.BUDDY_DB) return;
+  if (!env.BUDDY_DB) return { ok: false, detail: "Buddy database is not configured." };
   const store = deps.store ?? buddyStore(env.BUDDY_DB);
   const now = deps.now ? new Date(deps.now()) : new Date();
   const cutoff = new Date(now.getTime() - PENDING_TTL_DAYS * 86400_000).toISOString();
   try {
     const removed = await store.purgeStalePending(cutoff);
     if (removed > 0) console.log(`[buddy] sweep: removed ${removed} unverified signup(s) older than ${PENDING_TTL_DAYS}d`);
+    return {
+      ok: true,
+      detail: `${removed} stale signup${removed === 1 ? "" : "s"} removed.`,
+    };
   } catch (error) {
     console.error("[buddy] sweep failed:", error);
+    return { ok: false, detail: String(error?.message ?? error) };
   }
 }

@@ -19,6 +19,27 @@
 
 ## Shipped after the split
 
+**2026-09-08 — Automated maintenance checks and cron health (#113)**
+
+Closed the deterministic maintenance items from `PLAN.md` §4 in one batch:
+
+- added contract tests for the GitHub and D1 adapters, real signed-JWT tests for
+  Cloudflare Access, and focused tests for member display, localization fallback
+  and case-insensitive image lookup collisions;
+- extended `check:dist` with internal-link and HSTS enforcement, plus
+  non-blocking warnings for untranslated keys and unused raster images;
+- added a weekly external-link report and a five-page Playwright/axe browser
+  audit with screenshots and paint metrics uploaded as an Actions artifact;
+- stored the translation and buddy-cleanup cron results in `ADMIN_SETTINGS` and
+  exposed the latest status in the admin Translations tab;
+- added the global HSTS policy and fixed the contrast and inline-link findings
+  from the first browser audit.
+
+Verification on the final branch: `npm test` 275/275, 66 pages built, Astro
+diagnostics 0/0/0, `check:dist` clean, five browser pages with no serious or
+critical axe findings, zero npm vulnerabilities, and a clean Wrangler 4.127
+deployment dry run. GitHub CI and the Cloudflare preview build both passed.
+
 **2026-08-30 — Buddy-signup Turnstile abuse protection (branch `vk/8fb7-close-the-buddy`)**
 
 Closed the signup-abuse gap from `PLAN.md` §4. `POST /buddy/api/signup` was

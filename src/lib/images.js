@@ -10,15 +10,15 @@
 // x.png). The brace list covers lower- and upper-case; the lookup is also
 // lowercased so a path whose case drifts from the file still resolves. HEIC is
 // the one exception — see resolveImage.
+import { caseInsensitiveImageMap } from "./image-map.js";
+
 const modules = import.meta.glob(
   "/src/images/**/*.{webp,WEBP,jpg,JPG,jpeg,JPEG,jfif,JFIF,png,PNG,avif,AVIF,gif,GIF,tif,TIF,tiff,TIFF,bmp,BMP}",
   { eager: true }
 );
 
 // Case-insensitive lookup keyed by the lowercased project path.
-const byKey = new Map(
-  Object.entries(modules).map(([path, mod]) => [path.toLowerCase(), mod])
-);
+const byKey = caseInsensitiveImageMap(Object.entries(modules));
 
 export function resolveImage(jsonPath) {
   if (!jsonPath) return undefined;

@@ -102,6 +102,7 @@ const checks = [
 ];
 
 let failures = 0;
+let warnings = 0;
 
 for (const file of htmlFiles(DIST)) {
   // /admin used to be exempt here: it was a third-party single-page app under
@@ -212,6 +213,93 @@ function checkAdminWiring() {
       "    lookup in public/admin/admin.js.",
   );
   return missing.length;
+}
+
+// ---------------------------------------------------------------------------
+// Every internal link must resolve in the built site.
+//
+// Astro validates routes it generates, not strings placed in href attributes.
+// A typo in localizePath(), a renamed page, or a stale hreflang can therefore
+// build cleanly and ship a live 404. Check the same extensionless paths
+// Cloudflare resolves: /about -> dist/about.html, /admin -> admin/index.html.
+function checkInternalLinks() {
+  const missing = [];
+  const runtimePath = /^\/(?:admin|buddy)\/api(?:\/|$)|^\/cdn-cgi\//;
+
+  const isFile = (path) => {
+    try {
+      return statSync(path).isFile();
+    } catch {
+      return false;
+    }
+  };
+
+  const resolves = (pathname) => {
+    let decoded;
+    try {
+      decoded = decodeURIComponent(pathname);
+    } catch {
+      return false;
+    }
+    const relativePath = decoded.replace(/^\/+/, "");
+    const direct = join(DIST, relativePath || "index.html");
+    return [direct, `${direct}.html`, join(direct, "index.html")].some(isFile);
+  };
+
+  for (const file of htmlFiles(DIST)) {
+    const rel = relative(DIST, file);
+    const webPath = rel.replaceAll("\\", "/");
+    const pagePath =
+      webPath === "index.html"
+        ? "/"
+        : webPath.endsWith("/index.html")
+          ? `/${webPath.slice(0, -"/index.html".length)}`
+          : `/${webPath.replace(/\.html$/, "")}`;
+    const html = readFileSync(file, "utf8").replace(HTML_COMMENT, "");
+    const ids = new Set([...html.matchAll(/\bid=["']([^"']+)["']/g)].map((m) => m[1]));
+
+    for (const [, href] of html.matchAll(/<a\b[^>]*\shref=["']([^"']+)["'][^>]*>/gi)) {
+      if (href.startsWith("#")) {
+        const fragment = href.slice(1);
+        if (fragment && !ids.has(fragment)) missing.push(`${rel} -> ${href} (missing id)`);
+        continue;
+      }
+
+      let target;
+      try {
+        target = new URL(href.replace(/&amp;/g, "&"), `https://yunited.ch${pagePath}`);
+      } catch {
+        missing.push(`${rel} -> ${href} (invalid URL)`);
+        continue;
+      }
+      if (target.origin !== "https://yunited.ch" || runtimePath.test(target.pathname)) continue;
+      if (!resolves(target.pathname)) missing.push(`${rel} -> ${href}`);
+    }
+  }
+
+  if (missing.length === 0) return 0;
+  console.error("✗ dist/ — internal links point at files that were not built");
+  for (const hit of [...new Set(missing)].slice(0, 10)) console.error(`    ${hit}`);
+  if (missing.length > 10) console.error(`    …and ${missing.length - 10} more`);
+  return missing.length;
+}
+
+// ---------------------------------------------------------------------------
+// The global response policy must keep HTTPS sticky after the first visit.
+function checkSecurityHeaders() {
+  const path = join(DIST, "_headers");
+  if (!existsSync(path)) {
+    console.error("✗ dist/_headers — Cloudflare response headers were not copied into the build");
+    return 1;
+  }
+  const headers = readFileSync(path, "utf8");
+  const globalBlock = /\/\*\s*\n([\s\S]*?)(?=\n\/[^\n]*\n|$)/.exec(headers)?.[1] ?? "";
+  if (/^\s*Strict-Transport-Security:\s*max-age=\d+;\s*includeSubDomains;\s*preload\s*$/im.test(globalBlock)) {
+    return 0;
+  }
+  console.error("✗ dist/_headers — the global policy has no complete HSTS header");
+  console.error("    Expected max-age, includeSubDomains and preload in the /* block.");
+  return 1;
 }
 
 // ---------------------------------------------------------------------------
@@ -467,13 +555,106 @@ async function checkInlineCopyKeys() {
   return problems.length;
 }
 
+// ---------------------------------------------------------------------------
+// Complete locales may intentionally share a short label or punctuation with
+// English. Everything else that is byte-identical is usually an untranslated
+// fallback hiding in plain sight, so report new cases without blocking deploys.
+async function warnUntranslatedKeys() {
+  const { flatten } = await import("../src/lib/translate/flat.js");
+  const i18nDir = new URL("../src/i18n/", import.meta.url);
+  const en = flatten(JSON.parse(readFileSync(new URL("en.json", i18nDir), "utf8")));
+  const common = ["about.buddyMorePost", "exchange.outgoingItem3Post", "buddy.heroScript"];
+  const expected = {
+    de: new Set([
+      ...common,
+      "nav.events",
+      "nav.buddy",
+      "toc.mission",
+      "meta.events.title",
+      "events.upcomingEyebrow",
+      "contact.labelName",
+      "buddy.fieldName",
+      "buddy.levelBachelor",
+      "buddy.levelMaster",
+      "buddy.optional",
+    ]),
+    hr: new Set(common),
+    bs: new Set(common),
+    sr: new Set(common),
+  };
+
+  const unexpected = [];
+  for (const locale of Object.keys(expected)) {
+    const translated = flatten(
+      JSON.parse(readFileSync(new URL(`${locale}.json`, i18nDir), "utf8")),
+    );
+    for (const [key, value] of Object.entries(en)) {
+      if (translated[key] === value && !expected[locale].has(key)) {
+        unexpected.push(`${locale}.${key}`);
+      }
+    }
+  }
+
+  if (unexpected.length === 0) return 0;
+  console.warn("⚠ i18n — keys identical to English in complete locales (review, non-blocking)");
+  for (const key of unexpected.slice(0, 12)) console.warn(`    ${key}`);
+  if (unexpected.length > 12) console.warn(`    …and ${unexpected.length - 12} more`);
+  return unexpected.length;
+}
+
+// ---------------------------------------------------------------------------
+// Source images are mirrored into the public build even if nothing uses them.
+// Flag that storage/repo drift, but do not block a deploy: a designer may have
+// staged an image shortly before wiring it into content.
+function warnUnusedImages() {
+  const sourceRoot = new URL("../src/", import.meta.url).pathname;
+  const contentRoot = new URL("../content/", import.meta.url).pathname;
+  const imageRoot = join(sourceRoot, "images");
+  const raster = /\.(?:webp|jpe?g|jfif|png|avif|gif|tiff?|bmp)$/i;
+
+  const filesUnder = (dir) => {
+    if (!existsSync(dir)) return [];
+    return readdirSync(dir).flatMap((name) => {
+      const full = join(dir, name);
+      return statSync(full).isDirectory() ? filesUnder(full) : [full];
+    });
+  };
+
+  const referenced = new Set();
+  const textFiles = [
+    ...filesUnder(sourceRoot).filter((file) => /\.(?:astro|js|mjs|json|css)$/.test(file)),
+    ...filesUnder(contentRoot).filter((file) => file.endsWith(".json")),
+  ];
+  for (const file of textFiles) {
+    const text = readFileSync(file, "utf8");
+    for (const [, path] of text.matchAll(/["'`](images\/[^"'`]+?\.(?:webp|jpe?g|jfif|png|avif|gif|tiff?|bmp))["'`]/gi)) {
+      referenced.add(path.toLowerCase());
+    }
+  }
+
+  const unused = filesUnder(imageRoot)
+    .filter((file) => raster.test(file))
+    .map((file) => relative(sourceRoot, file).replaceAll("\\", "/"))
+    .filter((file) => !referenced.has(file.toLowerCase()));
+
+  if (unused.length === 0) return 0;
+  console.warn("⚠ src/images — unreferenced raster files (review, non-blocking)");
+  for (const file of unused.slice(0, 10)) console.warn(`    ${file}`);
+  if (unused.length > 10) console.warn(`    …and ${unused.length - 10} more`);
+  return unused.length;
+}
+
 failures += checkAdminIsFirstParty();
 failures += checkAdminWiring();
+failures += checkInternalLinks();
+failures += checkSecurityHeaders();
 failures += checkLinkSpacing();
 failures += checkAnimationShorthands();
 failures += checkClippedStrips();
 failures += checkMediaMirror();
 failures += await checkInlineCopyKeys();
+warnings += await warnUntranslatedKeys();
+warnings += warnUnusedImages();
 
 if (failures > 0) {
   console.error(
@@ -486,5 +667,6 @@ if (failures > 0) {
 }
 
 console.log(
-  "✓ dist/ — CSP-clean, on-brand, Serbian in Latin, /admin first-party and wired, media previewable",
+  "✓ dist/ — CSP-clean, secure headers, internal links valid, on-brand, Serbian in Latin, /admin wired, media previewable" +
+    (warnings ? ` (${warnings} non-blocking warning${warnings === 1 ? "" : "s"})` : ""),
 );

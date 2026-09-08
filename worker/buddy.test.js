@@ -627,6 +627,10 @@ test("purgeStaleBuddySignups drops only old pending rows", async () => {
       { id: "active", status: "active", created_at: "2026-01-01T00:00:00.000Z" },
     ],
   });
-  await purgeStaleBuddySignups({ BUDDY_DB: {} }, { store, now: () => "2026-09-01T00:00:00.000Z" });
+  const result = await purgeStaleBuddySignups(
+    { BUDDY_DB: {} },
+    { store, now: () => "2026-09-01T00:00:00.000Z" },
+  );
   assert.deepEqual(store._signups.map((s) => s.id).sort(), ["active", "fresh"]);
+  assert.deepEqual(result, { ok: true, detail: "1 stale signup removed." });
 });

@@ -63,6 +63,7 @@ const el = {
   translationsLoading: $("translations-loading"),
   translationsStatus: $("translations-status"),
   translationsUsage: $("translations-usage"),
+  translationsAutomation: $("translations-automation"),
   translationsKeyForm: $("translations-key-form"),
   translationsKeyInput: $("translations-key-input"),
   translationsSaveBtn: $("translations-save-btn"),
@@ -961,7 +962,7 @@ async function loadTranslations() {
 
   try {
     const data = await api("/admin/api/settings");
-    state.translations = { loaded: true, deepl: data.deepl };
+    state.translations = { loaded: true, deepl: data.deepl, automation: data.automation };
     renderTranslations();
   } catch (error) {
     el.translationsLoading.hidden = true;
@@ -1008,7 +1009,30 @@ function renderTranslations() {
   el.translationsKeyForm.hidden = !deepl.editable;
   el.translationsRemoveBtn.hidden = deepl.source !== "kv";
 
+  renderAutomationHealth();
+
   renderDeReview();
+}
+
+function renderAutomationHealth() {
+  const automation = state.translations.automation;
+  if (!automation?.supported) {
+    el.translationsAutomation.hidden = true;
+    return;
+  }
+
+  const label = (name, record) => {
+    if (!record) return `${name}: no run reported yet`;
+    const when = new Date(record.ranAt);
+    const timestamp = Number.isNaN(when.getTime()) ? record.ranAt : when.toLocaleString();
+    return `${name}: ${record.ok ? "healthy" : "needs attention"} (${timestamp}). ${record.detail}`;
+  };
+  const jobs = automation.jobs ?? {};
+  el.translationsAutomation.textContent = [
+    label("Nightly translation", jobs.translation),
+    label("Buddy cleanup", jobs.buddyRetention),
+  ].join(" ");
+  el.translationsAutomation.hidden = false;
 }
 
 /**
@@ -1081,7 +1105,11 @@ el.translationsKeyForm.addEventListener("submit", async (event) => {
       // Cleared immediately, and never kept in `state`: the page holds a
       // credential for exactly as long as it takes to post it.
       el.translationsKeyInput.value = "";
-      state.translations = { loaded: true, deepl: result.deepl };
+      state.translations = {
+        ...state.translations,
+        loaded: true,
+        deepl: result.deepl,
+      };
       renderTranslations();
       showBanner(result.message, true);
     },
@@ -1107,7 +1135,11 @@ el.translationsRemoveBtn.addEventListener("click", async () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ remove: true }),
       });
-      state.translations = { loaded: true, deepl: result.deepl };
+      state.translations = {
+        ...state.translations,
+        loaded: true,
+        deepl: result.deepl,
+      };
       renderTranslations();
       showBanner(result.message, true);
     },

@@ -824,6 +824,7 @@ main { position: relative; }
 /* Dark sections reuse hero styling */
 .section-dark { background: var(--color-ink); color: var(--color-paper); }
 .section-dark h2 { color: var(--color-paper); }
+.section-dark .eyebrow { color: var(--color-gold); }
 .section-dark .section-intro { color: rgba(244, 236, 221, 0.78); }
 
 /* ---------- Cards (events + members share this base) ---------- */
@@ -1103,12 +1104,7 @@ main { position: relative; }
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-muted);
-  opacity: 0.55;
-  transition: opacity var(--dur-fast) var(--ease-out);
 }
-.uev > summary:hover .uev-cue,
-.uev > summary:focus-visible .uev-cue { opacity: 1; }
-@media (hover: none) { .uev-cue { opacity: 1; } }
 .uev-caret {
   width: 0;
   height: 0;
@@ -1612,6 +1608,7 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
   font-size: 0.85rem;
   color: rgba(244, 236, 221, 0.6);
 }
+.footer-bottom a { text-decoration: underline; }
 
 /* ---------- Reveal-on-scroll: the JS version, and why this is not it ----------
    There were six independent animations on this site: the hero rise, the

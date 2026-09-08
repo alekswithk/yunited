@@ -91,6 +91,8 @@ retry rather than silently discarding the first one's commit.
 | `access.js` | Reads the Cloudflare Access identity, and optionally verifies its signed token. |
 | `board-access.js` | The Cloudflare client for the **email allow-list** — who may open `/admin` at all. Read it before touching anything about access. |
 | `translate.js` | The DeepL key (KV over secret), the per-entry state the panel badges, and `translateEntry()` — which **never throws**, because a translation failure must never fail a board member's save. The rules it applies live in `src/lib/translate/content.js`, shared with the CLI. |
+| `buddy-store.js` | Every buddy-system D1 query, behind named methods and an injected-D1 contract test. |
+| `cron-health.js` | Stores the last translation and buddy-cleanup run in `ADMIN_SETTINGS` for the Translations tab. |
 | `lib.js` | Pure helpers: slugs, the academic-year image folder, blank-value coercion. |
 | `*.test.js` | `npm test` — the logic no build can check. |
 

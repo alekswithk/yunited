@@ -98,9 +98,12 @@ const JWKS_TTL_MS = 60 * 60 * 1000;
  *
  * @param {Request} request
  * @param {{ CF_ACCESS_TEAM_DOMAIN?: string, CF_ACCESS_AUD?: string }} env
+ * @param {{ fetchImpl?: typeof fetch, now?: () => number }} [deps]
  * @returns {Promise<{ ok: true, skipped?: boolean, email?: string } | { ok: false, reason: string }>}
  */
-export async function verifyAccessJwt(request, env) {
+export async function verifyAccessJwt(request, env, deps = {}) {
+  const fetchImpl = deps.fetchImpl ?? fetch;
+  const now = deps.now ?? Date.now;
   const teamDomain = env.CF_ACCESS_TEAM_DOMAIN;
   const aud = env.CF_ACCESS_AUD;
 
@@ -146,11 +149,11 @@ export async function verifyAccessJwt(request, env) {
   const audiences = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
   if (!audiences.includes(aud)) return { ok: false, reason: "Access token is for another application" };
 
-  if (typeof payload.exp !== "number" || payload.exp * 1000 <= Date.now()) {
+  if (typeof payload.exp !== "number" || payload.exp * 1000 <= now()) {
     return { ok: false, reason: "Access token has expired — reload the page" };
   }
 
-  const key = await signingKey(issuer, header.kid);
+  const key = await signingKey(issuer, header.kid, { fetchImpl, now });
   if (!key) return { ok: false, reason: "unknown Access signing key" };
 
   const valid = await crypto.subtle.verify(
@@ -165,15 +168,15 @@ export async function verifyAccessJwt(request, env) {
 }
 
 /** Fetch (and cache) the team's public signing keys, then import the one named by `kid`. */
-async function signingKey(issuer, kid) {
+async function signingKey(issuer, kid, { fetchImpl, now }) {
   const url = `${issuer}/cdn-cgi/access/certs`;
-  const stale = jwksCache.url !== url || Date.now() - jwksCache.fetchedAt > JWKS_TTL_MS;
+  const stale = jwksCache.url !== url || now() - jwksCache.fetchedAt > JWKS_TTL_MS;
 
   if (stale || !jwksCache.keys) {
-    const response = await fetch(url);
+    const response = await fetchImpl(url);
     if (!response.ok) throw new Error(`Could not fetch Access signing keys (${response.status})`);
     const { keys } = await response.json();
-    jwksCache = { url, keys, fetchedAt: Date.now() };
+    jwksCache = { url, keys, fetchedAt: now() };
   }
 
   const jwk = (jwksCache.keys ?? []).find((k) => k.kid === kid);

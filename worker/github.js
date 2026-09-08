@@ -21,10 +21,12 @@ const API = "https://api.github.com";
 
 /**
  * @param {{ GITHUB_TOKEN: string, GITHUB_REPO: string, GITHUB_BRANCH: string }} env
+ * @param {{ fetchImpl?: typeof fetch }} [deps]
  */
-export function github(env) {
+export function github(env, deps = {}) {
   const repo = env.GITHUB_REPO;
   const branch = env.GITHUB_BRANCH || "main";
+  const fetchImpl = deps.fetchImpl ?? fetch;
 
   /**
    * One GitHub REST call. Throws a readable Error on any non-2xx, because every
@@ -32,7 +34,7 @@ export function github(env) {
    * board, rather than press on with half the work done.
    */
   async function api(path, init = {}) {
-    const response = await fetch(`${API}/repos/${repo}${path}`, {
+    const response = await fetchImpl(`${API}/repos/${repo}${path}`, {
       ...init,
       headers: {
         Authorization: `Bearer ${env.GITHUB_TOKEN}`,

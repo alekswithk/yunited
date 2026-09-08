@@ -71,13 +71,20 @@ npm run preview      # serve the built dist/ locally
 npm run check        # astro check — type/diagnostics, must be 0 errors
 npm test             # unit tests for src/lib and worker/
 npm run check:dist   # post-build assertions on dist/
+npm run check:links  # non-blocking external-link report; CI runs it weekly
+npm run audit:browser # screenshots, paint metrics and axe report under artifacts/
 npm run admin:dev    # the admin panel + its Worker, on http://localhost:8787
 ```
 
 "A change is verified" when `npm test`, `npm run build`, `npm run check` and
-`npm run check:dist` all pass — that is exactly what CI runs — and, for content
+`npm run check:dist` all pass — that is exactly what CI runs on each change — and, for content
 or rendering changes, the expected text appears in the built HTML (e.g.
 `grep "Casino Night" dist/events.html`).
+
+CI also checks external links and captures five representative pages in a real
+browser every Monday. Those scheduled checks report third-party outages,
+phone-width screenshots, paint timings and serious axe findings without making
+a flaky external site part of deploy correctness.
 
 ### Architecture
 
@@ -243,8 +250,8 @@ src/
   images/         source images (optimized at build)
 worker/           the /admin API — the only server-side code; holds the GitHub token
 public/           copied verbatim into dist/ — admin/ (the panel), _headers, assets/
-scripts/          mirror-media + the offline translation CLIs (bulk work, not the board's path)
-.github/          CI — test + build + check + check:dist, on PRs and pushes to main
+scripts/          build checks, browser/link audits, media mirror and translation CLIs
+.github/          CI checks changes and runs browser/external-link audits each Monday
 astro.config.mjs, wrangler.jsonc   build & deploy config
 ```
 

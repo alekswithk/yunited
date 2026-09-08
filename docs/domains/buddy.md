@@ -5,8 +5,8 @@ member. Sign-up → email verification → the board runs a matching round → e
 gets a private page. It is the **only** part of the project that keeps data outside
 Git — per-student signups live in **Cloudflare D1**, reached only through the Worker.
 
-Landed on `main` via #75–#77 (2026-08-29). Inert in production until two out-of-band
-steps are done — see *Open items*.
+Landed on `main` via #75–#77 (2026-08-29). Production D1 and Resend are set up.
+Turnstile remains the one go-live credential; see *Open items*.
 
 ---
 
@@ -20,7 +20,7 @@ steps are done — see *Open items*.
 | `src/lib/buddy/emails.js` | the 3 localised emails (`verify` / `matched` / `noMatch`) + `sendEmail()` (Resend). |
 | `src/lib/buddy/*.test.js` | `node:test` — match, schema, tokens. |
 | `worker/buddy.js` | `handleBuddyPublic` (`/buddy/api/*`), `handleBuddyAdmin` (`/admin/api/buddy/*`), `purgeStaleBuddySignups`. |
-| `worker/buddy-store.js` | `buddyStore(db)` — **every** D1 query, behind named methods. Untested I/O layer. |
+| `worker/buddy-store.js` | `buddyStore(db)` — **every** D1 query, behind named methods. Contract-tested with an injected D1 stub. |
 | `worker/buddy.test.js` | handlers driven against an in-memory fake store. |
 | `worker/migrations/0001_buddy.sql` | tables `signups`, `rounds`, `pairs`. |
 | `src/pages/[...locale]/buddy.astro` | the `/buddy` page: explanation + sign-up form. |
@@ -124,8 +124,9 @@ Admin panel markup for the Buddy tab is in `public/admin/{index.html,admin.js,ad
 
 ## How to verify a change here
 
-- `npm test` — `src/lib/buddy/*.test.js` + `worker/buddy.test.js` (201 total as of
-  2026-08-29). A schema/handler change must land with its test.
+- `npm test` — `src/lib/buddy/*.test.js`, `worker/buddy.test.js` and
+  `worker/buddy-store.test.js`. A schema, handler or query change must land with
+  its test.
 - `npm run build` (the `/buddy` route tree must render — 66 pages total) ·
   `npm run check` 0/0/0 · `npm run check:dist`.
 - **Adding a signup field:** update `signupSchema` *and* `normalizeSignup`
@@ -135,19 +136,14 @@ Admin panel markup for the Buddy tab is in `public/admin/{index.html,admin.js,ad
 - **Local D1:** `npx wrangler d1 migrations apply yunited-buddy` (no `--remote`)
   gives a throwaway local SQLite copy; `npm run admin:dev` serves `/admin` + the
   Worker on `:8787`.
-- A true end-to-end check needs the two out-of-band steps (below) done.
+- A true public sign-up check needs the Turnstile secret below.
 
 ---
 
 ## Open items & known gaps
 
-- **Go-live (maintainer, out-of-band):** `npx wrangler d1 migrations apply
-  yunited-buddy --remote` (verify it ran), then `npx wrangler secret put
-  RESEND_API_KEY` + the Resend SPF/DKIM records for `yunited.ch`. D1 is already
-  created and bound (`wrangler.jsonc` has a real `database_id`).
-- **`worker/buddy-store.js` has no tests** (by design — thin I/O layer, like
-  `github.js`). Worth an injected-D1-stub test; see `PLAN.md` §4.
-- **`/buddy/pair` and `/admin` have never been rendered at the 33rem phone width.**
+- **Go-live (maintainer, out-of-band):** create the managed Turnstile widget for
+  `yunited.ch`, then run `npx wrangler secret put TURNSTILE_SECRET_KEY`.
 - **Round cadence** and the optional **UniClubs member-list CSV cross-check** are
   board decisions, not code.
 - Public `/buddy/api/*` with `BUDDY_DB` unbound falls to a generic 500 rather than
