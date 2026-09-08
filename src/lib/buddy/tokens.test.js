@@ -32,8 +32,9 @@ test("isToken rejects the obvious bad inputs", () => {
 
 test("timingSafeEqual matches only identical strings", () => {
   const tok = randomToken();
+  const replacement = tok.endsWith("x") ? "y" : "x";
   assert.equal(timingSafeEqual(tok, tok), true);
-  assert.equal(timingSafeEqual(tok, tok.slice(0, -1) + "x"), false);
+  assert.equal(timingSafeEqual(tok, tok.slice(0, -1) + replacement), false);
   assert.equal(timingSafeEqual(tok, tok + "x"), false);
   assert.equal(timingSafeEqual("a", 1), false);
 });

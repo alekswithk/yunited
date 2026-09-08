@@ -24,7 +24,9 @@ npm run build      # writes the finished static site to dist/
 npm run preview    # serve the built dist/ locally
 npm run check      # astro check (type/diagnostics); must be 0 errors AND 0 hints
 npm test           # node:test unit tests for src/lib and worker/ (no framework, no network)
-npm run check:dist # post-build assertions on dist/ (CSP-inline-free, brand spelling)
+npm run check:dist # post-build assertions: CSP, headers, links, media and i18n warnings
+npm run check:links # non-blocking external-link report; CI runs it weekly
+npm run audit:browser # screenshots, paint metrics and axe report under artifacts/
 npm run admin:dev  # wrangler dev — the admin panel + its Worker on :8787
 ```
 
@@ -32,13 +34,20 @@ npm run admin:dev  # wrangler dev — the admin panel + its Worker on :8787
 
 "Verifying a change" means `npm test`, `npm run build`, `npm run check` and `npm run check:dist` all pass — that is exactly what CI runs — and, for content or rendering changes, the relevant text appears in the built HTML (e.g. `grep "Meet & Greet" dist/events.html`).
 
-**For layout and CSS changes that is not enough, and the four commands cannot tell you so.** None of them renders a page: `check:dist` greps the built HTML for CSP violations, brand spelling and image resolution, and never opens anything. Overlap, wrapping, sticky and stacking behaviour are all invisible to every command in this repo — the same shape of blind spot that `src/lib/translate/validate.js` exists to cover for translations, where `test`, `build`, `check` and `check:dist` all passed for months while the About page described the buddy system as a *mating* system. So a change to layout also needs **a browser pass at the widths its breakpoints name, in a locale with long labels** — `npm run dev`, then look. hr/bs are the long-label locales: the TOC's `toc.buddy` is "Sustav/Sistem prijatelja" (17ch) against "Buddy system" (12ch) in English, so `/hr/about` breaks a rail before `/about` does.
+**For layout and CSS changes that is not enough.** Run `npm run audit:browser`
+after the four checks. It captures the public home page, events, Croatian About,
+Croatian buddy-pair and `/admin` at their relevant desktop or phone widths. It
+also reports paint timings and serious axe findings. Review the PNGs under
+`artifacts/browser-audit/`; overlap, wrapping, sticky and stacking bugs still
+need a human eye. hr/bs are the long-label locales: the TOC's `toc.buddy` is
+"Sustav/Sistem prijatelja" (17ch) against "Buddy system" (12ch) in English, so
+`/hr/about` breaks a rail before `/about` does.
 
 **A claim in a code comment is not verification.** The `--toc-width` comments in `src/styles/global.css` asserted a longest label of "Buddy-System" and shipped in PR #55 having never been rendered; the actual longest label is half again as wide and in a different language. If a comment asserts rendered behaviour, either check it in a browser or say plainly that it is derived and unchecked.
 
 ## Deploy
 
-Cloudflare builds the repo with `npm run build` and serves `dist/` (`wrangler.jsonc` sets `assets.directory: "./dist"`). The build command must be configured in the Cloudflare Workers Builds settings — it is not in the repo. `public/_headers` carries the CSP and cache rules and is copied verbatim into `dist/`. The public CSP is `'self'` for `script-src` and `style-src` with **no `'unsafe-inline'`**; the external origins it allows are `www.openstreetmap.org` in `frame-src` (the mini-map `<iframe>` in an expanded event card on the home page — `src/components/UpcomingEvent.astro`), `formspree.io` in `connect-src`/`form-action` (the contact form), and Cloudflare's own `challenges.cloudflare.com` (Turnstile on the buddy sign-up) and analytics host. `check:dist` does not parse `_headers`, so those tokens are verified only by a browser pass — expand a card with devtools open and watch for a `frame-src` violation.
+Cloudflare builds the repo with `npm run build` and serves `dist/` (`wrangler.jsonc` sets `assets.directory: "./dist"`). The build command must be configured in the Cloudflare Workers Builds settings — it is not in the repo. `public/_headers` carries the CSP and cache rules and is copied verbatim into `dist/`. The public CSP is `'self'` for `script-src` and `style-src` with **no `'unsafe-inline'`**; the external origins it allows are `www.openstreetmap.org` in `frame-src` (the mini-map `<iframe>` in an expanded event card on the home page — `src/components/UpcomingEvent.astro`), `formspree.io` in `connect-src`/`form-action` (the contact form), and Cloudflare's own `challenges.cloudflare.com` (Turnstile on the buddy sign-up) and analytics host. `check:dist` verifies the global HSTS header and the CSP-sensitive markup, but a manual browser pass is still the right way to inspect a changed CSP request.
 
 The admin Worker (`worker/`) is part of the **same** Worker: `wrangler.jsonc` sets `main: "worker/index.js"` and `assets.run_worker_first: ["/admin/api/*", "/buddy/api/*"]`, so only those paths invoke code and everything else is served statically exactly as before. It deploys with the site — there is no second deploy. Its `GITHUB_TOKEN` is an encrypted Worker secret set out-of-band; the buddy system adds a `BUDDY_DB` D1 binding and a `RESEND_API_KEY` secret — see [`worker/README.md`](worker/README.md) and [`docs/domains/buddy.md`](docs/domains/buddy.md).
 
@@ -86,7 +95,7 @@ Pages live under `src/pages/[...locale]/` — a **rest parameter that matches ze
   entry in `content/events/` carries an optional `i18n` block keyed by *dictionary*
   name (`en`/`de`/`hr`/`bs`/`sr` — one per locale) plus `sourceLang`
   and a `sourceHash` of the source text. `localizeEntry(entry, dict)` in
-  `src/lib/content.js` swaps the translated fields in at render time and falls back
+  `src/lib/localize.js` swaps the translated fields in at render time and falls back
   field-by-field to the authored text. **Only an event's `title`/`description`
   are translated** — its `location` (a venue name / street address) and
   `mapCoords` (a lat,lon pair for the card's mini-map) are never translated;

@@ -67,6 +67,13 @@ EDITABLE-TEXT-FILES.txt
 # tweaking src/lib/buddy/emails.js. Regenerate it locally; never tracked.
 buddy-email-preview.html
 
+# Generated knowledge-graph output from the graphify skill. Derived from the
+# codebase, regenerable, and carries its own LLM-call cache. Keep it local.
+graphify-out/
+
+# Non-blocking screenshots and JSON emitted by the scheduled browser audit.
+artifacts/
+
 # ---- Host / deploy tooling ----
 .wrangler/
 .netlify/

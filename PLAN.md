@@ -15,9 +15,10 @@ the archive in the same PR — do not let this file grow a history section again
   admin panel → [`docs/ADMIN.md`](docs/ADMIN.md); maintaining the Worker →
   [`worker/README.md`](worker/README.md); succession → [`docs/HANDOVER.md`](docs/HANDOVER.md).
 
-**Health at last check (2026-09-06):** `npm test` 217/217 · `npm run build` 66
-pages · `npm run check` 0/0/0 · `npm run check:dist` clean · `npm audit` 0
-vulnerabilities · working tree clean. Four dated upcoming events (*Meet & Greet*
+**Health at last check (2026-09-08):** `npm test` 275/275 · `npm run build` 66
+pages · `npm run check` 0/0/0 · `npm run check:dist` clean · browser audit 5/5
+pages with no serious/critical axe findings · `npm audit` 0 vulnerabilities.
+Four dated upcoming events (*Meet & Greet*
 2026-09-23, *Game Night* 2026-10-07, *Karaoke* 2026-11-12, *Christmas Dinner*
 2026-12-09), so the empty-calendar warning is not firing; spring 2027 is still
 thin.
@@ -67,11 +68,11 @@ src/
 worker/                  SERVER LAYER — runs only on /admin/api/* and /buddy/api/*
   index.js                 routing + Access gate; dispatches admin + buddy handlers
   collections.js           THE description of the admin form (fields, slugs, carry)
-  github.js                Git Data API: one atomic commit per save  (UNTESTED)
+  github.js                Git Data API: one atomic commit per save; injected-fetch tests
   access.js / board-access.js  Access JWT read + the board's own email allow-list
   translate.js             DeepL key (KV over secret), per-entry state, translateEntry()
   buddy.js                 /buddy/api/* (public, token-authed) + /admin/api/buddy/* (Access)
-  buddy-store.js           every D1 query, behind named methods  (UNTESTED I/O layer)
+  buddy-store.js           every D1 query, behind named methods; injected-D1 tests
   migrations/0001_buddy.sql  signups, rounds, pairs
   lib.js                   slugify, coerceField, buildEntry, image paths
   *.test.js                node:test — form↔schema parity, carry, lockout rails,
@@ -81,12 +82,14 @@ public/                    copied verbatim into dist/
   admin/                   the admin panel (first-party, no framework; form from the API)
   _headers                 CSP + cache rules; scoped /admin CSP; /_astro immutable;
                            text/calendar for /events/*.ics
-scripts/check-dist.mjs     npm `check:dist`: post-build CSP, brand, Serbian-is-Latin,
-                           /admin first-party + media checks
+scripts/check-dist.mjs     npm `check:dist`: CSP, HSTS, links, brand, Serbian-Latin,
+                           /admin/media checks, translation/image warnings
+scripts/check-links.mjs    weekly, non-blocking external-link report
+scripts/browser-audit.mjs  scheduled screenshots, paint metrics and axe smoke test
 scripts/mirror-media.mjs   npm `prebuild`: mirrors src/images -> public/images (for /admin)
 scripts/translate*.mjs     npm `translate` / `translate:content`: offline DeepL fills (not in build)
-.github/workflows/ci.yml   test + build + check + check:dist + non-blocking `npm audit`,
-                           on PRs to main AND pushes to main; `workflow_dispatch` enabled
+.github/workflows/ci.yml   change checks + weekly browser/external-link reports;
+                           `workflow_dispatch` enabled
 astro.config.mjs           site, build.format:'file', sitemap, and the two settings that
                            keep the CSP inline-free (inlineStylesheets:'never', assetsInlineLimit:0)
 wrangler.jsonc             Cloudflare: assets.directory=./dist, run_worker_first, the
@@ -193,58 +196,11 @@ What remains:
 Not agreed work — the weekly agent (§6) may propose *into* this section, never
 implement *from* it. Roughly ordered by impact ÷ effort.
 
-- **Test `worker/github.js` and `worker/buddy-store.js`** *(M).* Both are untested
-  I/O layers. `github.js` (194 lines) is what makes `/admin`'s "nothing was
-  changed on failure" promise true — the save is one atomic ref update at the end.
-  `buddy-store.js` is new and now handles private student data. Approach:
-  `node:test` with an injected `fetch` / D1 stub; assert the blob→tree→commit→ref
-  order, that the ref update is **not** forced, and that `remove:true` emits a
-  tree entry with a null sha. No network, per `CLAUDE.md`. Touches `worker/**`, so
-  human review either way (§6).
-
-- **Surface untranslated keys in CI** *(S).* A
-  non-failing `check:dist` (or CI) warning listing every key identical to English
-  in a `complete: true` locale would make the debt visible on every PR. English
-  fallback is legitimate mid-work — so a warning, not an error.
-
 - **Decide the "casino nights" wording in `events.heroLede`** *(S, board
   decision).* #71/#73 changed "casino nights" → "adventures"/"avanture"/"Abenteuer"
   on `/join` but not `/events`. `events.heroLede` still says "casino
   nights"/"casino večeri"/"Casino-Abende" in all five locales. Pick a word,
   update all five, mirror the #71/#73 edits.
-
-- **A phone-width pass on `/admin` and `/buddy/pair`** *(S).* Neither has been
-  rendered at the 33rem breakpoint. `/admin` is board-facing; `/buddy/pair` is
-  tapped by students from an email link and just had a rendering bug fixed (#77).
-  One deliberate look at 375px in a long-label locale (hr/bs *kumstvo* pages).
-
-- **Unit-test `src/lib/members.js`** *(S).* `events.js` carries the same class of
-  build-time logic (date parsing, TBA handling, placeholder detection) and is
-  unit-tested per `CLAUDE.md`'s own rule for this repo — "get the ... boundary
-  wrong ... and every command still passes while the site shows the wrong
-  thing" — but `members.js` (`isUnfilled`, `displayName`, `initialOf`) has no
-  test file at all. The placeholder regex (`/\[.*?\]/`) and the
-  empty/whitespace-name fallback in `initialOf` are exactly the edge case that
-  could ship a literal `"[PLACEHOLDER: Full Name]"` or a bare `"?"` initial to a
-  live member card without failing `test`, `build`, `check` or `check:dist`.
-
-- **Unit-test `verifyAccessJwt` in `worker/access.js`** *(M).* It is the sole
-  authorization gate for every `/admin/api/*` route (save, delete, the Access
-  allow-list, the Buddy admin endpoints) and has zero test coverage today —
-  `access.test.js` doesn't exist, unlike its sibling `board-access.test.js`.
-  Its branches (wrong issuer, wrong audience, expired, unknown `kid`, bad
-  signature) are independently checkable with `node:test`: mint a real RSA
-  keypair with the Web Crypto global (available in Node), sign a fake JWT with
-  it, and stub `fetch` to return a matching JWKS — no network, per `CLAUDE.md`.
-  Touches `worker/**`, so human review either way (§6).
-
-- **An internal-link integrity check in `check:dist`** *(M).* Nothing today
-  crawls the built `dist/**/*.html` for internal `<a href>` targets or hreflang
-  links that don't resolve to a real file — a `localizePath` typo or a renamed
-  route would only surface as a live 404 a visitor actually hits. `check-dist.mjs`
-  already walks every page for CSP/brand/image checks; extending it to collect
-  internal hrefs per page and assert the target exists under `dist/` needs no
-  new dependency and runs in the same CI pass.
 
 - **A "what's on" nudge when the calendar empties** *(M, only if it recurs).* The
   build warns when no upcoming event has a date, but only a developer running a
@@ -257,85 +213,6 @@ implement *from* it. Roughly ordered by impact ÷ effort.
   inbox fills up or Formspree's quota is exhausted. (If the buddy-signup item
   above brings Turnstile in anyway, reconsider adding it here in the same pass.)
 
-- **Add a `Strict-Transport-Security` header** *(S).* `public/_headers`' global
-  `/*` block sets `X-Content-Type-Options`, `X-Frame-Options`,
-  `Referrer-Policy` and `Permissions-Policy`, but no HSTS header at all —
-  checked, it is not there. Nothing else supplies it either: the site is a
-  Cloudflare Worker serving static assets directly, not behind the Pages HTTPS
-  proxy layer that sometimes adds this on its own, so a client that has never
-  visited `yunited.ch` before has no reason to skip a plaintext first request.
-  Add `Strict-Transport-Security: max-age=63072000; includeSubDomains;
-  preload` to the `/*` block; `check:dist` would need no change. Touches
-  `public/_headers`, so human review either way (§6). Submitting the domain at
-  hstspreload.org is then a separate, human, one-time step.
-
-- **Unit-test `localizeEntry` in `src/lib/content.js`** *(S).* It is exactly
-  the class of build-time logic `CLAUDE.md` singles out for testing — get its
-  field-by-field fallback wrong and every command still passes while a page
-  quietly shows English text under a `hr`/`bs`/`sr` URL, or drops a field
-  entirely — yet it has no test file and isn't exercised by `events.test.js`
-  either (checked). Worth covering explicitly: a partially-translated entry
-  falls back per field rather than all-or-nothing; a translated field that is
-  an empty string or whitespace-only does *not* overwrite the source text; and
-  an entry with no matching `i18n[dict]` is returned unchanged. Pure function,
-  no `import.meta.glob` needed to reach it — a plain object literal exercises
-  it directly.
-
-- **Guard the case-collision in `src/lib/images.js`'s image lookup** *(S).*
-  `resolveImage`'s lookup `Map` is keyed by the *lowercased* path so that
-  `IMG_1234.PNG` resolves like `img_1234.png` — deliberate, per the comment at
-  the top of the file. The gap: if two distinct files in `src/images/` differ
-  only by case (e.g. a board member re-uploads `Photo.jpg` next to an existing
-  `photo.jpg`), `import.meta.glob`'s enumeration order silently decides which
-  one every reference resolves to, with no error and no warning — the build
-  stays green and `check:dist` stays clean while an event or member ships the
-  wrong photo. Detect the collision when building `byKey` (the two original,
-  differently-cased paths are both known at that point) and throw a clear
-  build error naming both files, the same way a missing image already does.
-
-- **A Playwright screenshot pass for the two known-fragile layouts** *(M).*
-  `CLAUDE.md` names this exact gap repeatedly — overlap, wrapping and sticky
-  behaviour are invisible to `test`, `build`, `check` and `check:dist`, so
-  today it depends on a human remembering to open a browser at the named
-  breakpoints in hr/bs before every layout PR (the `--toc-width` incident in
-  PR #55 is the fossil record of that failing once). `/about` and
-  `/buddy/pair` are the two pages CLAUDE.md and PLAN.md §4 flag as fragile —
-  the TOC rail against the 17ch `hr` "Sustav/Sistem prijatelja" label, and
-  the pair page at the 33rem phone breakpoint. A script that boots
-  `npm run preview`, opens both pages in Playwright's pre-installed Chromium
-  at the widths their breakpoints name, and diffs against a checked-in
-  baseline PNG would catch a regression automatically instead of relying on
-  someone doing the manual pass. Keep it non-blocking in CI at first (font
-  rendering/anti-aliasing differences between machines make pixel diffs
-  noisy) — a warning artifact on the PR, not a required check, until it's
-  proven stable enough to gate on.
-
-- **An accessibility smoke test against the built `dist/` pages** *(S/M).*
-  Nothing in `check:dist` or CI checks accessibility today — no
-  color-contrast, landmark, alt-text or ARIA check exists anywhere in the
-  pipeline (checked `scripts/check-dist.mjs` and `.github/workflows/ci.yml`).
-  Running `axe-core` against a handful of representative built pages (home,
-  events, about, buddy sign-up) in one Node script, with Playwright's
-  pre-installed Chromium loading the static HTML, would surface regressions
-  like a card missing an accessible name or insufficient text contrast on
-  `--color-paper`/`--color-red` combinations for free. Start non-blocking (a
-  reported list, not a failing check) since a full WCAG pass isn't a goal —
-  catching an accidental regression on a handful of key pages is.
-
-- **Surface the nightly cron sweeps' health in `/admin`** *(S).* The
-  translate sweep and `purgeStaleBuddySignups` (`worker/index.js`
-  `scheduled`) only report through `npx wrangler tail` or the Workers
-  observability logs — nobody sees an outage until a board member notices
-  missing translations or a growing pile of unverified buddy signups weeks
-  later, the same "nobody has an account for that surface" problem
-  `CLAUDE.md` describes for the retired GitHub Actions translate workflow.
-  The Translations tab already stores structured state in the
-  `ADMIN_SETTINGS` KV (`worker/translate.js`); writing a small
-  `{ranAt, ok, detail}` record there after each sweep (translate and buddy
-  purge, one key each) and showing "last run: <time>, <ok/failed>" next to
-  the existing DeepL key status would close that gap with the storage
-  mechanism the panel already has, not a new one.
-
 ---
 
 ## 5. Everyday commands
@@ -347,15 +224,16 @@ npm test           # unit tests for src/lib + worker/ (node:test, no framework)
 npm run build      # writes dist/ (runs prebuild: mirrors src/images)
 npm run check      # astro check — must be 0 errors AND 0 hints
 npm run check:dist # post-build: CSP-inline-free + brand spelling + Serbian-Latin
+npm run check:links # external-link report (non-blocking; scheduled in CI)
+npm run audit:browser # screenshots, paint metrics and axe report under artifacts/
 npm run preview    # serve built dist/
 npm run admin:dev  # wrangler dev — /admin + its Worker on :8787
 ```
 
 "Verified" = all four of `test`, `build`, `check`, `check:dist` pass — exactly
 what CI runs — and, for content/render changes, the expected text appears in the
-built HTML (e.g. `grep "Meet & Greet" dist/events.html`). For layout/CSS changes
-that is **not enough** — none of the four renders a page; do a browser pass at the
-widths the breakpoints name, in a long-label locale (hr/bs). See `CLAUDE.md`.
+built HTML (e.g. `grep "Meet & Greet" dist/events.html`). For layout/CSS changes,
+also run `npm run audit:browser` and review its screenshots. See `CLAUDE.md`.
 
 ---
 

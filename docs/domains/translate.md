@@ -143,17 +143,6 @@ hermetic — no translation API call ever happens during `npm run build`.
 
 ## Open items & known gaps
 
-- **7 UI keys unfilled in de/hr/bs/sr** — `skipLink`,
-  `events.emptyUpcomingEyebrow/Heading/Body/Instagram/Uniclubs`,
-  `events.addToCalendar` — currently rendering in English. `npm run translate`
-  fills them.
-- **`validate.js` `forbidden` stems are not scoped per language.** German's
-  accepted loanword "Buddy-System" trips the `buddy-` rule written for hr/bs/sr
-  (~13 false positives when the gate is run against `de.json`). Real finding
-  alongside it: `movie-night-svadba-2026.json`'s German title translated the
-  protected name `Svadba`.
-- **No CI surfacing** of keys identical to English in a `complete: true` locale —
-  the 7-key debt above stays invisible between PRs. See `PLAN.md` §4.
 - **DeepL glossaries exist only for `de`** among the four targets. hr/bs/sr
   terminology pinning is `context` + the validator, plus per-TERM `rewrite`
   rules in `glossary.js` (`pinCanonical` in `deepl.js`) for regressions

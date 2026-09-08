@@ -1,10 +1,9 @@
 // Every D1 query the buddy system runs, behind named methods.
 //
 // worker/buddy.js takes a *store* (this shape) as an injected dependency, so its
-// request handlers are unit-tested against an in-memory fake — the same split as
-// the rest of worker/, where logic is testable under plain Node and the thin
-// I/O layer is not. This file is that thin layer: it is verified by the
-// migration and by a local `wrangler d1` run, not by npm test.
+// request handlers are unit-tested against an in-memory fake. The same split
+// keeps the rest of worker/ testable under plain Node. This adapter also has
+// contract tests with an injected D1 stub in buddy-store.test.js.
 //
 // Bind params are ?1-style positional so the SQL reads next to its arguments.
 

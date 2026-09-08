@@ -72,6 +72,7 @@ import {
 import { gate } from "../src/lib/translate/content.js";
 import { handleBuddyPublic, handleBuddyAdmin, purgeStaleBuddySignups } from "./buddy.js";
 import { postCopy, getCopy, deReviewList, editModeEnabled } from "./copy.js";
+import { readCronHealth, trackCronJob } from "./cron-health.js";
 
 export default {
   /**
@@ -181,7 +182,12 @@ export default {
   async scheduled(_event, env, ctx) {
     // The translation sweep and the buddy-signup retention sweep are unrelated;
     // run both, and let one failing never stop the other.
-    ctx.waitUntil(Promise.allSettled([sweep(env), purgeStaleBuddySignups(env)]));
+    ctx.waitUntil(
+      Promise.allSettled([
+        trackCronJob(env, "translation", () => sweep(env)),
+        trackCronJob(env, "buddyRetention", () => purgeStaleBuddySignups(env)),
+      ]),
+    );
   },
 };
 
@@ -197,9 +203,17 @@ const SWEEP_LIMIT = 5;
  * simply picked up tomorrow.
  */
 async function sweep(env) {
-  if (!env.GITHUB_TOKEN) return console.warn("[translate] sweep: no GitHub token, nothing to do");
-  if (!(await resolveKey(env))) return console.warn("[translate] sweep: no DeepL key, nothing to do");
+  if (!env.GITHUB_TOKEN) {
+    console.warn("[translate] sweep: no GitHub token, nothing to do");
+    return { ok: false, detail: "No GitHub token; translations were not checked." };
+  }
+  if (!(await resolveKey(env))) {
+    console.warn("[translate] sweep: no DeepL key, nothing to do");
+    return { ok: false, detail: "No DeepL key; translations were not checked." };
+  }
 
+  let updated = 0;
+  let failed = 0;
   try {
     const gh = github(env);
     const content = await gh.readContent();
@@ -235,7 +249,6 @@ async function sweep(env) {
       );
 
       const changes = [];
-      let failed = 0;
       for (const entry of batch) {
         const translation = await translateEntry({
           entry: entry.data,
@@ -275,6 +288,7 @@ async function sweep(env) {
           `content: fill translations for ${changes.length} ${changes.length === 1 ? "event" : "events"} [auto-translate]`,
           changes,
         );
+        updated += changes.length;
         console.log(`[translate] sweep done: ${changes.length} updated, ${failed} failed — commit ${commit.sha}`);
       } catch (error) {
         // The ref update is fast-forward only, so this is very likely a board
@@ -283,13 +297,19 @@ async function sweep(env) {
         // actively editing is how a surprise gets committed on their behalf.
         if (error?.status === 409 || error?.status === 422) {
           console.warn("[translate] a save landed mid-sweep; nothing was changed, tomorrow's run picks it up");
+          failed += changes.length;
         } else {
           throw error;
         }
       }
     }
+    return {
+      ok: failed === 0,
+      detail: `${updated} translation${updated === 1 ? "" : "s"} updated; ${failed} failed.`,
+    };
   } catch (error) {
     console.error("[translate] sweep failed:", error);
+    return { ok: false, detail: String(error?.message ?? error) };
   }
 }
 
@@ -512,7 +532,15 @@ async function getState(request, env) {
 // two places at once.
 
 async function getSettings(_request, env) {
-  return json({ ok: true, deepl: await keyStatus(env) });
+  const [deepl, automation] = await Promise.all([
+    keyStatus(env),
+    readCronHealth(env),
+  ]);
+  return json({
+    ok: true,
+    deepl,
+    automation,
+  });
 }
 
 async function postSettings(request, env) {

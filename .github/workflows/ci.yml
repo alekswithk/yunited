@@ -14,6 +14,10 @@ on:
   # green after a hosted-runner outage (2026-08-06: two merges produced no
   # runs at all) was to push a new commit.
   workflow_dispatch:
+  schedule:
+    # External links are not part of build correctness, but a weekly pass makes
+    # dead RSVP/social links visible without slowing every content PR.
+    - cron: "23 5 * * 1"
 
 # A newer push to the same branch/PR cancels the older, still-running check.
 concurrency:
@@ -60,6 +64,26 @@ jobs:
       # comment at the top of scripts/check-dist.mjs.
       - name: Check built output
         run: npm run check:dist
+
+      - name: Check external links (report only)
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: npm run check:links
+
+      - name: Install browser for scheduled audit
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: npx playwright-core install --with-deps chromium
+
+      - name: Browser audit (report only)
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: npm run audit:browser
+
+      - name: Upload browser audit
+        if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-audit
+          path: artifacts/browser-audit/
+          if-no-files-found: warn
 
       # Non-blocking: dev-tooling CVEs here never reach a visitor or the
       # deployed Worker (see PLAN.md §5), so this reports rather than fails.

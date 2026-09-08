@@ -8,30 +8,7 @@
 // for a board member to fix without reading a stack trace.
 import { eventSchema, memberSchema, partnerSchema } from "./schema.js";
 import { splitEvents, hasDate } from "./events.js";
-
-/**
- * Swap an entry's translatable fields for the given dictionary's versions.
- *
- * `dict` is a dictionary name (en/de/bs/hr/sr), not a locale code — callers get
- * it from getLocale(locale).dict. Today the two coincide, but they are separate
- * fields on purpose: bs and hr shared one `bcs` dictionary until that file
- * turned out to be Croatian wearing a Bosnian label (see src/i18n/config.js),
- * and nothing here assumes the mapping stays one-to-one.
- *
- * Falls back field by field to the source text, so a partially translated entry
- * still renders completely rather than showing a blank title. Returns the entry
- * untouched when there is nothing to apply, which keeps the no-`i18n` case free.
- */
-export function localizeEntry(entry, dict) {
-  const translated = entry?.i18n?.[dict];
-  if (!translated) return entry;
-
-  const out = { ...entry };
-  for (const [field, value] of Object.entries(translated)) {
-    if (typeof value === "string" && value.trim() !== "") out[field] = value;
-  }
-  return out;
-}
+export { localizeEntry } from "./localize.js";
 
 // Eagerly import every entry file at build time. Keys are project-root paths
 // like "/content/events/casino-night-2026.json".
