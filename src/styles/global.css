@@ -2186,6 +2186,14 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
 /* The same, but closing a panel grid, which needs more air than a list does.
    The footnote under it needs no rule: `p + p` already spaces it. */
 .section-cta-lg { margin-top: var(--space-5); }
+.join-hero-actions { margin-top: var(--space-5); }
+.join-hero-cta { padding: 0.85rem 1.75rem; }
+.join-cta .btn {
+  width: min(100%, 34rem);
+  padding: 1rem 1.75rem;
+  text-align: center;
+  font-size: 0.9rem;
+}
 .info-panel ul { padding-left: 1.2rem; margin-top: var(--space-3); }
 .info-panel li { margin-bottom: var(--space-2); }
 

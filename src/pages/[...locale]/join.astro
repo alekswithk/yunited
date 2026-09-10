@@ -10,6 +10,7 @@ const t = useTranslations(locale);
 
 const title = t("meta.join.title");
 const description = t("meta.join.description");
+const uniclubsUrl = "https://uniclubs.ch/hsg/clubs/yunited";
 ---
 
 <BaseLayout locale={locale} title={title} description={description} path="/join">
@@ -18,6 +19,11 @@ const description = t("meta.join.description");
       <p class="hero-script">Pridruži se · Придружи се · Join us</p>
       <h1>{t("join.heroTitle")}</h1>
       <p>{t("join.heroLede")}</p>
+      <div class="hero-actions join-hero-actions">
+        <a class="btn btn-gold join-hero-cta" href={uniclubsUrl} target="_blank" rel="noopener">
+          {t("join.cta")}
+        </a>
+      </div>
     </div>
   </section>
 
@@ -37,8 +43,8 @@ const description = t("meta.join.description");
           <p set:html={t("join.freeBody")}></p>
         </div>
       </div>
-      <p class="section-cta-lg">
-        <a class="btn btn-red" href="https://uniclubs.ch/hsg/clubs/yunited" target="_blank" rel="noopener">
+      <p class="section-cta-lg join-cta">
+        <a class="btn btn-gold" href={uniclubsUrl} target="_blank" rel="noopener">
           {t("join.cta")}
         </a>
       </p>
