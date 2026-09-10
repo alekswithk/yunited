@@ -202,11 +202,6 @@ implement *from* it. Roughly ordered by impact ÷ effort.
   nights"/"casino večeri"/"Casino-Abende" in all five locales. Pick a word,
   update all five, mirror the #71/#73 edits.
 
-- **A "what's on" nudge when the calendar empties** *(M, only if it recurs).* The
-  build warns when no upcoming event has a date, but only a developer running a
-  build sees it. If the empty-calendar problem comes back, surface it where the
-  board will see it rather than warning harder in the terminal.
-
 - **Turnstile on the contact form** *(deferred deliberately, 2026-07-29).* The
   form's only spam defence is a honeypot. Left as is — a third-party script on a
   CSP this clean is not worth it until spam actually appears. Revisit if the club

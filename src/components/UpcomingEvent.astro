@@ -93,6 +93,11 @@ const directionsHref = embed
           ></iframe>
         )}
         <div class="uev-actions">
+          {hasRsvp && (
+            <a class="card-link card-link-primary" href={event.rsvpUrl} target="_blank" rel="noopener">
+              {t("events.rsvpCta")}
+            </a>
+          )}
           {directionsHref && (
             <a class="card-link" href={directionsHref} target="_blank" rel="noopener">
               {t("home.getDirections")}
@@ -100,11 +105,6 @@ const directionsHref = embed
           )}
           {calendarHref && (
             <a class="card-link" href={calendarHref}>{t("events.addToCalendar")}</a>
-          )}
-          {hasRsvp && (
-            <a class="card-link" href={event.rsvpUrl} target="_blank" rel="noopener">
-              {t("events.rsvpCta")}
-            </a>
           )}
         </div>
         {embed && (

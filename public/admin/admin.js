@@ -94,6 +94,7 @@ const el = {
   buddySignups: $("buddy-signups"),
   buddyEmpty: $("buddy-empty"),
   buddyEmailNote: $("buddy-email-note"),
+  calendarWarning: $("calendar-warning"),
 };
 
 /** The tabs that are not content collections. */
@@ -273,10 +274,54 @@ function renderList() {
   el.addBtn.textContent = `Add ${c.singular}`;
 
   renderSortOptions(c);
+  renderCalendarWarning(c);
 
   const items = sortEntries(state.entries[c.name] ?? [], currentSort(c));
   el.empty.hidden = items.length > 0;
   el.entries.replaceChildren(...items.map((item) => renderRow(c, item)));
+}
+
+/**
+ * Warn while the board is already looking at Events, where it can fix the
+ * problem. Dates use YYYY-MM-DD, so string comparison is chronological and
+ * avoids timezone shifts around midnight.
+ */
+function renderCalendarWarning(c) {
+  el.calendarWarning.hidden = true;
+  el.calendarWarning.textContent = "";
+  if (c.name !== "events") return;
+
+  const today = new Date();
+  const todayKey = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, "0"),
+    String(today.getDate()).padStart(2, "0"),
+  ].join("-");
+  const datedUpcoming = (state.entries.events ?? [])
+    .map((entry) => entry.data?.date)
+    .filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date) && date >= todayKey)
+    .sort();
+
+  if (datedUpcoming.length === 0) {
+    el.calendarWarning.textContent =
+      "No dated upcoming events are scheduled. Add the next event when its date is known, or publish it as TBA now.";
+    el.calendarWarning.hidden = false;
+    return;
+  }
+
+  const lastDate = datedUpcoming.at(-1);
+  const threshold = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 60);
+  const last = new Date(`${lastDate}T12:00:00`);
+  if (last > threshold) return;
+
+  const label = new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(last);
+  el.calendarWarning.textContent =
+    `The calendar currently ends on ${label}. Add the next event when its date is known, or publish it as TBA now.`;
+  el.calendarWarning.hidden = false;
 }
 
 /** The sort this collection is currently showing; the registry's first by default. */
