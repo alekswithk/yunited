@@ -10,9 +10,10 @@
     "contact": "Contact",
     "buddy": "Buddy",
     "more": "More",
-    "join": "Join",
+    "join": "Join on uniclubs",
     "aria": "Main navigation",
-    "openMenu": "Open menu"
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "lang": {
     "aria": "Choose a language"

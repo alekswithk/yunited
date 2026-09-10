@@ -275,6 +275,15 @@ h1, h2, h3 {
   color: inherit;
 }
 
+.calendar-warning {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3);
+  background: #fff1c7;
+  border: 2px solid var(--color-gold);
+  box-shadow: 3px 3px 0 #9a6b0d;
+  font-weight: 600;
+}
+
 /* ---------- Tabs ---------- */
 
 .tabs {

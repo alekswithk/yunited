@@ -19,6 +19,26 @@
 
 ## Shipped after the split
 
+**2026-09-10 — Clearer UniClubs actions, admin calendar reminder and mobile-nav polish**
+
+Kept UniClubs as the only membership and event-registration system while making
+the route there clearer:
+
+- the header's gold button now says "Join on uniclubs" in all five languages
+  and opens YUnited's UniClubs page directly; the internal `/join` page remains
+  available from the homepage and footer for visitors who want more context;
+- event registration is now the filled primary action, ahead of the quieter
+  calendar and directions links;
+- the Events tab in `/admin` warns when there are no dated upcoming events or
+  when the last dated event is no more than 60 days away;
+- the phone navigation fades and slides into place, while its three bars turn
+  into a close icon. The global reduced-motion rule still removes transitions.
+
+Verification: `npm test` 275/275, 66 pages built, Astro diagnostics 0/0/0,
+`check:dist` clean, and the five-page browser audit reported no serious or
+critical axe findings. The open drawer was also checked at 390 px in German,
+the longest navigation locale.
+
 **2026-09-08 — Automated maintenance checks and cron health (#113)**
 
 Closed the deterministic maintenance items from `PLAN.md` §4 in one batch:

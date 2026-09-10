@@ -674,13 +674,20 @@ main { position: relative; }
   height: 2px;
   background: var(--color-ink);
   margin: 6px 0;
+  transform-origin: center;
+  transition:
+    transform 220ms var(--ease-out),
+    opacity 140ms ease;
 }
+.nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; transform: scaleX(0.35); }
+.nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
 
 @media (max-width: 768px) {
   .nav-toggle { display: block; }
 
   .main-nav {
-    display: none;
+    display: flex;
     position: absolute;
     top: 70px;
     left: 0;
@@ -692,8 +699,22 @@ main { position: relative; }
     border-top: var(--border-structural);
     border-bottom: var(--border-structural);
     gap: var(--space-3);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-0.75rem);
+    transition:
+      opacity 180ms ease,
+      transform 220ms var(--ease-out),
+      visibility 0s linear 220ms;
   }
-  .main-nav.is-open { display: flex; }
+  .main-nav.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+    transition-delay: 0s;
+  }
 
   /* Undo the "More" disclosure in the drawer: no nested tap to reach Contact.
      The summary is hidden and the three links sit in the column exactly as
@@ -970,6 +991,29 @@ main { position: relative; }
 }
 .card:hover .card-link::after,
 .card-link:hover::after { transform: scaleX(1); }
+
+/* Registration is the event's main action. Calendar and directions remain
+   plain links, so the route to uniclubs is the first thing the eye finds. */
+.card-link-primary {
+  background: var(--color-gold);
+  border: 2px solid var(--color-ink);
+  box-shadow: 3px 3px 0 var(--color-ink);
+  padding: 0.45rem 0.7rem;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) ease;
+}
+.card-link-primary::after { display: none; }
+.card-link-primary:hover {
+  background: var(--color-gold-dark);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--color-ink);
+}
+.card-link-primary:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
 
 /* ---------- Upcoming events: expanding posters (home page only) ----------
    src/components/UpcomingEvent.astro. At rest each event is a poster — the

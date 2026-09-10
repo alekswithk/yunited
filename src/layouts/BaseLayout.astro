@@ -110,6 +110,12 @@ const showAlternates = alternates.length > 1 && !noindex;
       navToggleButton.addEventListener("click", () => {
         const isOpen = mainNav.classList.toggle("is-open");
         navToggleButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        navToggleButton.setAttribute(
+          "aria-label",
+          isOpen
+            ? navToggleButton.getAttribute("data-label-close") || ""
+            : navToggleButton.getAttribute("data-label-open") || "",
+        );
       });
     }
 

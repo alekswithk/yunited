@@ -63,7 +63,7 @@ const dateText = formatEventDate(event.date, getLocale(locale).dateLocale) ?? t(
     {(hasRsvp || calendarHref) && (
       <div class="card-actions">
         {hasRsvp && (
-          <a class="card-link" href={event.rsvpUrl} target="_blank" rel="noopener">{linkText}</a>
+          <a class="card-link card-link-primary" href={event.rsvpUrl} target="_blank" rel="noopener">{linkText}</a>
         )}
         {calendarHref && (
           <a class="card-link" href={calendarHref}>{t("events.addToCalendar")}</a>
