@@ -1,0 +1,12 @@
+---
+const { corner } = Astro.props;
+---
+<svg class:list={["hero-ornament", `hero-ornament-${corner}`]} viewBox="0 0 210 130" aria-hidden="true" focusable="false">
+  <path class="ornament-rule" d="M15 120V15H195" />
+  <path class="ornament-rule-inner" d="M35 90V35H165" />
+  <path class="ornament-red" d="M70 0 85 15 70 30 55 15Z" />
+  <path class="ornament-gold" d="M108 5 118 15 108 25 98 15Z" />
+  <path class="ornament-blue" d="M140 9 146 15 140 21 134 15Z" />
+  <path class="ornament-outline" d="M0 68 15 53 30 68 15 83Z" />
+  <path class="ornament-red" d="M9 103 15 97 21 103 15 109Z" />
+</svg>

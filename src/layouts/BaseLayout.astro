@@ -97,6 +97,10 @@ const showAlternates = alternates.length > 1 && !noindex;
   <Footer locale={loc.code} />
 
   <script>
+    import { initSmoothScroll } from "../scripts/smooth-scroll";
+
+    initSmoothScroll();
+
     // Shared behaviours from the old main.js: mobile menu toggle, the
     // language switcher's outside-click, and the table-of-contents scroll spy.
     // The footer year is rendered at build time; reveal-on-scroll is gone (see
