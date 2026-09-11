@@ -851,12 +851,10 @@ main { position: relative; }
 .home-hero + .motif-divider { height: 2px; background: var(--color-gold); opacity: 0.5; }
 .home-hero + .motif-divider::after { display: none; }
 
-/* Only the phone homepage settles after its introduction. Content stays in
-   normal flow: padding changes reveal the events without scrolling the page. */
+/* Phone homepage proportions stay fixed after the page opens. */
 @media (max-width: 600px) {
   .home-hero {
     min-height: 0;
-    transition: padding-block 0.8s var(--ease-out);
   }
   .home-hero .hero-script {
     font-size: 0.5625rem;
@@ -880,18 +878,9 @@ main { position: relative; }
   }
   .home-hero .hero-actions { gap: var(--space-2); }
   .home-hero .hero-actions .btn { padding-inline: var(--space-3); min-height: 44px; }
-  .home-hero.is-compact { padding-block: 3rem; }
-  .home-hero.is-compact ~ #upcoming > .container > :is(.eyebrow, h2) {
-    animation-name: none;
-  }
   .home-hero ~ #upcoming {
     padding-top: var(--space-4);
   }
-}
-
-/* Reduced-motion visitors see the compact composition from the first paint. */
-@media (max-width: 600px) and (prefers-reduced-motion: reduce) {
-  .home-hero { padding-block: 3rem; }
 }
 
 /* Buttons on dark surfaces. The quiet one keeps a light hairline and stays

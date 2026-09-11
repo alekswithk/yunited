@@ -123,33 +123,3 @@ const orgSchema = {
     </div>
   </section>
 </BaseLayout>
-
-<script>
-  // Give phone visitors a moment to read, then make room for the next section.
-  const hero = document.querySelector<HTMLElement>(".home-hero");
-  const phone = window.matchMedia("(max-width: 600px)");
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-
-  if (hero && phone.matches && !reducedMotion.matches && !location.hash &&
-      window.scrollY < 8 && document.visibilityState === "visible") {
-    const listeners = new AbortController();
-    const cancel = () => {
-      window.clearTimeout(timer);
-      listeners.abort();
-    };
-    const timer = window.setTimeout(() => {
-      if (window.scrollY < 8 && !hero.contains(document.activeElement)) {
-        hero.classList.add("is-compact");
-      }
-      cancel();
-    }, 3200);
-
-    // Once someone interacts, their reading position takes priority.
-    for (const event of ["scroll", "pointerdown", "touchstart", "wheel", "keydown", "focusin", "hashchange", "pagehide"]) {
-      window.addEventListener(event, cancel, { passive: true, signal: listeners.signal });
-    }
-    document.addEventListener("visibilitychange", cancel, { signal: listeners.signal });
-    phone.addEventListener("change", cancel, { signal: listeners.signal });
-    reducedMotion.addEventListener("change", cancel, { signal: listeners.signal });
-  }
-</script>
