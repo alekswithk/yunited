@@ -5,6 +5,7 @@ import EditableCopy from "../../components/EditableCopy.astro";
 import EventCard from "../../components/EventCard.astro";
 import UpcomingEvent from "../../components/UpcomingEvent.astro";
 import EmptyUpcoming from "../../components/EmptyUpcoming.astro";
+import HeroOrnament from "../../components/HeroOrnament.astro";
 import { events } from "../../lib/content.js";
 import { splitEvents } from "../../lib/events.js";
 import { localePaths, localizePath } from "../../i18n/config.js";
@@ -63,7 +64,9 @@ const orgSchema = {
   <!-- Hero: answers "what is this" immediately, no info gated behind animation -->
   <PageToc sections={sections} locale={locale} label="toc.aria" />
 
-  <section class="hero">
+  <section class="hero home-hero">
+    <HeroOrnament corner="upper" />
+    <HeroOrnament corner="lower" />
     <div class="container">
       <p class="hero-script">Dobrodošli · Добродошли · Welcome</p>
       <h1><EditableCopy as="span" key="home.heroTitleMain" locale={locale} /> <EditableCopy as="span" class="accent" key="home.heroTitleAccent" locale={locale} /></h1>
@@ -120,3 +123,33 @@ const orgSchema = {
     </div>
   </section>
 </BaseLayout>
+
+<script>
+  // Give phone visitors a moment to read, then make room for the next section.
+  const hero = document.querySelector<HTMLElement>(".home-hero");
+  const phone = window.matchMedia("(max-width: 600px)");
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  if (hero && phone.matches && !reducedMotion.matches && !location.hash &&
+      window.scrollY < 8 && document.visibilityState === "visible") {
+    const listeners = new AbortController();
+    const cancel = () => {
+      window.clearTimeout(timer);
+      listeners.abort();
+    };
+    const timer = window.setTimeout(() => {
+      if (window.scrollY < 8 && !hero.contains(document.activeElement)) {
+        hero.classList.add("is-compact");
+      }
+      cancel();
+    }, 3200);
+
+    // Once someone interacts, their reading position takes priority.
+    for (const event of ["scroll", "pointerdown", "touchstart", "wheel", "keydown", "focusin", "hashchange", "pagehide"]) {
+      window.addEventListener(event, cancel, { passive: true, signal: listeners.signal });
+    }
+    document.addEventListener("visibilitychange", cancel, { signal: listeners.signal });
+    phone.addEventListener("change", cancel, { signal: listeners.signal });
+    reducedMotion.addEventListener("change", cancel, { signal: listeners.signal });
+  }
+</script>
