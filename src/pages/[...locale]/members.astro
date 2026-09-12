@@ -1,7 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import MemberLead from "../../components/MemberLead.astro";
-import MemberRow from "../../components/MemberRow.astro";
+import MemberCard from "../../components/MemberCard.astro";
 import { members } from "../../lib/content.js";
 import { localePaths, localizePath } from "../../i18n/config.js";
 import { useTranslations } from "../../i18n/utils.js";
@@ -14,7 +13,7 @@ const t = useTranslations(locale);
 const title = t("meta.members.title");
 const description = t("meta.members.description");
 
-const [lead, ...roster] = Array.isArray(members) ? members : [];
+const board = Array.isArray(members) ? members : [];
 ---
 
 <BaseLayout locale={locale} title={title} description={description} path="/members">
@@ -33,15 +32,10 @@ const [lead, ...roster] = Array.isArray(members) ? members : [];
       <p class="eyebrow">{t("members.boardEyebrow")}</p>
       <h2>{t("members.boardHeading")}</h2>
       <div id="member-grid">
-        {lead ? (
-          <>
-            <MemberLead member={lead} locale={locale} />
-            {roster.length > 0 && (
-              <div class="roster">
-                {roster.map((member) => <MemberRow member={member} locale={locale} />)}
-              </div>
-            )}
-          </>
+        {board.length > 0 ? (
+          <div class="member-grid">
+            {board.map((member) => <MemberCard member={member} locale={locale} />)}
+          </div>
         ) : (
           <p class="empty-note">{t("members.boardEmpty")}</p>
         )}

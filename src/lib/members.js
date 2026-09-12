@@ -14,8 +14,13 @@ export function displayName(member) {
   return isUnfilled(member.name) ? null : member.name;
 }
 
-// Drop-cap initial, shown until a member has a real photo.
+// Initials avatar, shown until a member has a real photo: first letter of
+// the first and last name, or just the one letter for a single-word name.
 export function initialOf(name) {
   const cleaned = String(name || "").replace(/\[.*?\]/g, "").trim();
-  return cleaned ? cleaned.charAt(0).toUpperCase() : "?";
+  if (!cleaned) return "?";
+  const words = cleaned.split(/\s+/);
+  const first = words[0].charAt(0);
+  const last = words.length > 1 ? words[words.length - 1].charAt(0) : "";
+  return (first + last).toUpperCase();
 }
