@@ -17,7 +17,9 @@ test("displayName returns a real name and hides an unannounced seat", () => {
 });
 
 test("initialOf normalizes names and never leaks placeholder text", () => {
-  assert.equal(initialOf("  željka  "), "Ž");
+  assert.equal(initialOf("Aleksandar Maric"), "AM");
+  assert.equal(initialOf("  željka horvat  "), "ŽH");
+  assert.equal(initialOf("Madonna"), "M");
   assert.equal(initialOf("[PLACEHOLDER: Full Name]"), "?");
   assert.equal(initialOf(""), "?");
   assert.equal(initialOf(null), "?");

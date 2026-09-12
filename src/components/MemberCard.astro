@@ -1,0 +1,28 @@
+---
+// One board member's card: circular initials avatar beside role + name.
+// Every seat renders the same way — see the note on .member-grid in
+// global.css for why the board no longer has a "lead" card.
+import Portrait from "./Portrait.astro";
+import { isUnfilled, displayName } from "../lib/members.js";
+import { defaultLocale } from "../i18n/config.js";
+import { useTranslations } from "../i18n/utils.js";
+
+// A member's own text (name/role/bio) is the same in every language — only
+// the surrounding UI (the "TBA" placeholder) follows the locale.
+const { member, locale = defaultLocale } = Astro.props;
+const t = useTranslations(locale);
+const tbaClass = isUnfilled(member.name) ? " is-tba" : "";
+const showBio = !isUnfilled(member.bio);
+const name = displayName(member) ?? t("members.tba");
+---
+
+<article class="member-card">
+  <a class="edit-affordance" hidden href={`/admin#members/${member.slug}.json`}>Edit</a>
+  <Portrait member={member} locale={locale} />
+  <div class="member-body">
+    <p class="member-role">{member.role}</p>
+    <p class={`member-name${tbaClass}`}>{name}</p>
+    <div class="member-divider" role="presentation"></div>
+    {showBio && <p class="member-bio">{member.bio}</p>}
+  </div>
+</article>
