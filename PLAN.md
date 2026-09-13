@@ -208,6 +208,56 @@ implement *from* it. Roughly ordered by impact ÷ effort.
   inbox fills up or Formspree's quota is exhausted. (If the buddy-signup item
   above brings Turnstile in anyway, reconsider adding it here in the same pass.)
 
+- [ ] **Preconnect to the three cross-origin hosts the CSP allows** *(S,
+  performance).* `formspree.io` (contact form), `challenges.cloudflare.com`
+  (buddy Turnstile) and the Cloudflare analytics beacon are the only external
+  origins any page ever calls, yet `BaseLayout.astro`'s `<head>` has no
+  `rel="preconnect"` for any of them — the DNS + TLS handshake happens cold on
+  first use instead of overlapping with page load. A same-origin site has
+  nothing else to preconnect to, so this is the entire opportunity.
+
+- [ ] **Surface the weekly `check:links` and `audit:browser` reports somewhere
+  a board member will actually see** *(M, maintainability).* Both run only on
+  the weekly schedule / `workflow_dispatch` and are report-only: a dead RSVP
+  link or a new axe finding lands in the Actions tab and an artifact zip, a
+  surface no board member has an account for — the exact blind spot that let
+  the old translate-content GitHub Action fail silently for months (see
+  CLAUDE.md's translate section). Options: open/update one pinned tracking
+  issue from CI when either report finds something, or have the Worker's
+  nightly cron (which already emails on translation/buddy issues) carry a
+  summary. Needs a decision on where "somewhere board members look" actually
+  is before implementing.
+
+- [ ] **Serve AVIF alongside WebP for content photos** *(M, performance).*
+  `resolveImage()` / the `<Image>` calls in `EventCard`, `MemberLead`,
+  `MemberRow` and `Portrait` currently emit one format per source photo.
+  Astro's `<Picture>` component can emit `formats={["avif", "webp"]}` from the
+  same source with no JSON/schema change, and AVIF typically shaves another
+  20–30% off a photo already through the WebP pipeline, with WebP staying as
+  the automatic fallback for anything that doesn't support AVIF. Needs a
+  browser pass (CLAUDE.md's own bar for anything touching how photos render)
+  to confirm no regression in the `card-image`/`photo-settle` scroll-driven
+  animation, which the four load-bearing motion rules in `global.css` warn is
+  easy to break silently.
+
+- [ ] **Dark mode via `prefers-color-scheme`** *(L, UX — needs a board/design
+  decision, not just code).* The site has no dark palette at all — every color
+  in `global.css`'s `:root` token block is the single cream/red identity.
+  Worth proposing, not committing to: it touches every design token, every
+  photo overlay and the motion rules' interaction with color, and needs the
+  same hr/bs browser pass CLAUDE.md requires for any layout change — sized L
+  because it's a parallel palette plus a full re-audit, not a toggle.
+
+- [ ] **Test the populated `content/partners/` case** *(S, maintainability).*
+  `src/lib/content.js` and the logo strip on `/partners` were written for an
+  empty collection ("costs nothing until the board adds its first partner" —
+  `content.js`), but there is no fixture partner anywhere and no test
+  (`src/lib/*.test.js`) exercising the collection with one entry in it. The
+  first real `/admin` save of a partner would be the first time that path
+  actually renders — the same kind of gap that let the Sveltia image-path bug
+  reach four real events before anyone noticed (`worker/README.md`). A single
+  in-memory fixture module would catch a regression before it ships.
+
 ---
 
 ## 5. Everyday commands
