@@ -2155,20 +2155,20 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
 }
 .partner-card > a { display: block; color: inherit; text-decoration: none; }
 .partner-card .logo-area {
+  position: relative;
   aspect-ratio: 16 / 9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-4);
   background: var(--color-paper-soft);
   border-bottom: var(--border);
 }
-/* Logos arrive at whatever aspect ratio the partner supplies; contain keeps a
-   wide wordmark and a square badge both intact inside the same box. */
+/* Cover, not contain: the box fills edge to edge regardless of the logo's
+   own aspect ratio, the same as an event photo — a partner's logo file is
+   never framed with visible cream padding around it. */
 .partner-card .logo-area img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .partner-name {
   padding: var(--space-4);
