@@ -44,11 +44,11 @@ const description = t("meta.partners.description");
             const logo = partner.logo ? resolveImage(partner.logo) : undefined;
             const content = (
               <>
-                {/* A logo is optional, so a partner without one just shows its name. */}
+                {/* A logo is optional, so a partner without one just shows its name.
+                    No `height` — the frame's aspect ratio and `object-fit: contain`
+                    (see .logo-area in global.css) render the logo whole either way. */}
                 {logo && (
-                  <div class="logo-area">
-                    <Image src={logo} alt={partner.name} width={320} height={180} loading="lazy" />
-                  </div>
+                  <Image class="logo-area" src={logo} alt={partner.name} width={340} densities={[1, 2]} loading="lazy" />
                 )}
                 <p class="partner-name">{partner.name}</p>
               </>

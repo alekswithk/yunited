@@ -2147,6 +2147,12 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
 .partner-grid {
   grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 340px));
   justify-content: center;
+  /* Each card's logo sets its own height now (see .logo-area below), so rows
+     must not stretch every card to the tallest one — CSS grid's default
+     `align-items: stretch` would otherwise silently undo that everywhere two
+     partners land in the same row. Same class of bug as the home posters'
+     `.uev-row` stretch-propagation (see the note there). */
+  align-items: start;
   /* `.card-grid` is a plain <div> everywhere else it's used; this is a <ul>,
      so it still needs the browser's default list bullet/indent reset. */
   list-style: none;
@@ -2163,21 +2169,31 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
    (class+type over class alone) regardless of source order, showing "Edit"
    to every visitor instead of only a signed-in board member in edit mode. */
 .partner-card .partner-link { display: block; color: inherit; text-decoration: none; }
+/* Uniform square, `contain`, never crop: a partner's logo comes in whatever
+   shape the company supplies, and a real logo often has its name baked into
+   the image (see Stora AG Ost's — the wordmark sits under the mark). Cropping
+   any of that is unacceptable for someone else's mark, so every card gets the
+   same 1:1 frame and the whole logo always renders inside it; the cream
+   margin around an off-ratio logo reads as a mat, the same structural,
+   uniform-box logic the info-panels elsewhere on this page already use — not
+   as an empty accident. No wrapping <div>: the class sits directly on the
+   <img> (`<Image class="logo-area">`). Reviewed against two other options
+   (natural per-logo height, and a shared box with `cover` cropping) — both
+   rejected, the first for producing wildly uneven card heights in a row, the
+   second for cropping exactly the baked-in wordmark this rule exists to
+   protect.
+   ponytail: a fixed square wastes vertical space on a wide wordmark once
+   there are many partners; revisit the ratio (or cap the square's height)
+   once the grid actually fills out. */
 .partner-card .logo-area {
-  position: relative;
-  aspect-ratio: 16 / 9;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  padding: var(--space-4);
+  box-sizing: border-box;
   background: var(--color-paper-soft);
   border-bottom: var(--border);
-}
-/* Cover, not contain: the box fills edge to edge regardless of the logo's
-   own aspect ratio, the same as an event photo — a partner's logo file is
-   never framed with visible cream padding around it. */
-.partner-card .logo-area img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 .partner-name {
   padding: var(--space-4);
