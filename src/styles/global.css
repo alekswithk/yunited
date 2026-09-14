@@ -2147,13 +2147,22 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
 .partner-grid {
   grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 340px));
   justify-content: center;
+  /* `.card-grid` is a plain <div> everywhere else it's used; this is a <ul>,
+     so it still needs the browser's default list bullet/indent reset. */
+  list-style: none;
+  padding: 0;
 }
 .partner-card {
   background: #fffdf8;
   border: var(--border);
   border-radius: var(--radius);
 }
-.partner-card > a { display: block; color: inherit; text-decoration: none; }
+/* Scoped to .partner-link, not a bare `> a` — a partner card's other direct-
+   child anchor is the hidden .edit-affordance link, and a selector matching
+   both would beat `.edit-affordance { display: none; }` on specificity
+   (class+type over class alone) regardless of source order, showing "Edit"
+   to every visitor instead of only a signed-in board member in edit mode. */
+.partner-card .partner-link { display: block; color: inherit; text-decoration: none; }
 .partner-card .logo-area {
   position: relative;
   aspect-ratio: 16 / 9;

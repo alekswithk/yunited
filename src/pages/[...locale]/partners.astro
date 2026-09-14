@@ -57,7 +57,7 @@ const description = t("meta.partners.description");
               <li class="partner-card">
                 <a class="edit-affordance" hidden href={`/admin#partners/${partner.slug}.json`}>Edit</a>
                 {partner.url ? (
-                  <a href={partner.url} target="_blank" rel="noopener noreferrer">{content}</a>
+                  <a class="partner-link" href={partner.url} target="_blank" rel="noopener noreferrer">{content}</a>
                 ) : (
                   content
                 )}
