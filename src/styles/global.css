@@ -1841,7 +1841,7 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
     section:not(.hero):not(.page-hero) > .container > .section-intro,
     .card,
     .info-panel,
-    .partner-item,
+    .partner-card,
     .empty-lead {
       animation-name: rise-in;
       animation-timing-function: var(--ease-out);
@@ -1861,7 +1861,7 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
     }
     .card,
     .info-panel,
-    .partner-item,
+    .partner-card,
     .empty-lead {
       animation-range-start: cover 2%;
       animation-range-end: cover 26%;
@@ -2135,44 +2135,43 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
 .info-panel.panel-gold { border-top-color: var(--color-gold); }
 .info-panel h3 { margin-bottom: var(--space-3); }
 
-/* Partner logo strip on /partners. auto-fit rather than a fixed column count so
-   it reads correctly at one partner as well as at nine — the board will start
-   with one, and a lone logo stranded in a 4-column grid looks like a mistake. */
-.partner-strip {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 220px));
-  gap: var(--space-4);
+/* Partner cards on /partners — same shape as an event/member card (logo on
+   top, name below) but its own class rather than `.card`: no hover lift, no
+   photo-settle scroll animation. Its own track sizing, not `.card-grid`'s:
+   `auto-fit`, not `auto-fill` — `auto-fill` keeps empty trailing tracks in
+   the grid (just collapsed to their minimum, not gone), so `justify-content:
+   center` centers that whole multi-track row rather than the one real card
+   in it. `auto-fit` collapses unused tracks to zero width, leaving one real
+   column for `justify-content: center` to centre — the board starts with one
+   partner, not nine. */
+.partner-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 340px));
   justify-content: center;
-  list-style: none;
-  padding: 0;
-  margin-top: var(--space-4);
 }
-.partner-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 110px;
-  padding: var(--space-3);
+.partner-card {
   background: #fffdf8;
   border: var(--border);
   border-radius: var(--radius);
 }
-.partner-item a {
+.partner-card > a { display: block; color: inherit; text-decoration: none; }
+.partner-card .logo-area {
+  aspect-ratio: 16 / 9;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 100%;
+  padding: var(--space-4);
+  background: var(--color-paper-soft);
+  border-bottom: var(--border);
 }
 /* Logos arrive at whatever aspect ratio the partner supplies; contain keeps a
    wide wordmark and a square badge both intact inside the same box. */
-.partner-item img {
+.partner-card .logo-area img {
   max-width: 100%;
-  height: auto;
+  max-height: 100%;
   object-fit: contain;
 }
-/* Fallback when a partner has no logo file yet. */
 .partner-name {
+  padding: var(--space-4);
   font-family: var(--font-display);
   font-size: 1.125rem;
   text-align: center;
@@ -2620,7 +2619,8 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
 
 body.editmode .card,
 body.editmode .uev,
-body.editmode .member-card {
+body.editmode .member-card,
+body.editmode .partner-card {
   position: relative; /* containing block for the absolutely-placed link below */
 }
 
