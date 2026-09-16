@@ -26,14 +26,6 @@ const description = t("meta.partners.description");
 
   <div class="motif-divider" role="presentation"></div>
 
-  {/*
-    Renders only when there is something in content/partners/. There are no
-    partners yet and none are invented here — an empty section headed "Our
-    partners" would advertise the opposite of what it intends. Once the board
-    adds the first entry in /admin this appears on its own, in every locale,
-    with no code change. Placed right below the hero, ahead of the pitch,
-    because a real partner is stronger proof than the copy underneath it.
-  */}
   {partners.length > 0 && (
     <section>
       <div class="container">
@@ -44,12 +36,11 @@ const description = t("meta.partners.description");
             const logo = partner.logo ? resolveImage(partner.logo) : undefined;
             const content = (
               <>
-                {/* A logo is optional, so a partner without one just shows its name.
-                    No `height` — the frame's aspect ratio and `object-fit: contain`
-                    (see .logo-area in global.css) render the logo whole either way. */}
-                {logo && (
-                  <Image class="logo-area" src={logo} alt={partner.name} width={340} densities={[1, 2]} loading="lazy" />
-                )}
+                <div class="logo-area">
+                  {logo && (
+                    <Image src={logo} alt="" width={340} densities={[1, 2]} loading="lazy" />
+                  )}
+                </div>
                 <p class="partner-name">{partner.name}</p>
               </>
             );
