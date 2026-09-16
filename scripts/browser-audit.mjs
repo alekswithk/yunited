@@ -14,6 +14,8 @@ const ORIGIN = `http://127.0.0.1:${PORT}`;
 const OUT = new URL("../artifacts/browser-audit/", import.meta.url).pathname;
 const targets = [
   { name: "home-phone", path: "/", width: 390, height: 844 },
+  { name: "partners-desktop", path: "/partners", width: 1440, height: 1000 },
+  { name: "partners-hr-phone", path: "/hr/partners", width: 375, height: 812 },
   { name: "events-desktop", path: "/events", width: 1440, height: 1000 },
   { name: "about-hr-phone", path: "/hr/about", width: 375, height: 812 },
   { name: "buddy-pair-hr-phone", path: "/hr/buddy/pair", width: 375, height: 812 },
