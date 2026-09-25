@@ -24,6 +24,7 @@ Turnstile remains the one go-live credential; see *Open items*.
 | `worker/buddy.test.js` | handlers driven against an in-memory fake store. |
 | `worker/migrations/0001_buddy.sql` | tables `signups`, `rounds`, `pairs`. |
 | `src/pages/[...locale]/buddy.astro` | the `/buddy` page: explanation + sign-up form. |
+| `src/components/EditableCopy.astro` | Board-only inline editing for the buddy page and its flow pages' plain-text headings and descriptions; form labels and rich paragraphs remain in the dictionaries. |
 | `src/pages/[...locale]/buddy/{check-email,confirmed,pair,removed}.astro` | the flow's landing pages. |
 | `src/i18n/*.json` → `buddy.*` keys | page copy (all 5 locales; hr/bs/sr on *kumstvo*). |
 | `wrangler.jsonc` | `d1_databases` (BUDDY_DB), `run_worker_first: /buddy/api/*`, the nightly cron. |

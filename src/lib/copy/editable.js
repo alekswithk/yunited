@@ -17,7 +17,10 @@
 // anyway. HTML fragments and Pre/Link/Post split sentences are out of scope for
 // now (a plain <textarea> cannot round-trip them safely).
 
-export const ALLOW_PREFIXES = ["about.", "home."];
+export const ALLOW_PREFIXES = [
+  "about.", "home.", "events.", "members.", "exchange.",
+  "partners.", "join.", "contact.", "buddy.",
+];
 export const DENY_KEYS = new Set(["skipLink"]);
 
 /**

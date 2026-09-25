@@ -13,7 +13,7 @@
 // (Origin + board membership + the per-key allow-list). This only decides
 // whether the affordances show.
 //
-// BaseLayout renders this on every page except `noindex` (404). On a page with
+// BaseLayout renders this on every page except 404. On a page with
 // neither affordance the script stays silent.
 ---
 
@@ -39,10 +39,12 @@
     let who = cachedWho();
     if (!who) {
       who = await probeWhoami();
-      try {
-        sessionStorage.setItem(CACHE_KEY, JSON.stringify(who));
-      } catch {
-        /* storage off — don't cache */
+      if (who.ok) {
+        try {
+          sessionStorage.setItem(CACHE_KEY, JSON.stringify(who));
+        } catch {
+          /* storage off — don't cache */
+        }
       }
     }
     const forced = import.meta.env.DEV && safeLocal(PREVIEW_KEY) === "1";
@@ -53,7 +55,8 @@
   function cachedWho(): Who | null {
     try {
       const raw = sessionStorage.getItem(CACHE_KEY);
-      return raw ? (JSON.parse(raw) as Who) : null;
+      const who = raw ? (JSON.parse(raw) as Who) : null;
+      return who?.ok ? who : null;
     } catch {
       return null;
     }

@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import EditableCopy from "../../components/EditableCopy.astro";
 import PageToc from "../../components/PageToc.astro";
 import { localePaths, localizePath } from "../../i18n/config.js";
 import { useTranslations } from "../../i18n/utils.js";
@@ -33,8 +34,8 @@ const sections = [
   <section class="page-hero">
     <div class="container">
       <p class="hero-script">Kumstvo · Кумство · Buddy system</p>
-      <h1>{t("buddy.heroTitle")}</h1>
-      <p>{t("buddy.heroLede")}</p>
+      <EditableCopy as="h1" key="buddy.heroTitle" locale={locale} />
+      <EditableCopy as="p" key="buddy.heroLede" locale={locale} />
     </div>
   </section>
 
@@ -42,9 +43,9 @@ const sections = [
 
   <section id="what">
     <div class="container">
-      <p class="eyebrow">{t("buddy.whatEyebrow")}</p>
-      <h2>{t("buddy.whatHeading")}</h2>
-      <p class="section-intro">{t("buddy.whatLede")}</p>
+      <EditableCopy as="p" class="eyebrow" key="buddy.whatEyebrow" locale={locale} />
+      <EditableCopy as="h2" key="buddy.whatHeading" locale={locale} />
+      <EditableCopy as="p" class="section-intro" key="buddy.whatLede" locale={locale} />
       <div class="buddy-prose">
         <p set:html={t("buddy.whatP1")}></p>
         <p set:html={t("buddy.whatP2")}></p>
@@ -57,21 +58,21 @@ const sections = [
 
   <section id="who">
     <div class="container">
-      <p class="eyebrow eyebrow-azure">{t("buddy.whoEyebrow")}</p>
+      <EditableCopy as="p" class="eyebrow eyebrow-azure" key="buddy.whoEyebrow" locale={locale} />
       <div class="split-grid">
         <div class="info-panel panel-red">
-          <h3>{t("buddy.studentsTitle")}</h3>
-          <p>{t("buddy.studentsBody")}</p>
+          <EditableCopy as="h3" key="buddy.studentsTitle" locale={locale} />
+          <EditableCopy as="p" key="buddy.studentsBody" locale={locale} />
         </div>
         <div class="info-panel">
-          <h3>{t("buddy.exchangeTitle")}</h3>
-          <p>{t("buddy.exchangeBody")}</p>
+          <EditableCopy as="h3" key="buddy.exchangeTitle" locale={locale} />
+          <EditableCopy as="p" key="buddy.exchangeBody" locale={locale} />
         </div>
       </div>
       <div class="buddy-prompt">
         <div>
-          <p class="buddy-prompt-title">{t("buddy.promptTitle")}</p>
-          <p class="buddy-prompt-body">{t("buddy.promptBody")}</p>
+          <EditableCopy as="p" class="buddy-prompt-title" key="buddy.promptTitle" locale={locale} />
+          <EditableCopy as="p" class="buddy-prompt-body" key="buddy.promptBody" locale={locale} />
         </div>
         <a class="btn btn-gold" href="#signup">{t("buddy.promptCta")}</a>
       </div>
@@ -80,8 +81,8 @@ const sections = [
 
   <section id="signup">
     <div class="container">
-      <p class="eyebrow">{t("buddy.signupEyebrow")}</p>
-      <h2>{t("buddy.signupHeading")}</h2>
+      <EditableCopy as="p" class="eyebrow" key="buddy.signupEyebrow" locale={locale} />
+      <EditableCopy as="h2" key="buddy.signupHeading" locale={locale} />
 
       <p class="form-success" id="buddy-success" role="status" tabindex="-1"></p>
 
@@ -121,8 +122,8 @@ const sections = [
           <!-- Shown only under the compact-phone breakpoint, where .rc-sub is
                hidden inside the cards to keep each pill to one line; picked
                with :has() so the right hint shows with no script involved. -->
-          <p class="buddy-role-hint buddy-role-hint-buddy">{t("buddy.roleBuddyHint")}</p>
-          <p class="buddy-role-hint buddy-role-hint-seeker">{t("buddy.roleSeekerHint")}</p>
+          <EditableCopy as="p" class="buddy-role-hint buddy-role-hint-buddy" key="buddy.roleBuddyHint" locale={locale} />
+          <EditableCopy as="p" class="buddy-role-hint buddy-role-hint-seeker" key="buddy.roleSeekerHint" locale={locale} />
         </fieldset>
 
         <div>
@@ -134,7 +135,7 @@ const sections = [
           <label for="buddy-email">{t("buddy.fieldEmail")}</label>
           <input id="buddy-email" name="email" type="email" required autocomplete="email"
             placeholder="you@student.unisg.ch" />
-          <p class="form-note">{t("buddy.fieldEmailHelp")}</p>
+          <EditableCopy as="p" class="form-note" key="buddy.fieldEmailHelp" locale={locale} />
         </div>
 
         <div>
@@ -161,7 +162,7 @@ const sections = [
           <label for="buddy-languages">{t("buddy.fieldLanguages")} <span class="buddy-opt">({t("buddy.optional")})</span></label>
           <input id="buddy-languages" name="languages" type="text"
             placeholder="English, German, BCS" />
-          <p class="form-note">{t("buddy.fieldLanguagesHelp")}</p>
+          <EditableCopy as="p" class="form-note" key="buddy.fieldLanguagesHelp" locale={locale} />
         </div>
 
         <div class="buddy-role-fields buddy-field-full" id="buddy-fields-buddy" hidden>
@@ -183,7 +184,7 @@ const sections = [
           <label for="buddy-note">{t("buddy.fieldNote")} <span class="buddy-opt">({t("buddy.optional")})</span></label>
           <textarea id="buddy-note" name="note" rows="4"
             placeholder={t("buddy.fieldNotePlaceholder")}></textarea>
-          <p class="form-note">{t("buddy.fieldNoteHelp")}</p>
+          <EditableCopy as="p" class="form-note" key="buddy.fieldNoteHelp" locale={locale} />
         </div>
 
         <div class="buddy-consent-row buddy-field-full">
@@ -207,7 +208,7 @@ const sections = [
 
         <div class="buddy-submit-row buddy-field-full">
           <button class="btn btn-gold" type="submit" id="buddy-submit">{t("buddy.submit")}</button>
-          <p class="form-note">{t("buddy.submitNote")}</p>
+          <EditableCopy as="p" class="form-note" key="buddy.submitNote" locale={locale} />
         </div>
       </form>
     </div>
@@ -215,24 +216,24 @@ const sections = [
 
   <section id="faq" class="section-dark">
     <div class="container">
-      <p class="eyebrow">{t("buddy.faqEyebrow")}</p>
-      <h2>{t("buddy.faqHeading")}</h2>
+      <EditableCopy as="p" class="eyebrow" key="buddy.faqEyebrow" locale={locale} />
+      <EditableCopy as="h2" key="buddy.faqHeading" locale={locale} />
       <div class="buddy-faq">
         <div>
-          <h3>{t("buddy.faqQ1")}</h3>
-          <p>{t("buddy.faqA1")}</p>
+          <EditableCopy as="h3" key="buddy.faqQ1" locale={locale} />
+          <EditableCopy as="p" key="buddy.faqA1" locale={locale} />
         </div>
         <div>
-          <h3>{t("buddy.faqQ2")}</h3>
-          <p>{t("buddy.faqA2")}</p>
+          <EditableCopy as="h3" key="buddy.faqQ2" locale={locale} />
+          <EditableCopy as="p" key="buddy.faqA2" locale={locale} />
         </div>
         <div>
-          <h3>{t("buddy.faqQ3")}</h3>
-          <p>{t("buddy.faqA3")}</p>
+          <EditableCopy as="h3" key="buddy.faqQ3" locale={locale} />
+          <EditableCopy as="p" key="buddy.faqA3" locale={locale} />
         </div>
         <div>
-          <h3>{t("buddy.faqQ4")}</h3>
-          <p>{t("buddy.faqA4")}</p>
+          <EditableCopy as="h3" key="buddy.faqQ4" locale={locale} />
+          <EditableCopy as="p" key="buddy.faqA4" locale={locale} />
         </div>
       </div>
     </div>

@@ -304,9 +304,7 @@ const showAlternates = alternates.length > 1 && !noindex;
     }
   </script>
 
-  {/* Board-only inline "Edit" links. Renders no markup; its script reveals the
-      hidden .edit-affordance links when GET /admin/api/whoami says the viewer is
-      signed in. Left off 404 (noindex); silent on pages with nothing editable. */}
-  {!noindex && <EditMode />}
+  {/* Board-only editing. The 404 has no authored page copy to edit. */}
+  {path !== "/404" && <EditMode />}
 </body>
 </html>

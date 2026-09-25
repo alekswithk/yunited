@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import EditableCopy from "../../components/EditableCopy.astro";
 import EventCard from "../../components/EventCard.astro";
 import EmptyUpcoming from "../../components/EmptyUpcoming.astro";
 import { events, localizeEntry } from "../../lib/content.js";
@@ -43,8 +44,8 @@ const toJsonLdScript = (schema: object) => JSON.stringify(schema).replace(/</g, 
   <section class="page-hero">
     <div class="container">
       <p class="hero-script">Događaji · Догађаји · Events</p>
-      <h1>{t("events.heroTitle")}</h1>
-      <p>{t("events.heroLede")}</p>
+      <EditableCopy as="h1" key="events.heroTitle" locale={locale} />
+      <EditableCopy as="p" key="events.heroLede" locale={locale} />
     </div>
   </section>
 
@@ -52,8 +53,8 @@ const toJsonLdScript = (schema: object) => JSON.stringify(schema).replace(/</g, 
 
   <section>
     <div class="container">
-      <p class="eyebrow">{t("events.upcomingEyebrow")}</p>
-      <h2>{t("events.upcomingHeading")}</h2>
+      <EditableCopy as="p" class="eyebrow" key="events.upcomingEyebrow" locale={locale} />
+      <EditableCopy as="h2" key="events.upcomingHeading" locale={locale} />
       <div class="magazine-grid" id="upcoming-events">
         {upcoming.length > 0 ? (
           upcoming.map((event) => <EventCard event={event} isPast={false} locale={locale} />)
@@ -66,14 +67,14 @@ const toJsonLdScript = (schema: object) => JSON.stringify(schema).replace(/</g, 
 
   <section>
     <div class="container">
-      <p class="eyebrow">{t("events.pastEyebrow")}</p>
-      <h2>{t("events.pastHeading")}</h2>
+      <EditableCopy as="p" class="eyebrow" key="events.pastEyebrow" locale={locale} />
+      <EditableCopy as="h2" key="events.pastHeading" locale={locale} />
       <p class="section-intro" set:html={t("events.pastIntro")}></p>
       <div class="magazine-grid" id="past-events">
         {past.length > 0 ? (
           past.map((event) => <EventCard event={event} isPast={true} locale={locale} />)
         ) : (
-          <p class="empty-note">{t("events.emptyPast")}</p>
+          <EditableCopy as="p" class="empty-note" key="events.emptyPast" locale={locale} />
         )}
       </div>
     </div>
