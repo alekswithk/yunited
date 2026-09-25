@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
+import EditableCopy from "../../../components/EditableCopy.astro";
 import { localePaths, localizePath } from "../../../i18n/config.js";
 import { useTranslations } from "../../../i18n/utils.js";
 
@@ -19,8 +20,8 @@ const description = t("meta.buddyPair.description");
   <section class="page-hero">
     <div class="container">
       <p class="hero-script">Kumstvo · Кумство · Buddy system</p>
-      <h1>{t("buddy.confirmedTitle")}</h1>
-      <p>{t("buddy.confirmedBody")}</p>
+      <EditableCopy as="h1" key="buddy.confirmedTitle" locale={locale} />
+      <EditableCopy as="p" key="buddy.confirmedBody" locale={locale} />
       <p class="section-cta">
         <a class="btn btn-gold" href={localizePath("/buddy", locale)}>{t("buddy.confirmedBack")}</a>
       </p>

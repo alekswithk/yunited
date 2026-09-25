@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import EditableCopy from "../../components/EditableCopy.astro";
 import { localePaths, localizePath } from "../../i18n/config.js";
 import { useTranslations } from "../../i18n/utils.js";
 
@@ -24,8 +25,8 @@ const officialInfoUrl = locale === "de"
   <section class="page-hero">
     <div class="container">
       <p class="hero-script">Razmena · Размена · Exchange</p>
-      <h1>{t("exchange.heroTitle")}</h1>
-      <p>{t("exchange.heroLede")}</p>
+      <EditableCopy as="h1" key="exchange.heroTitle" locale={locale} />
+      <EditableCopy as="p" key="exchange.heroLede" locale={locale} />
     </div>
   </section>
 
@@ -37,9 +38,9 @@ const officialInfoUrl = locale === "de"
 
         <!-- Audience 1: incoming exchange students -->
         <div class="info-panel panel-red">
-          <p class="eyebrow">{t("exchange.incomingEyebrow")}</p>
-          <h3>{t("exchange.incomingHeading")}</h3>
-          <p>{t("exchange.incomingLede")}</p>
+          <EditableCopy as="p" class="eyebrow" key="exchange.incomingEyebrow" locale={locale} />
+          <EditableCopy as="h3" key="exchange.incomingHeading" locale={locale} />
+          <EditableCopy as="p" key="exchange.incomingLede" locale={locale} />
           <ul>
             <li set:html={t("exchange.incomingBuddy")}></li>
             <li set:html={t("exchange.incomingEvents")}></li>
@@ -53,11 +54,11 @@ const officialInfoUrl = locale === "de"
 
         <!-- Audience 2: outgoing HSG students -->
         <div class="info-panel">
-          <p class="eyebrow eyebrow-azure">{t("exchange.outgoingEyebrow")}</p>
-          <h3>{t("exchange.outgoingHeading")}</h3>
-          <p>{t("exchange.outgoingLede")}</p>
+          <EditableCopy as="p" class="eyebrow eyebrow-azure" key="exchange.outgoingEyebrow" locale={locale} />
+          <EditableCopy as="h3" key="exchange.outgoingHeading" locale={locale} />
+          <EditableCopy as="p" key="exchange.outgoingLede" locale={locale} />
           <ul>
-            <li>{t("exchange.outgoingItem1")}</li>
+            <EditableCopy as="li" key="exchange.outgoingItem1" locale={locale} />
             <li set:html={t("exchange.outgoingItem2")}></li>
             <li>{t("exchange.outgoingItem3Pre")}<a href={localizePath("/contact", locale)}>{t("exchange.outgoingItem3Link")}</a>{t("exchange.outgoingItem3Post")}</li>
           </ul>

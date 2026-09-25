@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import EditableCopy from "../../components/EditableCopy.astro";
 import { localePaths } from "../../i18n/config.js";
 import { useTranslations } from "../../i18n/utils.js";
 
@@ -18,8 +19,8 @@ const description = t("meta.contact.description");
   <section class="page-hero">
     <div class="container">
       <p class="hero-script">Kontakt · Контакт · Contact</p>
-      <h1>{t("contact.heroTitle")}</h1>
-      <p>{t("contact.heroLede")}</p>
+      <EditableCopy as="h1" key="contact.heroTitle" locale={locale} />
+      <EditableCopy as="p" key="contact.heroLede" locale={locale} />
     </div>
   </section>
 
@@ -27,8 +28,8 @@ const description = t("meta.contact.description");
 
   <section>
     <div class="container">
-      <p class="eyebrow">{t("contact.formEyebrow")}</p>
-      <h2>{t("contact.formHeading")}</h2>
+      <EditableCopy as="p" class="eyebrow" key="contact.formEyebrow" locale={locale} />
+      <EditableCopy as="h2" key="contact.formHeading" locale={locale} />
 
       <!--
         The form posts to Formspree, which forwards submissions to the club

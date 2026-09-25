@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import EditableCopy from "../../components/EditableCopy.astro";
 import MemberCard from "../../components/MemberCard.astro";
 import { members } from "../../lib/content.js";
 import { localePaths, localizePath } from "../../i18n/config.js";
@@ -20,8 +21,8 @@ const board = Array.isArray(members) ? members : [];
   <section class="page-hero">
     <div class="container">
       <p class="hero-script">Naš tim · Наш тим · Our team</p>
-      <h1>{t("members.heroTitle")}</h1>
-      <p>{t("members.heroLede")}</p>
+      <EditableCopy as="h1" key="members.heroTitle" locale={locale} />
+      <EditableCopy as="p" key="members.heroLede" locale={locale} />
     </div>
   </section>
 
@@ -29,15 +30,15 @@ const board = Array.isArray(members) ? members : [];
 
   <section>
     <div class="container">
-      <p class="eyebrow">{t("members.boardEyebrow")}</p>
-      <h2>{t("members.boardHeading")}</h2>
+      <EditableCopy as="p" class="eyebrow" key="members.boardEyebrow" locale={locale} />
+      <EditableCopy as="h2" key="members.boardHeading" locale={locale} />
       <div id="member-grid">
         {board.length > 0 ? (
           <div class="member-grid">
             {board.map((member) => <MemberCard member={member} locale={locale} />)}
           </div>
         ) : (
-          <p class="empty-note">{t("members.boardEmpty")}</p>
+          <EditableCopy as="p" class="empty-note" key="members.boardEmpty" locale={locale} />
         )}
       </div>
     </div>
@@ -45,8 +46,8 @@ const board = Array.isArray(members) ? members : [];
 
   <section class="section-dark">
     <div class="container">
-      <h2>{t("members.involvedHeading")}</h2>
-      <p class="section-intro">{t("members.involvedBody")}</p>
+      <EditableCopy as="h2" key="members.involvedHeading" locale={locale} />
+      <EditableCopy as="p" class="section-intro" key="members.involvedBody" locale={locale} />
       <a class="btn btn-gold" href={localizePath("/contact", locale)}>{t("members.involvedCta")}</a>
     </div>
   </section>

@@ -1,6 +1,7 @@
 ---
 import { Image } from "astro:assets";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import EditableCopy from "../../components/EditableCopy.astro";
 import { localePaths, localizePath } from "../../i18n/config.js";
 import { useTranslations } from "../../i18n/utils.js";
 import { partners } from "../../lib/content.js";
@@ -19,8 +20,8 @@ const description = t("meta.partners.description");
   <section class="page-hero">
     <div class="container">
       <p class="hero-script">Partneri · Партнери · Partners</p>
-      <h1>{t("partners.heroTitle")}</h1>
-      <p>{t("partners.heroLede")}</p>
+      <EditableCopy as="h1" key="partners.heroTitle" locale={locale} />
+      <EditableCopy as="p" key="partners.heroLede" locale={locale} />
     </div>
   </section>
 
@@ -29,8 +30,8 @@ const description = t("meta.partners.description");
   {partners.length > 0 && (
     <section>
       <div class="container">
-        <p class="eyebrow">{t("partners.currentEyebrow")}</p>
-        <h2>{t("partners.currentHeading")}</h2>
+        <EditableCopy as="p" class="eyebrow" key="partners.currentEyebrow" locale={locale} />
+        <EditableCopy as="h2" key="partners.currentHeading" locale={locale} />
         <ul class="card-grid partner-grid">
           {partners.map((partner) => {
             const logo = partner.logo ? resolveImage(partner.logo) : undefined;
@@ -62,20 +63,20 @@ const description = t("meta.partners.description");
 
   <section>
     <div class="container">
-      <p class="eyebrow">{t("partners.whyEyebrow")}</p>
-      <h2>{t("partners.whyHeading")}</h2>
+      <EditableCopy as="p" class="eyebrow" key="partners.whyEyebrow" locale={locale} />
+      <EditableCopy as="h2" key="partners.whyHeading" locale={locale} />
       <div class="split-grid">
         <div class="info-panel panel-red">
-          <h3>{t("partners.reachTitle")}</h3>
-          <p>{t("partners.reachBody")}</p>
+          <EditableCopy as="h3" key="partners.reachTitle" locale={locale} />
+          <EditableCopy as="p" key="partners.reachBody" locale={locale} />
         </div>
         <div class="info-panel">
-          <h3>{t("partners.visibilityTitle")}</h3>
-          <p>{t("partners.visibilityBody")}</p>
+          <EditableCopy as="h3" key="partners.visibilityTitle" locale={locale} />
+          <EditableCopy as="p" key="partners.visibilityBody" locale={locale} />
         </div>
         <div class="info-panel panel-gold">
-          <h3>{t("partners.networkTitle")}</h3>
-          <p>{t("partners.networkBody")}</p>
+          <EditableCopy as="h3" key="partners.networkTitle" locale={locale} />
+          <EditableCopy as="p" key="partners.networkBody" locale={locale} />
         </div>
       </div>
     </div>
@@ -83,9 +84,9 @@ const description = t("meta.partners.description");
 
   <section class="section-dark">
     <div class="container">
-      <p class="eyebrow eyebrow-azure">{t("partners.ctaEyebrow")}</p>
-      <h2>{t("partners.ctaHeading")}</h2>
-      <p class="section-intro">{t("partners.ctaBody")}</p>
+      <EditableCopy as="p" class="eyebrow eyebrow-azure" key="partners.ctaEyebrow" locale={locale} />
+      <EditableCopy as="h2" key="partners.ctaHeading" locale={locale} />
+      <EditableCopy as="p" class="section-intro" key="partners.ctaBody" locale={locale} />
       <a class="btn btn-gold" href={localizePath("/contact", locale)}>{t("partners.ctaButton")}</a>
     </div>
   </section>

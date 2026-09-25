@@ -22,6 +22,10 @@ const editable = Object.keys(en).filter((k) => isEditableCopyKey(k, en[k]));
 test("named cases", () => {
   assert.equal(isEditableCopyKey("about.missionP1", en["about.missionP1"]), true);
   assert.equal(isEditableCopyKey("home.whoBody", en["home.whoBody"]), true);
+  for (const key of [
+    "events.heroLede", "members.heroLede", "exchange.incomingLede",
+    "partners.ctaBody", "join.questionsBody", "contact.formNote", "buddy.faqA1",
+  ]) assert.equal(isEditableCopyKey(key, en[key]), true, key);
   assert.equal(isEditableCopyKey("about.buddyMorePre", en["about.buddyMorePre"]), false); // split
   assert.equal(isEditableCopyKey("home.mapTitle", en["home.mapTitle"]), false); // {location}
   assert.equal(isEditableCopyKey("nav.events", en["nav.events"]), false); // prefix
@@ -29,7 +33,7 @@ test("named cases", () => {
   assert.equal(isEditableCopyKey("skipLink", en["skipLink"]), false); // deny
 });
 
-test("only about.* and home.* keys are editable", () => {
+test("only page copy keys are editable", () => {
   for (const key of editable) {
     assert.ok(
       ALLOW_PREFIXES.some((p) => key.startsWith(p)),

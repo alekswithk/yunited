@@ -29,6 +29,7 @@ hermetic — no translation API call ever happens during `npm run build`.
 | `scripts/translate-content.mjs` | `npm run translate:content` — event content, for a maintainer's bulk runs. |
 | `scripts/lib/require-api-key.mjs` | the **one** Node-only edge — reads `DEEPL_API_KEY` from the environment. Kept out of `src/lib/translate/`. |
 | `src/i18n/{en,de,hr,bs,sr}.json` | the dictionaries. `en.json` is the source of truth. |
+| `src/lib/copy/editable.js` + `src/components/EditableCopy.astro` | Allow plain-text page copy to be edited in place by an admin. `worker/copy.js` commits the English edit and regenerated hr/bs/sr; German is queued for review. Markup, split links and interpolation slots remain excluded. |
 | `src/i18n/config.js` | locale registry — the only place locales are defined (`complete`, `htmlLang`, `dateLocale`). |
 | `worker/index.js` | wiring: translate-on-save (~L763), "Translate now" `postTranslate` (~L899), nightly `sweep` (~L196), key endpoints (~L461). |
 | `worker/collections.js` | the events collection's `carry` array must list `i18n` (`collections.test.js` asserts it). |

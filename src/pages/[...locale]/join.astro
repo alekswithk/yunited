@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import EditableCopy from "../../components/EditableCopy.astro";
 import { localePaths, localizePath } from "../../i18n/config.js";
 import { useTranslations } from "../../i18n/utils.js";
 
@@ -17,8 +18,8 @@ const uniclubsUrl = "https://uniclubs.ch/hsg/clubs/yunited";
   <section class="page-hero">
     <div class="container">
       <p class="hero-script">Pridruži se · Придружи се · Join us</p>
-      <h1>{t("join.heroTitle")}</h1>
-      <p>{t("join.heroLede")}</p>
+      <EditableCopy as="h1" key="join.heroTitle" locale={locale} />
+      <EditableCopy as="p" key="join.heroLede" locale={locale} />
       <div class="hero-actions join-hero-actions">
         <a class="btn btn-gold join-hero-cta" href={uniclubsUrl} target="_blank" rel="noopener">
           {t("join.cta")}
@@ -31,15 +32,15 @@ const uniclubsUrl = "https://uniclubs.ch/hsg/clubs/yunited";
 
   <section>
     <div class="container">
-      <p class="eyebrow">{t("join.getEyebrow")}</p>
-      <h2>{t("join.getHeading")}</h2>
+      <EditableCopy as="p" class="eyebrow" key="join.getEyebrow" locale={locale} />
+      <EditableCopy as="h2" key="join.getHeading" locale={locale} />
       <div class="split-grid split-narrow">
         <div class="info-panel panel-red">
-          <h3>{t("join.semesterTitle")}</h3>
+          <EditableCopy as="h3" key="join.semesterTitle" locale={locale} />
           <p set:html={t("join.semesterBody")}></p>
         </div>
         <div class="info-panel panel-gold">
-          <h3>{t("join.freeTitle")}</h3>
+          <EditableCopy as="h3" key="join.freeTitle" locale={locale} />
           <p set:html={t("join.freeBody")}></p>
         </div>
       </div>
@@ -56,8 +57,8 @@ const uniclubsUrl = "https://uniclubs.ch/hsg/clubs/yunited";
 
   <section class="section-dark">
     <div class="container">
-      <h2>{t("join.questionsHeading")}</h2>
-      <p class="section-intro">{t("join.questionsBody")}</p>
+      <EditableCopy as="h2" key="join.questionsHeading" locale={locale} />
+      <EditableCopy as="p" class="section-intro" key="join.questionsBody" locale={locale} />
       <a class="btn btn-gold" href={localizePath("/contact", locale)}>{t("join.questionsCta")}</a>
     </div>
   </section>

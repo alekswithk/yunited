@@ -28,6 +28,14 @@ Go to **https://yunited.ch/admin**. Cloudflare asks for your email, sends you a
 one-time code, and lets you in. That is the whole login — there is no second
 account and nothing to install.
 
+After signing in, visit a public page to edit its headings and plain text in
+place. Click the outlined text, make the change, press **Set**, then **Save copy**
+in the editing bar. Event, board-member and partner cards have an **Edit** link
+that opens their form in /admin. The editor changes the English source and
+regenerates Croatian, Bosnian and Serbian; German changes appear on the
+Translations tab for review. Text containing links or formatting stays in the
+dictionary files because the plain-text editor cannot safely edit its markup.
+
 If you get "access denied", your email is not on the allow-list yet. Ask anyone
 who is already on it to add you from the panel's **Access** tab — it takes about
 ten seconds (see [Giving someone access](#giving-someone-access)).

@@ -404,7 +404,7 @@ async function handle(request, env, url) {
     "POST save": { handler: postSave, needs: "github" },
     "POST delete": { handler: postDelete, needs: "github" },
     "POST translate": { handler: postTranslate, needs: "github" },
-    // The inline copy editor: edit an About/home string in place, regenerate
+    // The inline copy editor: edit a page string in place, regenerate
     // hr/bs/sr in the same commit. See worker/copy.js.
     "GET copy": { handler: getCopy, needs: "github" },
     "POST copy": { handler: postCopy, needs: "github" },
