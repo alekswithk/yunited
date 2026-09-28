@@ -39,10 +39,10 @@ const description = t("meta.partners.description");
               <>
                 <div class="logo-area">
                   {logo && (
-                    <Image src={logo} alt="" width={340} densities={[1, 2]} loading="lazy" />
+                    <Image src={logo} alt={partner.name} width={340} densities={[1, 2]} loading="lazy" />
                   )}
+                  {!logo && <p class="partner-name">{partner.name}</p>}
                 </div>
-                <p class="partner-name">{partner.name}</p>
               </>
             );
             return (
