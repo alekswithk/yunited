@@ -65,6 +65,8 @@ The three things most worth knowing:
   Upcoming.
 - **Board order**: the `Order` field sets the sequence. `1` is the President and
   gets the large card, then `2`, `3`, … Each number must be unique.
+- **Partner order**: choose an available position from the selector. A new
+  partner starts at the next free number automatically.
 - **A board seat can have a role but no name yet** — it shows as "To be
   announced".
 

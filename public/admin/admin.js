@@ -558,10 +558,8 @@ function renderField(field, data) {
     wrap.append(help);
   }
 
-  const input =
-    field.type === "text"
-      ? document.createElement("textarea")
-      : document.createElement("input");
+  const partnerOrder = state.active === "partners" && field.name === "order";
+  const input = document.createElement(partnerOrder ? "select" : field.type === "text" ? "textarea" : "input");
   input.id = id;
   input.name = field.name;
   input.className = field.type === "text" ? "textarea" : "input";
@@ -569,13 +567,25 @@ function renderField(field, data) {
   if (field.placeholder) input.placeholder = field.placeholder;
   if (field.required) input.required = true;
 
-  if (input.tagName === "INPUT") {
+  if (partnerOrder) {
+    const used = new Set((state.entries.partners ?? [])
+      .filter((entry) => entry.file !== state.editing?.file)
+      .map((entry) => entry.data.order));
+    const last = Math.max(0, ...used, data?.order ?? 0) + 1;
+    for (let number = 1; number <= last; number++) {
+      if (used.has(number)) continue;
+      const option = document.createElement("option");
+      option.value = String(number);
+      option.textContent = String(number);
+      input.append(option);
+    }
+  } else if (input.tagName === "INPUT") {
     input.type = { date: "date", time: "time", url: "url", number: "number" }[field.type] ?? "text";
     if (field.min !== undefined) input.min = String(field.min);
   }
 
   const value = data?.[field.name];
-  input.value = value === null || value === undefined ? "" : String(value);
+  if (value !== null && value !== undefined) input.value = String(value);
 
   wrap.append(input);
   return wrap;

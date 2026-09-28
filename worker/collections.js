@@ -262,7 +262,7 @@ export const COLLECTIONS = {
         required: true,
         emptyValue: null,
         min: 1,
-        help: "1 shows first in the logo strip. Every partner needs a different number.",
+        help: "Choose an available position. New partners start at the next free number.",
       },
       {
         name: "url",
