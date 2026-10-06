@@ -1,0 +1,30 @@
+{
+  "title": "Professional Q&A",
+  "date": "2026-11-25",
+  "time": "19:30",
+  "location": "SQR Discovery Grid",
+  "description": "Join Marko Mlikota and Dalibor Vranjes for an informal Q&A about professional life, career choices and studying. Bring your questions and hear about their experiences in a relaxed setting.",
+  "image": "images/events/26_27/professional_q_and_a_2026.jpg",
+  "rsvpUrl": "https://uniclubs.ch/hsg/clubs/yunited/events/professional-q-a",
+  "mapCoords": null,
+  "i18n": {
+    "sourceLang": "en",
+    "sourceHash": "bcfa2f6d07e28b78",
+    "de": {
+      "title": "Frage-und-Antwort-Runde zum Thema Beruf",
+      "description": "Nehmen Sie an einer lockeren Fragerunde mit Marko Mlikota und Dalibor Vranjes teil, bei der es um das Berufsleben, die Berufswahl und das Studium geht. Bringen Sie Ihre Fragen mit und erfahren Sie in entspannter Atmosphäre mehr über ihre Erfahrungen."
+    },
+    "hr": {
+      "title": "Profesionalna pitanja i odgovori",
+      "description": "Pridružite se Marku Mlikoti i Daliboru Vranješu na neformalnoj sesiji pitanja i odgovora o profesionalnom životu, odabiru karijere i studiranju. Ponesite svoja pitanja i čujte o njihovim iskustvima u opuštenom okruženju."
+    },
+    "bs": {
+      "title": "Profesionalna pitanja i odgovori",
+      "description": "Pridružite se Marku Mlikoti i Daliboru Vranješu na neformalnoj sesiji pitanja i odgovora o profesionalnom životu, izboru karijere i studiranju. Ponesite svoja pitanja i čujte o njihovim iskustvima u opuštenom ambijentu."
+    },
+    "sr": {
+      "title": "Profesionalno pitanja i odgovori",
+      "description": "Pridružite se Marku Mlikoti i Daljiboru Vranješu na neformalnom Q&A o profesionalnom životu, izboru karijere i studiranju. Ponesite svoja pitanja i saznajte o njihovim iskustvima u opuštenom okruženju."
+    }
+  }
+}
