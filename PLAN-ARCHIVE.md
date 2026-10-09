@@ -19,6 +19,15 @@
 
 ## Shipped after the split
 
+**2026-10-09 — Public design refresh**
+
+Applied the approved sample’s system typography, cream page introductions,
+translucent navigation and flat controls across all five languages. Homepage
+events use native disclosure rows; the homepage has no header photograph.
+Preserved all existing website text and retained smooth scrolling and the folk
+motif, with reduced-motion support. Removed the unused hero ornaments.
+
+
 **2026-09-10 — Clearer UniClubs actions, admin calendar reminder and mobile-nav polish**
 
 Kept UniClubs as the only membership and event-registration system while making

@@ -5,7 +5,6 @@ import EditableCopy from "../../components/EditableCopy.astro";
 import EventCard from "../../components/EventCard.astro";
 import UpcomingEvent from "../../components/UpcomingEvent.astro";
 import EmptyUpcoming from "../../components/EmptyUpcoming.astro";
-import HeroOrnament from "../../components/HeroOrnament.astro";
 import { events } from "../../lib/content.js";
 import { splitEvents } from "../../lib/events.js";
 import { localePaths, localizePath } from "../../i18n/config.js";
@@ -17,9 +16,7 @@ const { locale } = Astro.params;
 const t = useTranslations(locale);
 
 const { upcoming, past } = splitEvents(events);
-// Three, not two: the upcoming teaser is now a row of expanding posters, and
-// two of them leaves the row looking half-built. The past teaser stays at two
-// compact cards.
+// Keep three upcoming events and two recent highlights in the homepage teaser.
 const upcomingTeaser = upcoming.slice(0, 3);
 const pastTeaser = past.slice(0, 2);
 
@@ -65,8 +62,6 @@ const orgSchema = {
   <PageToc sections={sections} locale={locale} label="toc.aria" />
 
   <section class="hero home-hero">
-    <HeroOrnament corner="upper" />
-    <HeroOrnament corner="lower" />
     <div class="container">
       <p class="hero-script">Dobrodošli · Добродошли · Welcome</p>
       <h1><EditableCopy as="span" key="home.heroTitleMain" locale={locale} /> <EditableCopy as="span" class="accent" key="home.heroTitleAccent" locale={locale} /></h1>
@@ -80,7 +75,7 @@ const orgSchema = {
 
   <div class="motif-divider" role="presentation"></div>
 
-  <!-- Upcoming events teaser (max 3 expanding posters, from content/events/*.json) -->
+  <!-- Upcoming events teaser (max 3 disclosure rows, from content/events/*.json) -->
   <section id="upcoming">
     <div class="container">
       <EditableCopy as="p" class="eyebrow" key="home.upcomingEyebrow" locale={locale} />

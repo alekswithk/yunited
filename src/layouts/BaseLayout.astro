@@ -77,8 +77,6 @@ const showAlternates = alternates.length > 1 && !noindex;
   <link rel="manifest" href="/site.webmanifest">
   <meta name="theme-color" content="#f4ecdd">
   <link rel="alternate" type="application/rss+xml" title="YUnited events" href="/events.xml">
-  <link rel="preload" href="/assets/fonts/fraunces-400-900-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/assets/fonts/newsreader-400-600-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <slot name="head" />
 </head>
@@ -134,7 +132,7 @@ const showAlternates = alternates.length > 1 && !noindex;
     // summary is hidden (CSS) and it is forced open here so <details> can't hide
     // the three links — reaching Contact stays one tap. The drawer already
     // depends on this script (the hamburger above), so this is no new gate.
-    const drawer = window.matchMedia("(max-width: 768px)");
+    const drawer = window.matchMedia("(max-width: 1100px)");
     const navMore = document.querySelector<HTMLDetailsElement>(".nav-more");
 
     const syncNavMore = () => {
@@ -237,8 +235,7 @@ const showAlternates = alternates.length > 1 && !noindex;
       // `atBottom` closes the case outright.
       const READING_LINE = 0.4;
 
-      // The rail also passes over the dark sections (.hero / .page-hero /
-      // .section-dark, all --color-ink) as they scroll past, and its dark inks
+      // The rail also passes over .section-dark as it scrolls past, and its dark inks
       // vanish against them. Each entry is told when ink is behind IT and flips
       // to the paper palette.
       //
@@ -248,7 +245,7 @@ const showAlternates = alternates.length > 1 && !noindex;
       // Side-agnostic on purpose — it measures where each entry actually is, so
       // it kept working unchanged when the rail moved to the right gutter.
       const darkSurfaces = Array.from(
-        document.querySelectorAll(".hero, .page-hero, .section-dark, .site-footer")
+        document.querySelectorAll(".section-dark")
       );
 
       // Both jobs measure on scroll, on one rAF-throttled pass. Neither can be

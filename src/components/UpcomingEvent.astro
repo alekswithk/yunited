@@ -1,20 +1,5 @@
 ---
-// One upcoming event on the HOME PAGE, as an expanding poster.
-//
-// This is NOT EventCard. EventCard is a compact card, still used for the past
-// teaser here and for the whole of /events. This one is a poster: the
-// photograph carries it, with the date/title/venue set underneath in the
-// poster idiom, and a native <details> that unfolds a panel with the
-// description and (when the board has set them) the venue + map on click. The
-// cue reads "More" because not every event has a venue or coordinates yet, but
-// they all have a description. Home page only — index.astro uses it, nothing
-// else does — so the motion and the OpenStreetMap embed stay off /events
-// entirely.
-//
-// The markup is a poster face inside <summary> and a panel after it; all the
-// motion (the poster grows into the row on click, the others slim to spines)
-// lives in the `.uev*` block in global.css. Every <details> here shares one
-// `name`, so opening one closes the rest with no JavaScript.
+// Homepage event row; native details keeps every action available on expansion.
 import { Image } from "astro:assets";
 import { formatEventDate, icsHref, osmEmbed } from "../lib/events.js";
 import { resolveImage } from "../lib/images.js";
@@ -63,7 +48,6 @@ const directionsHref = embed
       <div class="uev-textblock">
         <p class="uev-date">{dateText}{timeText}</p>
         <h3 class="uev-title">{event.title}</h3>
-        <span class="uev-strip" aria-hidden="true"></span>
         {event.location && <p class="uev-venue">{event.location}</p>}
       </div>
       <span class="uev-cue">

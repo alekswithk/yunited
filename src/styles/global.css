@@ -1,111 +1,5 @@
-/* ==========================================================================
-   YUnited — shared stylesheet for every page.
-   Editorial / broadsheet direction: print-inspired serif type, square
-   corners, hairline rules, and one hard-offset shadow per screen — on the
-   primary call to action, and on nothing else. Gold is the only interactive
-   colour; red and azure are punctuation. Design tokens live at the top; change
-   a value here and it updates across the whole site.
-   ========================================================================== */
+/* YUnited: system typography, warm paper, quiet controls and the folk motif. */
 
-/* ---------- Self-hosted fonts ----------
-   Fraunces, Newsreader and Space Mono are served from assets/fonts/ rather than
-   fonts.gstatic.com, so no visitor IP is handed to Google (FADP/GDPR).
-   Latin + latin-ext only — latin-ext carries the đ/š/ž the copy relies on.
-   None of the three ships a Cyrillic subset, so the Cyrillic flourishes fall
-   back to Georgia, exactly as they already did when loaded from Google.
-   -------------------------------------- */
-
-@font-face {
-  font-family: 'Fraunces';
-  font-style: italic;
-  font-weight: 400 900;
-  font-display: swap;
-  src: url('/assets/fonts/fraunces-400-900-italic-latin-ext.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-
-@font-face {
-  font-family: 'Fraunces';
-  font-style: italic;
-  font-weight: 400 900;
-  font-display: swap;
-  src: url('/assets/fonts/fraunces-400-900-italic-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-@font-face {
-  font-family: 'Fraunces';
-  font-style: normal;
-  font-weight: 400 900;
-  font-display: swap;
-  src: url('/assets/fonts/fraunces-400-900-normal-latin-ext.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-
-@font-face {
-  font-family: 'Fraunces';
-  font-style: normal;
-  font-weight: 400 900;
-  font-display: swap;
-  src: url('/assets/fonts/fraunces-400-900-normal-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-@font-face {
-  font-family: 'Newsreader';
-  font-style: normal;
-  font-weight: 400 600;
-  font-display: swap;
-  src: url('/assets/fonts/newsreader-400-600-normal-latin-ext.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-
-@font-face {
-  font-family: 'Newsreader';
-  font-style: normal;
-  font-weight: 400 600;
-  font-display: swap;
-  src: url('/assets/fonts/newsreader-400-600-normal-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-@font-face {
-  font-family: 'Space Mono';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('/assets/fonts/space-mono-400-normal-latin-ext.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-
-@font-face {
-  font-family: 'Space Mono';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('/assets/fonts/space-mono-400-normal-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-@font-face {
-  font-family: 'Space Mono';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('/assets/fonts/space-mono-700-normal-latin-ext.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-
-@font-face {
-  font-family: 'Space Mono';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('/assets/fonts/space-mono-700-normal-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-/* ---------- Design tokens ---------- */
 :root {
   /* Colours drawn from the regional flag palette + warm print neutrals */
   --color-red: #b3202c;        /* deep red — primary accent */
@@ -119,10 +13,9 @@
   --color-paper-soft: #ebe0cb; /* slightly deeper cream, for cards/fills */
   --color-muted: #6a5f4e;      /* secondary text (warm) */
 
-  /* Type: editorial serif display, warm reading serif, mono for labels */
-  --font-display: "Fraunces", "Georgia", "Times New Roman", serif;
-  --font-body: "Newsreader", "Georgia", "Times New Roman", serif;
-  --font-mono: "Space Mono", "Courier New", monospace;
+  /* One system family; size and weight establish the hierarchy. */
+  --font-display: var(--font-body);
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
   /* Spacing scale — use these instead of ad-hoc pixel values */
   --space-1: 0.25rem;
@@ -133,7 +26,10 @@
   --space-6: 4rem;
   --space-7: 6rem;
 
-  --radius: 0;                 /* square corners — print, not app */
+  --radius: 0.5rem;
+  --color-surface: #fffdf8;
+  --color-glass: rgba(244, 236, 221, 0.86);
+  --shadow-menu: 0 12px 32px rgba(26, 22, 17, 0.12);
 
   /* Rules. Two weights, and both are hairlines — see the note below on why the
      2px ink border went away. --rule draws a box (cards, panels, inputs);
@@ -146,16 +42,7 @@
   --border: 1px solid var(--rule);
   --border-structural: 1px solid var(--rule-strong);
 
-  /* The hard offset shadow, and there is exactly one of it per screen.
-     It used to sit on every button, every card hover, the language menu and
-     form focus — which is what made the page read as unfinished, because a
-     device used everywhere emphasises nothing. It now belongs to the primary
-     call to action and to nothing else. --shadow-hard-ink is for a gold button
-     on paper; --shadow-hard-paper for the same button on an ink surface, where
-     an ink shadow is invisible. */
-  --shadow-hard-ink: 5px 5px 0 var(--color-ink);
-  --shadow-hard-paper: 5px 5px 0 rgba(244, 236, 221, 0.9);
-  --max-width: 1180px;
+  --max-width: 1216px;
 
   /* Section rhythm. Three values, not one. Which a section gets is decided by
      structure — a dark band breathes, a section following another section of
@@ -165,15 +52,11 @@
   --pad-base: var(--space-6);
   --pad-tight: var(--space-5);
 
-  /* Motion. One curve and three durations for the whole site, so nothing
-     animates on its own private timing. --ease-out is the everyday curve;
-     --ease-snap overshoots very slightly, which suits the press on the one
-     hard-shadowed button (things here move like stamped paper, not springs). */
+  /* Shared timing for immediate feedback and short transitions. */
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
-  --ease-snap: cubic-bezier(0.34, 1.24, 0.64, 1);
+  --ease-snap: var(--ease-out);
   --dur-fast: 0.12s;   /* hovers, presses — must feel instant */
   --dur-base: 0.28s;   /* state changes you should notice */
-  --dur-slow: 0.6s;    /* entrances */
 
   /* The folk-motif divider. The tile is pinned rather than derived from the
      SVG's aspect ratio, so --motif-travel can be a whole number of tiles and
@@ -199,7 +82,7 @@ body {
   font-family: var(--font-body);
   color: var(--color-ink);
   background: var(--color-paper);
-  font-size: 1.0625rem;        /* ~17px */
+  font-size: 1rem;        /* ~17px */
   line-height: 1.65;
   font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
@@ -230,10 +113,7 @@ a {
   outline: 3px solid var(--color-red);
   outline-offset: 3px;
 }
-.hero :focus-visible,
-.page-hero :focus-visible,
-.section-dark :focus-visible,
-.site-footer :focus-visible {
+.section-dark :focus-visible {
   outline-color: var(--color-gold);
 }
 
@@ -260,7 +140,7 @@ h1, h2, h3 {
   font-family: var(--font-display);
   font-optical-sizing: auto;
   line-height: 1.04;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.04em;
   /* German compounds are longer than the phone column is wide — a single
      "Austauschstudierende" set at 2.2rem is wider than a 375px screen and used
      to push the whole page sideways. `hyphens` uses the <html lang> the layout
@@ -279,19 +159,16 @@ h1, h2, h3 {
   text-wrap: balance;
 }
 
-h1 { font-size: clamp(2.6rem, 7vw, 5rem); font-weight: 900; }
-h2 { font-size: clamp(1.8rem, 4vw, 2.85rem); font-weight: 700; margin-bottom: var(--space-4); }
-/* 1.5rem/700, not 1.2rem/600. h3 is the card title, and at 1.2rem it was 13%
-   larger than the body text under it — too close to outrank the sentence it is
-   supposed to head. This is the step the scale was missing between h2 and body. */
-h3 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; }
+h1 { font-size: clamp(2.6rem, 6vw, 5rem); font-weight: 600; }
+h2 { font-size: clamp(1.8rem, 4vw, 3.1rem); font-weight: 600; margin-bottom: var(--space-4); }
+h3 { font-size: 1.4rem; font-weight: 600; letter-spacing: -0.01em; }
 
 p + p { margin-top: var(--space-3); }
 
 .container {
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 0 var(--space-4);
+  padding: 0 clamp(1.25rem, 4vw, 3rem);
 }
 
 section { padding: var(--pad-base) 0; }
@@ -300,34 +177,6 @@ section { padding: var(--pad-base) 0; }
 section.section-dark { padding: var(--pad-wide) 0; }
 section + section { padding-top: var(--pad-tight); }
 section.section-dark + section { padding-top: var(--pad-base); }
-
-/* The rule that opens a section, replacing the 2px underline the eyebrow used
-   to carry. It spans the measure instead of the label, so it reads as the
-   section boundary it actually is. The heroes and the 404 open a page rather
-   than a section and are left alone. */
-/* Two rules that cannot both match, rather than one rule plus an override.
-
-   The override version was written first and did not work: `.section-dark >
-   .container { border-top-color: … }` lost to the `section:not(…) > .container`
-   rule above it, so the dark band's rule stayed drawn in ink on ink and was
-   invisible. Raising the override's specificity did not fix it either — a
-   test rule at (0,2,0) also lost. I did not get to the bottom of why, and the
-   same shape of override works fine elsewhere in this file (.info-panel.panel-red
-   overrides .info-panel's border-top without trouble), so the shorthand is not
-   the whole story.
-
-   Rather than depend on an interaction I could not explain, the two selectors
-   are mutually exclusive: .section-dark is excluded above and carries its own
-   rule below. Both were then checked in a browser — paper at 18% on the dark
-   band, ink at 14% on the light ones, nothing on either hero. */
-section:not(.hero, .page-hero, .error-page, .section-dark) > .container {
-  border-top: var(--border);
-  padding-top: var(--space-4);
-}
-.section-dark > .container {
-  border-top: 1px solid var(--rule-on-ink);
-  padding-top: var(--space-4);
-}
 
 /* Containing block for the table-of-contents rail, which is an absolutely
    positioned column spanning exactly this element. No offsets, so nothing about
@@ -346,14 +195,14 @@ main { position: relative; }
    margins these used to carry inline were doing nothing. */
 .prose-column { max-width: 680px; }
 
-/* Small mono label above section headings */
+/* Small label above section headings */
 .eyebrow {
   display: inline-block;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
   font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: none;
   color: var(--color-red);
   margin-bottom: var(--space-3);
 }
@@ -373,9 +222,8 @@ main { position: relative; }
    every scroll frame, on every divider, on every page. */
 .motif-divider {
   height: 16px;
-  border-top: var(--border-structural);
-  border-bottom: var(--border-structural);
   position: relative;
+  opacity: 0.85;
   /* `overflow: clip`, and it has to be exactly this. Not hidden, not clip-path.
      The strip inside is deliberately wider than the divider, so it needs
      clipping — but the two obvious ways to clip both break something:
@@ -422,30 +270,14 @@ main { position: relative; }
   position: sticky;
   top: 0;
   z-index: 50;
-  background: var(--color-paper);        /* solid — no blur */
-}
-/* The header's closing rule is a pseudo-element rather than a `border-bottom`,
-   for one reason: it has to be able to draw itself across on load (see
-   "Signature motion"). A border cannot be animated without repainting, and
-   scaling a 1px pseudo horizontally is free.
-   At rest this is pixel-identical to the border it replaced — same 1px, same
-   --rule-strong. The only difference is that the header box is now 66px
-   instead of 67px, which nothing measures. */
-.site-header::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  background: var(--rule-strong);
-  transform-origin: left;
+  background: var(--color-glass);
+  backdrop-filter: blur(20px) saturate(130%);
 }
 .site-header .container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 66px;
+  min-height: 88px;
 }
 
 .logo {
@@ -465,13 +297,16 @@ main { position: relative; }
 .main-nav { display: flex; align-items: center; gap: var(--space-4); }
 
 .main-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   text-decoration: none;
   color: var(--color-ink);
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
   font-weight: 400;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: none;
   padding-bottom: 2px;
   border-bottom: 2px solid transparent;
 }
@@ -482,8 +317,7 @@ main { position: relative; }
 
 /* Language switcher. Rendered only once more than one translation is finished
    (see src/i18n/config.js), so it is absent from the markup until then. */
-/* Language switcher — a native <details> disclosure, styled as a square
-   print-shop dropdown. Sized to hold five locales without touching the nav. */
+/* Native language disclosure, sized for the translated labels. */
 .lang-switch {
   position: relative;
   margin-left: var(--space-2);
@@ -492,17 +326,18 @@ main { position: relative; }
 }
 
 .lang-switch > summary {
+  min-height: 44px;
   display: flex;
   align-items: center;
   gap: var(--space-2);
   cursor: pointer;
   padding: 0.3rem 0.55rem;
   border: 2px solid transparent;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
   font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: none;
   list-style: none; /* Firefox */
   white-space: nowrap;
 }
@@ -535,24 +370,25 @@ main { position: relative; }
   list-style: none;
   background: var(--color-paper);
   border: var(--border);
-  box-shadow: none;
+  box-shadow: var(--shadow-menu);
+  border-radius: var(--radius);
 }
 .lang-menu li { margin: 0; }
 .lang-menu a {
   display: block;
   padding: 0.4rem 0.9rem;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
   white-space: nowrap;
 }
 .lang-menu a:hover { background: var(--color-ink); color: var(--color-paper); }
 .lang-menu a[aria-current="true"] { color: var(--color-red); font-weight: 700; }
 
-/* In the open mobile nav (.main-nav becomes a stacked column at 768px) the menu
+/* In the open mobile nav (.main-nav becomes a stacked column at 1100px) the menu
    drops back into the flow instead of floating over the links below it. */
-@media (max-width: 768px) {
+@media (max-width: 1100px) {
   .lang-switch {
     margin-left: 0;
     padding-left: 0;
@@ -572,15 +408,16 @@ main { position: relative; }
 .nav-more { position: relative; }
 
 .nav-more > summary {
+  min-height: 44px;
   display: flex;
   align-items: center;
   gap: var(--space-1);
   cursor: pointer;
   list-style: none; /* Firefox */
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
   color: var(--color-ink);
   padding-bottom: 2px;
   border-bottom: 2px solid transparent;
@@ -602,6 +439,8 @@ main { position: relative; }
   list-style: none;
   background: var(--color-paper);
   border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-menu);
 }
 .nav-more-menu li { margin: 0; }
 .nav-more-menu a {
@@ -613,52 +452,29 @@ main { position: relative; }
 .nav-more-menu a:hover { background: var(--color-ink); color: var(--color-paper); }
 .nav-more-menu a[aria-current="page"] { color: var(--color-red); font-weight: 700; }
 
-/* The base button is the quiet one: a hairline outline, flat, no shadow. Only
-   .btn-gold — the primary call to action — carries the hard offset, and there
-   should be one of those on a screen. */
+/* Buttons respond on press; only the primary action gets a fill. */
 .btn {
-  display: inline-block;
-  padding: 0.7rem 1.5rem;
-  border: 1px solid var(--rule-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.65rem 1.25rem;
+  border: var(--border-structural);
   border-radius: var(--radius);
   background: transparent;
   color: var(--color-ink);
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 0.82rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  font: 600 0.95rem/1.4 var(--font-body);
+  text-align: center;
   text-decoration: none;
   cursor: pointer;
-  transition: transform var(--dur-fast) var(--ease-snap), box-shadow var(--dur-fast) var(--ease-snap), background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+  transition: transform var(--dur-fast) var(--ease-out), background-color var(--dur-fast) ease;
 }
-.btn:hover { background: var(--color-paper-soft); border-color: var(--color-ink); }
-.btn:active { transform: translate(1px, 1px); }
-
-/* The primary. This is where the whole design spends its boldness. */
-.btn-gold {
-  background: var(--color-gold);
-  color: var(--color-ink);
-  border-color: transparent;
-  box-shadow: var(--shadow-hard-ink);
-}
-.btn-gold:hover {
-  background: var(--color-gold-dark);
-  border-color: transparent;
-  transform: translate(-2px, -2px);
-  box-shadow: 7px 7px 0 var(--color-ink);
-}
-.btn-gold:active { transform: translate(1px, 1px); box-shadow: 2px 2px 0 var(--color-ink); }
-
-/* Secondary actions. Both are the quiet button; .btn-red keeps its name so no
-   page markup has to change, but red is no longer a button fill — it is
-   punctuation now, and two filled buttons side by side is what made the pair
-   read as two primaries. */
-.btn-red,
-.btn-outline { background: transparent; color: var(--color-ink); }
-
-.nav-join { padding: 0.5rem 1.15rem; box-shadow: 3px 3px 0 var(--color-ink); }
-.nav-join:hover { box-shadow: 5px 5px 0 var(--color-ink); }
+.btn:hover { background: var(--color-paper-soft); }
+.btn:active { transform: scale(0.97); }
+.btn-gold { background: var(--color-gold); border-color: transparent; }
+.btn-gold:hover { background: var(--color-gold-dark); }
+.btn-red, .btn-outline { background: transparent; }
+.nav-join { padding: 0.5rem 1rem; }
 
 /* Mobile menu button (hidden on desktop) */
 .nav-toggle {
@@ -683,13 +499,15 @@ main { position: relative; }
 .nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; transform: scaleX(0.35); }
 .nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
 
-@media (max-width: 768px) {
+@media (max-width: 1100px) {
   .nav-toggle { display: block; }
 
   .main-nav {
     display: flex;
     position: absolute;
-    top: 70px;
+    top: 100%;
+    max-height: calc(100dvh - 88px);
+    overflow-y: auto;
     left: 0;
     right: 0;
     flex-direction: column;
@@ -698,7 +516,7 @@ main { position: relative; }
     padding: var(--space-4);
     border-top: var(--border-structural);
     border-bottom: var(--border-structural);
-    gap: var(--space-3);
+    gap: var(--space-2);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -740,179 +558,46 @@ main { position: relative; }
     margin: 0;
     padding: 0;
     border: 0;
+    box-shadow: none;
     background: none;
   }
   .nav-more-menu a { padding: 0; border-bottom: 2px solid transparent; }
   .nav-more-menu a:hover { background: none; color: var(--color-ink); border-bottom-color: var(--color-gold); }
 }
 
-/* ---------- Hero (dark, big editorial type) ---------- */
+/* ---------- Page introductions ---------- */
 .hero {
-  background: var(--color-ink);
-  color: var(--color-paper);
-  padding: var(--space-7) 0;
-  position: relative;
-  overflow: hidden;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  padding: var(--space-6) 0;
 }
-
-.hero h1 { color: var(--color-paper); max-width: 16ch; }
-.hero h1 .accent { color: var(--color-gold); font-style: italic; font-weight: 500; }
-
-/* The headline's reveal curtain — a block of the hero's own ground laid over
-   the type, which retracts downward on load so the headline is uncovered from
-   the top down, the way a line of type appears as it is printed.
-
-   A COVERING PSEUDO-ELEMENT, NOT AN overflow:hidden MASK. The obvious way to
-   do this is to wrap the text in a span and slide it inside a clipped box, but
-   that needs a wrapper in eight page templates, and `overflow: hidden` makes
-   the box a scroll container — the exact thing that silently re-parents a
-   `view()` timeline (see the note on .motif-divider). This needs no markup and
-   creates no scroll container.
-
-   It rests at scaleY(0) — retracted, showing the headline — so if the
-   animation never runs, for any reason, the headline is simply visible. The
-   curtain can only ever hide the text while it is actively playing. */
-.hero h1,
-.page-hero h1 { position: relative; }
-
-.hero h1::after,
-.page-hero h1::after {
-  content: "";
-  position: absolute;
-  /* Bleeds past the text box so it covers accents and descenders rather than
-     leaving a sliver of Đ or j showing above the curtain's edge. */
-  inset: -0.12em 0 -0.12em -0.04em;
-  background: var(--color-ink);
-  transform: scaleY(0);
-  transform-origin: bottom;
-  pointer-events: none;
-}
-
-/* Subtle dual-script cultural accent line */
+.hero h1 { max-width: 19ch; }
+.hero h1 .accent { color: var(--color-red); }
 .hero-script {
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--color-gold);
+  font-size: 0.95rem;
+  color: var(--color-muted);
   margin-bottom: var(--space-4);
-  padding-left: var(--space-3);
-  border-left: 3px solid var(--color-gold);
 }
-
 .hero p.lede {
-  font-size: 1.3rem;
-  line-height: 1.55;
-  max-width: 58ch;
+  font-size: 1.1rem;
+  line-height: 1.65;
+  max-width: 62ch;
   margin: var(--space-4) 0 var(--space-5);
-  color: rgba(244, 236, 221, 0.88);
+  color: var(--color-muted);
 }
-
 .hero-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
-
-.home-hero {
-  min-height: 690px;
-  display: grid;
-  align-items: center;
-  text-align: center;
-}
-.home-hero > .container { width: 100%; position: relative; }
 .home-hero h1 {
-  max-width: 1130px;
-  margin-inline: auto;
-  font-size: clamp(2.6rem, 5.14vw, 4.625rem);
-  line-height: 1.04;
-  letter-spacing: -0.035em;
-  text-wrap: balance;
-}
-.home-hero .hero-script {
-  border: 0;
-  padding: 0;
-  font-size: 0.75rem;
-  letter-spacing: 0.14em;
-}
-.home-hero p.lede {
-  max-width: 850px;
-  margin: var(--space-4) auto 1.875rem;
-  font-size: 1.4375rem;
-  line-height: 1.45;
+  font-size: clamp(2.6rem, 5.8vw, 5.2rem);
+  line-height: 1.06;
+  letter-spacing: -0.055em;
   text-wrap: pretty;
 }
-.home-hero .hero-actions { justify-content: center; }
-.hero-ornament { position: absolute; width: 210px; height: 130px; pointer-events: none; }
-.hero-ornament-upper { left: 3.5%; top: 60px; }
-.hero-ornament-lower { right: 3.5%; bottom: 65px; rotate: 180deg; }
-.ornament-rule { fill: none; stroke: var(--color-gold); stroke-opacity: 0.35; }
-.ornament-rule-inner { fill: none; stroke: var(--color-paper); stroke-opacity: 0.12; }
-.ornament-red { fill: var(--color-red); }
-.ornament-gold { fill: var(--color-gold); }
-.ornament-blue { fill: var(--color-azure); }
-.ornament-outline { fill: none; stroke: var(--color-gold); stroke-width: 2; }
-.home-hero + .motif-divider { height: 2px; background: var(--color-gold); opacity: 0.5; }
-.home-hero + .motif-divider::after { display: none; }
-
-/* Phone homepage proportions stay fixed after the page opens. */
+.section-dark .btn { color: var(--color-paper); border-color: var(--rule-on-ink); }
+.section-dark .btn:hover { background: rgba(244, 236, 221, 0.08); }
+.section-dark .btn-gold { color: var(--color-ink); border-color: transparent; }
+.section-dark .btn-gold:hover { background: var(--color-gold-dark); }
 @media (max-width: 600px) {
-  .home-hero {
-    min-height: 0;
-  }
-  .home-hero .hero-script {
-    font-size: 0.5625rem;
-    letter-spacing: 0.08em;
-    line-height: 1.7;
-    max-width: 280px;
-    margin-inline: auto;
-    margin-bottom: var(--space-4);
-  }
-  .hero-ornament { width: 85px; height: 53px; }
-  .hero-ornament-upper { left: 8px; top: 8px; }
-  .hero-ornament-lower { right: 8px; bottom: 8px; }
-  .home-hero h1 {
-    max-width: none;
-    font-size: clamp(2rem, 9vw, 2.6rem);
-  }
-  .home-hero p.lede {
-    font-size: 1.125rem;
-    line-height: 1.5;
-    margin-block: var(--space-3) var(--space-4);
-  }
-  .home-hero .hero-actions { gap: var(--space-2); }
-  .home-hero .hero-actions .btn { padding-inline: var(--space-3); min-height: 44px; }
-  .home-hero ~ #upcoming {
-    padding-top: var(--space-4);
-  }
-}
-
-/* Buttons on dark surfaces. The quiet one keeps a light hairline and stays
-   flat; the primary keeps its hard offset but in paper, because an ink shadow
-   on an ink ground is invisible — which is exactly what it was. */
-.hero .btn,
-.section-dark .btn,
-.page-hero .btn {
-  border-color: rgba(244, 236, 221, 0.38);
-  color: var(--color-paper);
-  box-shadow: none;
-}
-.hero .btn:hover,
-.section-dark .btn:hover,
-.page-hero .btn:hover {
-  background: rgba(244, 236, 221, 0.08);
-  border-color: var(--color-paper);
-}
-.hero .btn-gold,
-.section-dark .btn-gold,
-.page-hero .btn-gold {
-  background: var(--color-gold);
-  color: var(--color-ink);
-  border-color: transparent;
-  box-shadow: var(--shadow-hard-paper);
-}
-.hero .btn-gold:hover,
-.section-dark .btn-gold:hover,
-.page-hero .btn-gold:hover {
-  background: var(--color-gold-dark);
-  border-color: transparent;
-  box-shadow: 7px 7px 0 rgba(244, 236, 221, 0.9);
+  .hero { padding: var(--space-5) 0; }
 }
 
 /* Dark sections reuse hero styling */
@@ -927,13 +612,13 @@ main { position: relative; }
    lets the last narrow phone collapse the track instead of overflowing. */
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
   gap: var(--space-4);
 }
 
 .card {
-  background: #fffdf8;
-  border: var(--border);
+  background: transparent;
+  border: 0;
   border-radius: var(--radius);
   /* `clip`, not `hidden` — same reason as .motif-divider, and it bit here too.
      `hidden` makes a box a SCROLL CONTAINER, and `animation-timeline: view()`
@@ -950,7 +635,7 @@ main { position: relative; }
   flex-direction: column;
 }
 .card:hover {
-  transform: translateY(-3px);
+  transform: none;
   border-color: var(--rule-strong);
 }
 /* The photo answers the hover too, inside its own frame. `.card-image` already
@@ -980,7 +665,7 @@ main { position: relative; }
   align-items: center;
   justify-content: center;
   font-family: var(--font-display);
-  font-weight: 900;
+  font-weight: 600;
   font-size: 2.4rem;
 }
 .card-image img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -997,14 +682,14 @@ main { position: relative; }
   background-size: 64px 16px;
 }
 
-.card-body { padding: var(--space-4); flex: 1; display: flex; flex-direction: column; gap: var(--space-2); }
+.card-body { padding: var(--space-4) 0; flex: 1; display: flex; flex-direction: column; gap: var(--space-2); }
 
 .card-date {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: none;
   color: var(--color-muted);
 }
 /* Red, two pixels of it. Present, not competing. */
@@ -1018,7 +703,7 @@ main { position: relative; }
   vertical-align: -1px;
 }
 
-.card-location { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.04em; color: var(--color-muted); }
+.card-location { font-family: var(--font-body); font-size: 0.75rem; letter-spacing: 0.01em; color: var(--color-muted); }
 
 .card-description { font-size: 1rem; color: var(--color-ink); }
 
@@ -1035,11 +720,11 @@ main { position: relative; }
 
 .card-link {
   position: relative;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 0.75rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: none;
   text-decoration: none;
   color: var(--color-ink);
   border-bottom: 2px solid var(--color-gold);
@@ -1065,348 +750,37 @@ main { position: relative; }
 .card:hover .card-link::after,
 .card-link:hover::after { transform: scaleX(1); }
 
-/* Registration is the event's main action. Calendar and directions remain
-   plain links, so the route to uniclubs is the first thing the eye finds. */
-.card-link-primary {
-  background: var(--color-gold);
-  border: 2px solid var(--color-ink);
-  box-shadow: 3px 3px 0 var(--color-ink);
-  padding: 0.45rem 0.7rem;
-  transition:
-    transform var(--dur-fast) var(--ease-out),
-    box-shadow var(--dur-fast) var(--ease-out),
-    background-color var(--dur-fast) ease;
-}
-.card-link-primary::after { display: none; }
-.card-link-primary:hover {
-  background: var(--color-gold-dark);
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 var(--color-ink);
-}
-.card-link-primary:active {
-  transform: translate(2px, 2px);
-  box-shadow: none;
-}
-
-/* ---------- Upcoming events: expanding posters (home page only) ----------
-   src/components/UpcomingEvent.astro. At rest each event is a poster — the
-   photograph carries it, date/title/venue set underneath — pinned at a slight
-   tilt. Clicking one is a <details> toggle: on desktop the poster GROWS INTO
-   THE ROW (flex-grow, animatable) and unfolds a venue/map panel as a second
-   grid column (also animatable); the others slim to spines. It widens where it
-   sits — no grid-column span — so the clicked poster never jumps to another
-   row. One shared `name` on the <details> makes it an exclusive accordion with
-   no JavaScript. On a phone the row is a stack and the panel unfolds downward.
-
-   `check:dist` note: no `animation:` shorthand here (all `transition`), and no
-   `::after { width: calc(100% + …) }`, so neither of its CSS checks can fire.
-   Reduced motion: the global catch-all in the reduced-motion block below turns
-   every transition here off, and the poster still opens — just instantly. */
-.uev-row {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.uev { --uev-tilt: 0deg; min-width: 0; }
-.uev > summary { display: block; list-style: none; cursor: pointer; }
+/* Event actions and the homepage disclosure rows. */
+.card-link { min-height: 44px; display: inline-flex; align-items: center; font-size: 0.9rem; }
+.card-link-primary { color: var(--color-red); }
+.uev-row { display: grid; }
+.uev { min-width: 0; border-top: var(--border); }
+.uev:last-child { border-bottom: var(--border); }
+.uev > summary { list-style: none; cursor: pointer; }
 .uev > summary::-webkit-details-marker { display: none; }
-.uev > summary:focus-visible { outline: 2px solid var(--color-red); outline-offset: 3px; }
-
-/* The panel keeps the browser's native closed-<details> hiding — its links stay
-   out of tab order and the a11y tree until the poster is open. `allow-discrete`
-   plus a `@starting-style` give the open transition a real first frame anyway,
-   so it grows rather than snapping; a browser without either simply opens
-   instantly, which is also the reduced-motion behaviour. */
-.uev::details-content {
-  transition: content-visibility var(--dur-base) allow-discrete;
-}
-
-/* The poster face. A lighter offset shadow than --shadow-hard-ink on purpose —
-   that one is the single primary CTA's and stays unique; this is a hairline-
-   weight "pinned paper" lift, a different device. */
-.uev-face {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  background: var(--color-paper);
-  border: 1px solid var(--rule-strong);
-  box-shadow: 4px 4px 0 var(--rule-strong);
-  overflow: clip;
-  rotate: var(--uev-tilt);
-  translate: 0 0;
-  transition:
-    rotate var(--dur-base) var(--ease-out),
-    box-shadow var(--dur-fast) var(--ease-out),
-    opacity var(--dur-base) var(--ease-out);
-}
-.uev > summary:hover .uev-face { rotate: 0deg; box-shadow: 6px 6px 0 var(--rule-strong); }
-.uev[open] .uev-face { rotate: 0deg; box-shadow: 6px 6px 0 var(--rule-strong); }
-
-/* The photograph fills whatever height the face has spare, so the picture is
-   the focus at rest and when open. Same positioned-img trick as .card-image. */
-.uev-photo {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 8.5rem;
-  aspect-ratio: 3 / 2;
-  overflow: clip;
-  background: var(--color-paper-soft);
-  border-bottom: 1px solid var(--rule-strong);
-}
-.uev-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-
-.uev-textblock {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-3) var(--space-3) var(--space-2);
-}
-.uev-date {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-}
-.uev-date::before {
-  content: "";
-  display: inline-block;
-  width: 2px;
-  height: 0.72em;
-  background: var(--color-red);
-  margin-right: var(--space-2);
-  vertical-align: -1px;
-}
-.uev-title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-optical-sizing: auto;
-  font-weight: 900;
-  font-size: clamp(1.5rem, 2.2vw + 0.9rem, 2.2rem);
-  line-height: 0.98;
-  letter-spacing: -0.02em;
-  text-wrap: balance;
-}
-.uev-strip {
-  height: 11px;
-  margin: 0.25rem 0 0.15rem;
-  background-image: repeating-linear-gradient(
-    90deg,
-    var(--color-red) 0 8px,
-    transparent 8px 16px,
-    var(--color-azure) 16px 24px,
-    transparent 24px 32px
-  );
-  opacity: 0.5;
-}
-.uev-venue {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.03em;
-  color: var(--color-muted);
-}
-
-.uev-cue {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin: 0 var(--space-3) var(--space-3);
-  font-family: var(--font-mono);
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-}
-.uev-caret {
-  width: 0;
-  height: 0;
-  border-top: 4px solid transparent;
-  border-bottom: 4px solid transparent;
-  border-left: 5px solid currentColor;
-  /* Rotates only on .uev[open] — a state change, not a hover affordance — so it
-     rides --dur-base and settles with the poster rather than snapping ahead. */
-  transition: transform var(--dur-base) var(--ease-out);
-}
-.uev[open] .uev-caret { transform: rotate(90deg); }
-
-.uev-panel {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows var(--dur-base) var(--ease-out);
-}
-.uev[open] .uev-panel { grid-template-rows: 1fr; }
-/* The panel is display-skipped by the browser while the poster is closed, so on
-   the first open it has no rendered "0fr" frame to grow from. @starting-style
-   supplies one; a browser without it just opens the panel instantly the first
-   time (smooth on every open after). */
-@starting-style {
-  .uev[open] .uev-panel { grid-template-rows: 0fr; }
-}
-.uev-panel-inner { min-height: 0; min-width: 0; overflow: clip; }
-
-.uev-panel-pad {
-  display: grid;
-  gap: var(--space-3);
-  padding: var(--space-3);
-  border: 1px solid var(--rule-strong);
-  border-top: 0;
-}
-/* The panel's contents ease in as one block, a beat after the box starts to
-   open — no per-child stagger, which made the panel finish well after the
-   frame it sits in and read as sluggish. */
-.uev-panel-pad > * {
-  opacity: 0;
-  translate: 0 6px;
-  transition: opacity var(--dur-base) var(--ease-out), translate var(--dur-base) var(--ease-out);
-}
-.uev[open] .uev-panel-pad > * { opacity: 1; translate: 0 0; transition-delay: 0.08s; }
-
-.uev-desc { margin: 0; font-size: 1rem; color: var(--color-ink); }
-.uev-addr {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  line-height: 1.5;
-  color: var(--color-muted);
-}
-.uev-map {
-  display: block;
-  width: 100%;
-  aspect-ratio: 16 / 10;
-  border: 1px solid var(--rule-strong);
-  background: var(--color-paper-soft);
-}
-.uev-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3) var(--space-4);
-}
-
-/* Desktop: the row goes horizontal and the open poster grows via flex-grow
-   (basis pinned at 0, so each width is a clean ratio of the grow values, which
-   interpolates smoothly); the others slim to spines. The panel unfurls as a
-   second grid column whose width runs 0 → 18rem — a PLAIN LENGTH on both ends,
-   never an `fr`, because interpolating `0fr`→`18rem` inside `minmax()` is what
-   made the open lurch. The panel body is a fixed 18rem wide and clipped by that
-   growing column, so the description text and the map <iframe> never reflow
-   frame-by-frame as it opens; only the column width animates. The panel's own
-   `grid-template-rows` 0fr→1fr trick is for the phone stack (it unfolds
-   downward) — here it is pinned open and its transition killed, so the panel
-   is not doing a width AND a height animation at once. A closed panel
-   contributes nothing: its column is zero-width, so the poster sits at its
-   own `min-height`. */
-@media (min-width: 640px) {
-  .uev-row { flex-direction: row; align-items: stretch; }
-
-  /* The pinned-flyer tilt lives only here — a full-width tilted card on a phone
-     reads as broken, not as a poster. */
-  .uev:nth-child(1) { --uev-tilt: -1.2deg; }
-  .uev:nth-child(2) { --uev-tilt: 0.9deg; }
-  .uev:nth-child(3) { --uev-tilt: -0.5deg; }
-
-  .uev {
-    flex: 1 1 0;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 0rem;
-    align-items: stretch;
-    transition:
-      flex-grow var(--dur-base) var(--ease-out),
-      grid-template-columns var(--dur-base) var(--ease-out);
-  }
-  .uev[open] {
-    flex-grow: 6;
-    grid-template-columns: minmax(0, 1fr) 18rem;
-  }
-  /* Opening a <details> unskips ::details-content in the SAME frame the
-     `.uev[open]` rules take effect, and Chrome will not run a transition on the
-     grid/flex of `.uev` across that reveal unless the open state has an explicit
-     first frame. Without this the panel snapped open instead of growing (it
-     shipped that way in the first cut). These are the closed values; a browser
-     without @starting-style just opens instantly, same as reduced motion. */
-  @starting-style {
-    .uev[open] {
-      flex-grow: 1;
-      grid-template-columns: minmax(0, 1fr) 0rem;
-    }
-  }
-  /* One lone poster: don't stretch to the full page width, and when it opens
-     widen the cap by exactly the panel's width so the poster BODY holds its
-     size and the panel unfurls to its right — rather than the photo and title
-     squeezing to make room. `max-width` is scoped to this case ONLY: a poster
-     in a multi-poster row has no `max-width` (resting value `none`), and
-     `34rem → none` is not interpolable, so letting it into the shared
-     transition/@starting-style made every card in a 2–3 row jump on open. */
-  .uev-row > .uev:only-child {
-    max-width: 34rem;
-    transition:
-      flex-grow var(--dur-base) var(--ease-out),
-      grid-template-columns var(--dur-base) var(--ease-out),
-      max-width var(--dur-base) var(--ease-out);
-  }
-  .uev-row > .uev:only-child[open] { max-width: 52rem; }
-  @starting-style {
-    .uev-row > .uev:only-child[open] { max-width: 34rem; }
-  }
-
-  .uev-row:has(.uev[open]) .uev:not([open]) { flex-grow: 0.55; }
-  .uev-row:has(.uev[open]) .uev:not([open]) .uev-face {
-    rotate: 0deg;
-    opacity: 0.55;
-  }
-
-  .uev-face { min-height: 18rem; height: 100%; }
-  .uev-panel { grid-template-rows: 1fr; overflow: clip; transition: none; min-width: 0; }
-  .uev-panel-inner { width: 18rem; }
-  .uev-panel-pad { border-left: 0; height: 100%; align-content: start; }
-
-  /* The panel is the native ::details-content — the grid's 2nd column. Two
-     things stopped it collapsing WITH its track on close, so the card animated
-     to the wrong size and then snapped the rest when the browser discretely
-     hid the panel at the end of the `content-visibility` transition:
-       1. default `min-width: auto` (a content-based grid minimum) plus the
-          fixed `18rem` on .uev-panel-inner kept the column ~150px wide however
-          far `grid-template-columns` ran toward 0rem — so `min-width: 0` here,
-          and `overflow: clip` so the shrinking track actually crops the panel;
-       2. `.uev-panel-pad` is ~553px tall — between the closed and open card
-          heights — and `overflow: clip` only zeroes a grid item's automatic
-          minimum, not its max-content contribution, so the panel kept flooring
-          the row height until it was hidden. `height: 0` removes that floor,
-          but ONLY while :not([open]) — at close frame 0 `[open]` is already
-          gone, so the row eases down on the face height alone; while open the
-          rule doesn't match and the panel keeps its full height (never clipped). */
-  .uev::details-content { min-width: 0; overflow: clip; }
-  .uev:not([open])::details-content { height: 0; min-height: 0; }
-
-  /* End-of-open jump on posters 2 and 3. `.uev-row` is `align-items: stretch`,
-     so every poster is stretched to the tallest one. When a poster opens, the
-     two closed siblings slim to `flex-grow: 0.55` spines; a spine that narrow
-     wraps its title down to one word per line and wants to be ~800px tall, and
-     the stretch hands that height to the OPEN poster. The spine only reaches
-     full narrowness as the `flex-grow` / `grid-template-columns` transition
-     finishes, so the extra height lands in one step at the end of the open —
-     the jump. It hits 2 and 3 hard and 1 barely, because 1's venue/map panel
-     already sets a tall open height that the spine can't beat.
-       (a) cap the spines at their resting height while any poster is open, so
-           the stretch has nothing tall to propagate. Reverts on close — the
-           selector stops matching the moment `[open]` is gone.
-       (b) pin the open height of 2 and 3 to poster 1's (`34.5rem`, measured
-           across 640/900/1132px; it must clear their panel content, which runs
-           ~260px, translations included). Now their height comes from this
-           rule, not from the spine stretch, so it can't move mid-transition
-           and all three open to the same height. `:nth-child(1)` is never
-           matched — poster 1 is untouched. The photo (`flex: 1 1 auto`) takes
-           up the slack, so `min-height: 0` lets it. */
-  .uev-row:has(.uev[open]) > .uev:not([open]) { max-height: 28rem; overflow: clip; }
-  .uev-row > .uev:nth-child(n + 2)[open] { height: 34.5rem; }
-  .uev-row > .uev:nth-child(n + 2)[open] .uev-photo { min-height: 0; }
-
-  /* The empty state, when there is no upcoming event, fills the row. */
-  .uev-row > .empty-lead { flex: 1 1 auto; }
+.uev > summary:active { opacity: 0.7; }
+.uev-face { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) 0; }
+.uev-photo { flex: 0 0 112px; height: 84px; overflow: clip; border-radius: var(--radius); }
+.uev-photo img { width: 100%; height: 100%; object-fit: cover; }
+.uev-textblock { min-width: 0; flex: 1; }
+.uev-date { font-size: 0.85rem; color: var(--color-muted); margin-bottom: var(--space-1); }
+.uev-title { font-size: clamp(1.15rem, 2.2vw, 1.6rem); line-height: 1.2; text-wrap: pretty; }
+.uev-venue { font-size: 0.9rem; color: var(--color-muted); margin-top: var(--space-2); }
+.uev-cue { display: flex; align-items: center; gap: var(--space-2); font-size: 0.85rem; color: var(--color-red); }
+.uev-caret { width: 8px; height: 8px; border-right: 1.5px solid; border-bottom: 1.5px solid; transform: rotate(45deg); }
+.uev[open] .uev-caret { transform: rotate(225deg); }
+/* Native disclosure is immediate and reversible; content never waits for a transition. */
+.uev-panel-pad { display: grid; gap: var(--space-3); max-width: 780px; padding: 0 0 var(--space-5) calc(112px + var(--space-4)); }
+.uev-desc { font-size: 1rem; }
+.uev-addr { font-size: 0.9rem; color: var(--color-muted); }
+.uev-map { width: 100%; aspect-ratio: 16 / 10; border: var(--border); border-radius: var(--radius); background: var(--color-paper-soft); }
+.uev-actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3) var(--space-4); }
+@media (max-width: 600px) {
+  .uev-face { gap: var(--space-3); flex-wrap: wrap; }
+  .uev-photo { flex-basis: 64px; height: 64px; }
+  .uev-textblock { flex-basis: calc(100% - 80px); }
+  .uev-cue { margin-left: 80px; }
+  .uev-panel-pad { padding-left: 0; }
 }
 
 /* ---------- Board directory (members page) ----------
@@ -1424,7 +798,7 @@ main { position: relative; }
   align-items: center;
   justify-content: center;
   font-family: var(--font-display);
-  font-weight: 900;
+  font-weight: 600;
   line-height: 1;
   letter-spacing: -0.03em;
   overflow: hidden;
@@ -1442,14 +816,14 @@ main { position: relative; }
   display: flex;
   align-items: center;
   gap: var(--space-4);
-  background: #fffdf8;
-  border: var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-4);
+  background: transparent;
+  border: 0;
+  border-top: var(--border);
+  padding: var(--space-4) 0;
   transition: transform var(--dur-fast) var(--ease-snap), border-color var(--dur-fast) var(--ease-out);
 }
 .member-card:hover {
-  transform: translateY(-3px);
+  transform: none;
   border-color: var(--rule-strong);
 }
 .member-card .portrait {
@@ -1462,11 +836,11 @@ main { position: relative; }
 
 .member-body { min-width: 0; }
 .member-role {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: none;
   color: var(--color-red);
 }
 .member-name {
@@ -1560,11 +934,11 @@ main { position: relative; }
 .form-grid { display: grid; gap: var(--space-4); max-width: 560px; }
 
 label {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-weight: 700;
-  font-size: 0.74rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
   display: block;
   margin-bottom: var(--space-2);
 }
@@ -1576,7 +950,7 @@ input, select, textarea {
   border-radius: var(--radius);
   font-family: var(--font-body);
   font-size: 1rem;
-  background: #fffdf8;
+  background: var(--color-surface);
   transition: box-shadow var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
 /* No bespoke focus shadow here any more. The one visible ring at the top of
@@ -1600,7 +974,7 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
 /* "…or just email us" — the way around the form, set apart from it. */
 .form-alt { margin-top: var(--space-5); }
 
-.form-note { font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.02em; color: var(--color-muted); }
+.form-note { font-family: var(--font-body); font-size: 0.85rem; letter-spacing: 0.02em; color: var(--color-muted); }
 .form-error { color: var(--color-red); font-size: 0.9rem; font-weight: 600; display: none; }
 .form-error.is-visible { display: block; }
 
@@ -1612,118 +986,38 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
   border: var(--border);
   border-top: 3px solid var(--color-azure);
   border-radius: var(--radius);
-  background: #fffdf8;
+  background: var(--color-surface);
   font-weight: 600;
 }
 .form-success.is-visible { display: block; }
 
 /* ---------- Footer ---------- */
-.site-footer {
-  background: var(--color-ink);
-  color: rgba(244, 236, 221, 0.82);
-  padding: var(--space-6) 0 var(--space-5);
-  font-size: 0.98rem;
-  border-top: 4px solid var(--color-gold);
-}
-
-.footer-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
-  gap: var(--space-5);
-  margin-bottom: var(--space-5);
-}
-
-.site-footer h3 {
-  color: var(--color-paper);
-  margin-bottom: var(--space-3);
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-.site-footer a { color: rgba(244, 236, 221, 0.82); text-decoration: none; border-bottom: 1px solid transparent; }
-.site-footer a:hover { color: var(--color-gold); border-bottom-color: var(--color-gold); }
+.site-footer { color: var(--color-muted); padding: var(--space-6) 0 var(--space-5); font-size: 0.9rem; }
+.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: var(--space-5); margin-bottom: var(--space-5); }
+.site-footer h3 { color: var(--color-ink); margin-bottom: var(--space-3); font-size: 1rem; }
+.site-footer a { color: var(--color-ink); text-decoration: none; }
+.site-footer a:hover { text-decoration: underline; text-underline-offset: 4px; }
 .site-footer ul { list-style: none; }
 .site-footer li { margin-bottom: var(--space-2); }
-
-.footer-bottom {
-  border-top: 1px solid rgba(244, 236, 221, 0.18);
-  padding-top: var(--space-4);
-  font-size: 0.85rem;
-  color: rgba(244, 236, 221, 0.6);
-}
+.footer-bottom { border-top: var(--border); padding-top: var(--space-4); font-size: 0.8rem; }
 .footer-bottom a { text-decoration: underline; }
+@media (max-width: 600px) {
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+  .footer-grid > :first-child { grid-column: 1 / -1; }
+}
 
-/* ---------- Reveal-on-scroll: the JS version, and why this is not it ----------
-   There were six independent animations on this site: the hero rise, the
-   section reveal, a per-child stagger inside it, the motif parallax, a rule
-   that drew itself under every eyebrow, and a scatter-and-settle on the events
-   grid. Six effects, each on its own timing, is not motion design — it is
-   noise, and it was the largest part of why the site read as unfinished.
-
-   The scripted reveal went with the rest, and its removal deleted the
-   `scripting: enabled` gate, the IntersectionObserver in BaseLayout and the
-   `.reveal` class on eighteen elements. NONE OF THAT COMES BACK. Cutting to
-   two moments, though, left the page inert everywhere below the hero, so a
-   third is now here — but built the way the motif drift is, not the way the
-   old reveal was:
-
-     old reveal            moment 3 below
-     ----------            --------------
-     IntersectionObserver  no JavaScript at all
-     .reveal on 18 nodes   selectors only; no component knows it exists
-     six private timings   the same rise-in keyframe as the hero
-     starts at opacity 0,  inside @supports, so a browser without scroll
-     invisible if JS fails timelines never hides anything in the first place
-
-   The rule that still holds is the one the cleanup was actually about: a small
-   number of moments, on shared timing. Adding a seventh effect on its own
-   curve is how this goes wrong again — not the fact that things move. */
-
-/* ---------- Signature motion ----------
-   Three deliberate moments, all native CSS. Everything animates only opacity,
-   transform or the individual translate/rotate/scale properties, so nothing
-   here can trigger layout or paint the way animating height/top would. */
-
-/* The one entrance pose on the site. Moments 1 and 3 both use it — the hero
-   plays it on a clock, the rest of the page plays it on your scroll position.
-   Hoisted out of the reduced-motion guard it used to sit in because two blocks
-   reference it now; a keyframe rule is inert until something does, so being
-   declared unconditionally costs nothing. */
+/* ---------- Scroll-driven motion ----------
+   CSS timelines keep the content visible when animation support is absent. */
 @keyframes rise-in {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: none; }
 }
 
-/* The card entrance. Deliberately not `rise-in`: a card is a bigger object than
-   a line of text and settles from further away, with a degree and a half of
-   rotation coming out as it lands. --ease-snap (which overshoots very slightly)
-   is what makes it read as something set down rather than something floating
-   into place.
-
-   THE ROTATION IS THE ONE THING HERE TO WATCH. A scatter-and-settle on this
-   grid is what the volume-down pass cut, and at a larger angle it is what made
-   the site read as unfinished. 1.5deg is a tenth of what that was. If cards
-   ever start looking untidy on arrival again, this number is the first suspect
-   — lower it before touching anything else.
-
-   THE INDIVIDUAL PROPERTIES ARE LOAD-BEARING, not a style choice. An animation
-   holds its final value at a higher cascade level than any normal declaration,
-   and `animation-fill-mode: both` on a scroll timeline means these are holding
-   *permanently* once you have scrolled past. So a `to { transform: none }` here
-   would silently outrank `.card:hover { transform: translateY(-3px) }` and kill
-   the hover lift on every card on the site. Animating translate/rotate/scale
-   instead leaves `transform` free for hover, and the two compose. */
+/* Individual translate leaves transform available for interaction feedback. */
 @keyframes card-in {
-  from { opacity: 0; translate: 0 26px; rotate: 1.5deg; scale: 0.97; }
-  to   { opacity: 1; translate: 0 0;    rotate: 0deg;   scale: 1; }
+  from { opacity: 0; translate: 0 14px; }
+  to   { opacity: 1; translate: 0 0; }
 }
-
-/* Two curtains and a rule, all of which rest in their finished state so a
-   browser that never runs them shows a complete page. */
-@keyframes curtain-up { from { transform: scaleY(1); } to { transform: scaleY(0); } }
-@keyframes draw-x     { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 /* A photograph resolves out of a slight over-scale as its card arrives. This is
    the single move that does the most work on this page: it costs one composited
@@ -1733,46 +1027,9 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
    scale below is a `transform`, and these have to be able to coexist. */
 @keyframes photo-settle { from { scale: 1.07; } to { scale: 1; } }
 
-/* 1. The load sequence. One orchestrated moment, in the order a page is made:
-      the header rules up, the headline is uncovered, the standfirst and the
-      buttons follow it, and the motif strip draws in last.
-
-      This replaced four elements each doing the same 14px rise on a 80ms
-      metronome. Same duration, same restraint, but the beats now differ from
-      one another, which is the whole difference between a page that fades in
-      and a page that looks composed. */
-@media (prefers-reduced-motion: no-preference) {
-  .site-header::after {
-    animation: draw-x 0.55s var(--ease-out) both;
-  }
-
-  .hero h1::after,
-  .page-hero h1::after {
-    animation: curtain-up 0.72s var(--ease-out) 0.16s both;
-  }
-
-  .hero .hero-script,
-  .hero p.lede,
-  .hero .hero-actions,
-  .page-hero .hero-script,
-  .page-hero p {
-    animation: rise-in var(--dur-slow) var(--ease-out) both;
-  }
-  .hero p.lede, .page-hero p  { animation-delay: 0.42s; }
-  .hero .hero-actions         { animation-delay: 0.52s; }
-
-  /* Every divider draws, not just the one under the hero. The ones further
-     down finish long before you reach them — `both` holds them open — so this
-     costs nothing and saves a special case. */
-  .motif-divider {
-    transform-origin: left;
-    animation: draw-x 0.6s var(--ease-out) 0.6s both;
-  }
-}
-
 /* 2. The motif divider slides as it crosses the viewport — a parallax tied to
       your scroll position rather than to a timer, so it moves while you are
-      moving and is still while you are reading. Six tiles of travel across a
+      moving and is still while you are reading. Two tiles of travel across a
       full crossing: enough to read as motion at a glance, and a whole number
       of tiles, so the diamonds land back in register at the end.
 
@@ -1866,10 +1123,7 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
       animation-range-start: cover 2%;
       animation-range-end: cover 26%;
     }
-    /* Cards land; panels and logos rise. A .card carries a photograph and a
-       headline and is the heaviest thing on the page, so it gets the heavier
-       entrance — an .info-panel is a block of text and would look silly
-       tilting. */
+    /* Cards keep their entrance independent of hover transforms. */
     .card {
       animation-name: card-in;
       animation-timing-function: var(--ease-snap);
@@ -1907,12 +1161,9 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
       }
     }
 
-    /* 901px is the other side of the magazine grid's own collapse rule
-       (`@media (max-width: 900px)`, further down) — above it the 6-column
-       cycle is in force and 5n+3 / 5n+5 really are right-hand cards. */
+    /* Stagger the right-hand card only while the grid has two columns. */
     @media (min-width: 901px) {
-      .magazine-grid > .card:nth-child(5n + 3),
-      .magazine-grid > .card:nth-child(5n + 5) {
+      .magazine-grid > .card:nth-child(even) {
         animation-range-start: cover 6%;
         animation-range-end: cover 30%;
       }
@@ -1983,13 +1234,7 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
        two rails 15px out from each other at both ends. Fixed height + entries
        that share it: the ends line up and the spacing absorbs the difference.
 
-       min-height, not height, so a label that ever wraps to two lines grows the
-       rail instead of overflowing it. Nothing wraps today — the longest label in
-       any dictionary is hr/bs/sr `toc.buddy` (17ch) at 117px in a 132px text
-       box — so in practice this is exactly 120px on both pages. Keep it close to
-       the natural height of the longest rail: a much taller box would stick for
-       a shorter stretch of the page and detach early, which is what went wrong
-       when #55 made it 100vh. */
+       min-height lets translated labels wrap without clipping. */
     display: flex;
     flex-direction: column;
     min-height: 120px;
@@ -2032,20 +1277,15 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
     justify-content: flex-end;
     padding: var(--space-2) var(--space-3) var(--space-2) 0;
     border-right: 2px solid color-mix(in srgb, var(--color-ink) 18%, transparent);
-    font-family: var(--font-mono);
-    font-size: 0.66rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    letter-spacing: 0.01em;
+    text-transform: none;
     text-align: right;
     color: var(--color-muted);
     text-decoration: none;
     line-height: 1.3;
-    /* Backstop, same reasoning as the h1–h3 rule near the top. The rail is a
-       fixed 150px, so the text box is 132px, and the longest label in any
-       dictionary — hr "Sustav prijatelja", 17ch — measures 117.0px in Chrome
-       (Space Mono advances 612/1000 em, so a character is 6.885px at 0.66rem
-       with 0.04em tracking). That fits, with 15px to spare. A longer one would
-       not, and the overflow would land in the outer margin. */
+    /* Long translated labels wrap within the rail. */
     overflow-wrap: break-word;
     pointer-events: auto;
     transition: color var(--dur-base) var(--ease-out),
@@ -2060,8 +1300,7 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
     font-weight: 700;
   }
 
-  /* The rail holds still while the page scrolls dark sections (.hero,
-     .page-hero, .section-dark, .site-footer — all --color-ink) underneath it,
+  /* The rail holds still while the page scrolls dark sections (.section-dark) underneath it,
      and the inks above go invisible. Each link is told individually when ink is
      behind *it* and flips to the paper/gold pairing this site already uses on
      dark surfaces (.hero h1 .accent, .site-footer a:hover). Per link rather
@@ -2090,29 +1329,17 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
     animation: none !important;
     transition-duration: 0.01ms !important;
   }
-  /* Everything that plays an entrance rests in its FINISHED state, so killing
-     the animations above reveals a complete page rather than a half-drawn one.
-     These three are the ones whose resting value is not the default: the two
-     rules rest drawn, and the headline curtain rests retracted. Verified by
-     turning every animation off and checking nothing is left folded away. */
-  .site-header::after,
-  .motif-divider { transform: none; }
-  .hero h1::after,
-  .page-hero h1::after { transform: scaleY(0); }
-  /* The expanding-poster tilt is decorative, not an entrance — flatten it here
-     so a reduced-motion home page reads as a calm grid of posters. */
-  .uev-face { rotate: 0deg; translate: none; }
+
 }
 
 /* ---------- Page hero (smaller banner for inner pages) ---------- */
 .page-hero {
-  background: var(--color-ink);
-  color: var(--color-paper);
+  background: var(--color-paper);
+  color: var(--color-ink);
   padding: var(--pad-base) 0;
-  border-bottom: 2px solid var(--color-red);
 }
-.page-hero h1 { color: var(--color-paper); font-size: clamp(2.2rem, 5vw, 3.4rem); }
-.page-hero p { color: rgba(244, 236, 221, 0.8); font-size: 1.2rem; max-width: 62ch; margin-top: var(--space-3); }
+.page-hero h1 { color: var(--color-ink); font-size: clamp(2.4rem, 5vw, 4.5rem); }
+.page-hero p { color: var(--color-muted); font-size: 1.1rem; max-width: 62ch; margin-top: var(--space-3); }
 
 /* ---------- Two-column info blocks (Exchange page) ---------- */
 /* Same narrow-screen guard as .card-grid above. */
@@ -2121,18 +1348,15 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
   grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   gap: var(--space-4);
 }
+.split-grid { column-gap: var(--space-5); }
 /* Two panels of short text don't need the full container width to read well. */
 .split-grid.split-narrow { max-width: 860px; }
 
 .info-panel {
-  background: #fffdf8;
-  border: var(--border);
-  border-radius: var(--radius);
-  border-top: 3px solid var(--color-azure);
-  padding: var(--space-5);
+  background: transparent;
+  border-top: var(--border);
+  padding: var(--space-4) 0;
 }
-.info-panel.panel-red { border-top-color: var(--color-red); }
-.info-panel.panel-gold { border-top-color: var(--color-gold); }
 .info-panel h3 { margin-bottom: var(--space-3); }
 
 /* Equal tracks keep uploaded image dimensions out of layout sizing.
@@ -2212,7 +1436,7 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
   border: var(--border);
   border-top: 3px solid var(--color-gold);
   border-radius: var(--radius);
-  background: #fffdf8;
+  background: var(--color-surface);
   padding: var(--space-4);
   display: flex;
   flex-wrap: wrap;
@@ -2226,17 +1450,17 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
 /* The sign-up form. It reuses .form-grid and the shared input styles; these
    rules are only the controls the contact form doesn't have — the role picker,
    the capacity segmented control and the checkbox rows, none of which want the
-   bare uppercase-mono `label` treatment. */
+   shared `label` treatment. */
 .buddy-form { max-width: 620px; }
 .buddy-opt { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--color-muted); }
 
 .buddy-roles { border: 0; margin: 0; padding: 0; }
 .buddy-roles legend {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-weight: 700;
-  font-size: 0.74rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
   padding: 0;
   margin-bottom: var(--space-3);
 }
@@ -2258,7 +1482,7 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
   margin: 0;
   border: var(--border-structural);
   border-radius: var(--radius);
-  background: #fffdf8;
+  background: var(--color-surface);
   padding: var(--space-3);
   cursor: pointer;
   display: flex;
@@ -2281,16 +1505,16 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
 }
 .buddy-role-fields[hidden] { display: none; }
 .buddy-sublabel {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-weight: 700;
-  font-size: 0.74rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
 }
 
 .buddy-capacity { display: flex; gap: var(--space-2); }
 .buddy-capacity label {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.95rem;
   font-weight: 400;
   letter-spacing: 0;
@@ -2369,15 +1593,15 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
 .buddy-contact {
   border: var(--border);
   border-radius: var(--radius);
-  background: #fffdf8;
+  background: var(--color-surface);
   padding: var(--space-4);
 }
 .buddy-contact-role {
-  font-family: var(--font-mono);
-  font-size: 0.66rem;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: none;
   color: var(--color-red);
   display: block;
   margin-bottom: var(--space-2);
@@ -2392,10 +1616,10 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
   font-size: 0.9rem;
 }
 .buddy-contact dt {
-  font-family: var(--font-mono);
-  font-size: 0.66rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
   color: var(--color-muted);
   padding-top: 0.15rem;
 }
@@ -2419,7 +1643,7 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
 .buddy-checklist li {
   border: var(--border);
   border-radius: var(--radius);
-  background: #fffdf8;
+  background: var(--color-surface);
   padding: var(--space-2) var(--space-3);
 }
 .buddy-checklist li.is-done { color: var(--color-muted); text-decoration: line-through; }
@@ -2482,114 +1706,24 @@ textarea[aria-invalid="true"]:focus { border-color: var(--color-red); }
 .error-lede { color: var(--color-muted); margin-bottom: var(--space-5); }
 .error-code {
   font-family: var(--font-display);
-  font-weight: 900;
+  font-weight: 600;
   font-size: clamp(5rem, 20vw, 11rem);
   color: var(--color-red);
   line-height: 1;
   letter-spacing: -0.03em;
 }
 
-/* ---------- Magazine grid (events page) ----------
-   Asymmetric editorial layout. Column spans follow a repeating 5-card cycle
-   (6 · 4+2 · 3+3) so any number of events tiles a 6-column grid. Cards reuse
-   the standard .card markup — layout is driven entirely by nth-child. */
-.magazine-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  grid-auto-flow: dense;
-  gap: var(--space-4);
-  align-items: stretch;
+/* ---------- Event collection ---------- */
+.magazine-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-5); }
+.magazine-grid > .empty-note, .magazine-grid > .empty-lead { grid-column: 1 / -1; }
+@media (max-width: 900px) { .magazine-grid { grid-template-columns: 1fr; } }
+
+@media (prefers-reduced-transparency: reduce) {
+  .site-header { background: var(--color-paper); backdrop-filter: none; }
 }
-
-.magazine-grid > .card:nth-child(5n + 1) { grid-column: span 6; }  /* lead story */
-.magazine-grid > .card:nth-child(5n + 2) { grid-column: span 4; }  /* wide */
-.magazine-grid > .card:nth-child(5n + 3) { grid-column: span 2; }
-.magazine-grid > .card:nth-child(5n + 4) { grid-column: span 3; }
-.magazine-grid > .card:nth-child(5n + 5) { grid-column: span 3; }
-
-/* Wide cards (lead + 4-wide) run horizontally: image beside text */
-.magazine-grid > .card:nth-child(5n + 1),
-.magazine-grid > .card:nth-child(5n + 2) {
-  flex-direction: row;
-}
-.magazine-grid > .card:nth-child(5n + 1) .card-image,
-.magazine-grid > .card:nth-child(5n + 2) .card-image {
-  flex: 0 0 42%;
-  aspect-ratio: auto;
-  min-height: 240px;
-  border-bottom: none;
-  border-right: var(--border);
-}
-
-/* Lead story carries larger display type */
-.magazine-grid > .card:nth-child(5n + 1) .card-body { padding: var(--space-5); gap: var(--space-3); }
-.magazine-grid > .card:nth-child(5n + 1) h3 { font-size: clamp(1.9rem, 2.8vw, 2.5rem); font-weight: 900; }
-.magazine-grid > .card:nth-child(5n + 1) .card-description { font-size: 1.15rem; }
-
-/* A list that ends mid-cycle strands its last card with empty columns beside
-   it: the 4-wide card alone (2 of 6 unused) or the first 3-wide card alone (3
-   of 6 unused). That happens exactly when the count is 2 or 4 more than a
-   multiple of 5 — every other count closes its row on its own (1 card fills 6;
-   3 cards fill 4+2; 5 fill 4+2+3+3). `:last-child` catches it without knowing
-   the count: the 4-wide and first 3-wide positions are the only two that can
-   ever be a row's sole occupant, and only when nothing follows them.
-   `nth-child(5n+2):last-child` is one component more specific than the plain
-   `nth-child(5n+2)` span-4 rule above, so it wins outright — no source-order
-   dependency to keep track of. */
-.magazine-grid > .card:nth-child(5n + 2):last-child,
-.magazine-grid > .card:nth-child(5n + 4):last-child {
-  grid-column: span 6;
-  flex-direction: row;
-}
-.magazine-grid > .card:nth-child(5n + 2):last-child .card-image,
-.magazine-grid > .card:nth-child(5n + 4):last-child .card-image {
-  flex: 0 0 42%;
-  aspect-ratio: auto;
-  min-height: 240px;
-  border-bottom: none;
-  border-right: var(--border);
-}
-
-/* Empty-state note spans the full width instead of one narrow column */
-.magazine-grid > .empty-note,
-.magazine-grid > .empty-lead { grid-column: 1 / -1; }
-
-/* Collapse to a safe single column on smaller screens.
-
-   THIS USED TO BE THE WHOLE FIX, AND IT DIDN'T WORK. `.magazine-grid > .card`
-   is two classes' worth of specificity; the desktop row treatment above is
-   keyed off `:nth-child(...)`, which is three (four once `.card-image` joins
-   in) — so on every phone, cards 1 and 2 stayed in their desktop layout, a
-   137px sliver of photo beside a full-height text column, completely
-   unaffected by this block. Measured at 390/600/900/901px: identical at all
-   four, which is what a rule that never actually applies looks like.
-
-   The fix is naming the exact selectors being undone, so specificity TIES
-   rather than loses — a tie is won by whichever declaration comes later in the
-   file, which this block already does. `grid-column` keeps its `!important`
-   only because every `nth-child` span rule above also sets it and re-stating
-   five of them here would be pure noise; `!important` says the same thing in
-   one line and cannot lose a tie it isn't fighting for anything else. */
-@media (max-width: 900px) {
-  .magazine-grid { grid-template-columns: 1fr; }
-  .magazine-grid > .card { grid-column: auto !important; }
-  .magazine-grid > .card:nth-child(5n + 1),
-  .magazine-grid > .card:nth-child(5n + 2),
-  .magazine-grid > .card:nth-child(5n + 2):last-child,
-  .magazine-grid > .card:nth-child(5n + 4):last-child {
-    flex-direction: column;
-  }
-  .magazine-grid > .card .card-image,
-  .magazine-grid > .card:nth-child(5n + 1) .card-image,
-  .magazine-grid > .card:nth-child(5n + 2) .card-image,
-  .magazine-grid > .card:nth-child(5n + 2):last-child .card-image,
-  .magazine-grid > .card:nth-child(5n + 4):last-child .card-image {
-    flex: none;
-    aspect-ratio: 16 / 9;
-    min-height: 0;
-    border-right: none;
-    border-bottom: var(--border);
-  }
+@media (prefers-contrast: more) {
+  :root { --color-muted: #40382d; --rule: #6a5f4e; }
+  .site-header { background: var(--color-paper); border-bottom: 1px solid var(--color-ink); }
 }
 
 /* ==========================================================================
@@ -2625,10 +1759,10 @@ body.editmode a.edit-affordance:not([hidden]) {
   display: inline-flex;
   align-items: center;
   padding: 0.3em 0.7em;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: none;
   text-decoration: none;
   color: var(--color-paper);
   background: var(--color-azure);
@@ -2649,21 +1783,21 @@ body.editmode a.edit-affordance:not([hidden]):focus-visible {
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-2) var(--space-3);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.75rem;
   color: var(--color-paper);
   background: var(--color-ink);
   border: 1px solid var(--color-ink);
 }
 
-.editmode-bar-label { letter-spacing: 0.04em; }
+.editmode-bar-label { letter-spacing: 0.01em; }
 
 .editmode-bar-done,
 .editmode-bar-save {
   font: inherit;
   padding: 0.25em 0.7em;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  text-transform: none;
+  letter-spacing: 0.01em;
   color: var(--color-ink);
   background: var(--color-paper);
   border: 1px solid var(--color-paper);
@@ -2707,7 +1841,7 @@ body.editmode .i18n-target.i18n-dirty {
 
 .i18n-editnote {
   margin: var(--space-1) 0 0;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.7rem;
   color: var(--color-muted);
 }
@@ -2720,10 +1854,10 @@ body.editmode .i18n-target.i18n-dirty {
 
 .i18n-editset,
 .i18n-editcancel {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  text-transform: none;
+  letter-spacing: 0.01em;
   padding: 0.3em 0.8em;
   cursor: pointer;
   border: 1px solid var(--color-ink);
