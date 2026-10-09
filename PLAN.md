@@ -41,7 +41,7 @@ src/
   pages/404.astro           not-found page (not localized)
   pages/events.xml.js       RSS feed at /events.xml (build-time, non-localized)
   pages/events/[id].ics.js  one real .ics file per dated event (build-time)
-  components/*.astro        EventCard, UpcomingEvent (home expanding poster + OSM
+  components/*.astro        EventCard, UpcomingEvent (home disclosure row + OSM
                             mini-map), EmptyUpcoming, MemberLead, MemberRow,
                             Portrait, PageToc, Header (desktop "More" disclosure), Footer
   layouts/BaseLayout.astro  single source of <head> (canonical + hreflang) + chrome + script
