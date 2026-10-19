@@ -2,11 +2,11 @@
   "title": "Karaoke 🎤🎵",
   "date": "2026-11-12",
   "time": null,
-  "location": null,
+  "location": "Déja-vu Bar St. Gallen",
   "description": "Join YUnited for a karaoke night open to all HSG students. Sing your favorite hits from the Balkans, grab a drink, and enjoy a relaxed night with the community.",
   "image": "images/events/26_27/karaoke_2026_2.jpeg",
   "rsvpUrl": "https://uniclubs.ch/hsg/clubs/yunited/events/karaoke-mu3wy7zv-6zc",
-  "mapCoords": null,
+  "mapCoords": "47.436087, 9.386879",
   "i18n": {
     "sourceLang": "en",
     "sourceHash": "82f679b08e45c65e",
