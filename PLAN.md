@@ -258,6 +258,48 @@ implement *from* it. Roughly ordered by impact ÷ effort.
   reach four real events before anyone noticed (`worker/README.md`). A single
   in-memory fixture module would catch a regression before it ships.
 
+- [ ] **Automate dependency update & vulnerability scanning** *(S,
+  maintainability/security).* There is no `.github/dependabot.yml` and CI never
+  runs `npm audit` — the only record of "0 vulnerabilities" is a manual note in
+  this file's health-check line, dated 2026-09-08 and already stale relative to
+  any dependency bump since. Add a Dependabot config for the `npm` and
+  `github-actions` ecosystems (weekly, grouped minor/patch) and an `npm audit
+  --audit-level=high` step in `ci.yml`, failing the build on a new high/critical
+  advisory. Both are config-only, no application code, but `ci.yml` is a
+  protected path (§6) so this PR cannot self-merge regardless.
+
+- [ ] **Give the sitemap a real `lastmod` per page** *(S, SEO).* `astro.config.mjs`
+  passes `sitemap({ filter: isIndexable })` with no `serialize` callback, so
+  every one of the 66 URLs in `sitemap-index.xml` gets whatever timestamp
+  `@astrojs/sitemap` defaults to (effectively "now", identical for all of
+  them) instead of a date tied to the content that actually changed. Event
+  pages have a real `date`; `/events` and the homepage can derive one from the
+  nearest upcoming event; static pages (`/about`, `/join`, …) can reasonably
+  omit it rather than lie. A `serialize` function in the sitemap integration
+  config, fed from `src/lib/content.js`, would let crawlers tell a page that
+  changed from one that didn't.
+
+- [ ] **Mark untranslated member content with an explicit `lang` attribute**
+  *(S/M, accessibility).* `content/members/` has no `i18n` block at all by
+  design (CLAUDE.md: a bio is "a person describing themselves in their own
+  words" and machine translation once mangled one) — so a board member's name,
+  role and bio render verbatim on `/hr/about`, `/de/about`, etc., inside a page
+  whose `<html lang>` is `hr` or `de`. A screen reader then reads English (or
+  whatever language the bio happens to be in) in that locale's voice. Wrapping
+  each rendered bio/role in a `<span lang="…">` matching its actual written
+  language (a per-member field, or a one-time audit if it's uniform) would fix
+  the announcement without touching translation policy or the schema's
+  `.strict()` shape. Needs a short audit of the 6 existing bios first to see
+  whether one `lang` value covers all of them.
+
+- [ ] **Add a reminder (`VALARM`) to generated `.ics` files** *(S, UX).*
+  `icsCalendar()` in `src/lib/events.js` emits `VEVENT` with no `VALARM`
+  sub-component, so a visitor who taps "add to calendar" on an `EventCard` gets
+  an entry with no reminder — most calendar apps default dated events to
+  "no alert". A single `BEGIN:VALARM` / `TRIGGER:-PT1H` (one hour before) block
+  is a few lines in the same function and has a `src/lib/events.test.js` to
+  extend; no schema or content change needed.
+
 ---
 
 ## 5. Everyday commands
