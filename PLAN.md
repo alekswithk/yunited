@@ -258,6 +258,46 @@ implement *from* it. Roughly ordered by impact ÷ effort.
   reach four real events before anyone noticed (`worker/README.md`). A single
   in-memory fixture module would catch a regression before it ships.
 
+- [ ] **Bump `zod` past the high-severity advisory it currently fails
+  `npm audit` on** *(S, security — worth a human looking sooner than the next
+  weekly run).* `npm audit --omit=dev` on 2026-11-08 reports `zod <4.6.6`,
+  [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5)
+  (memory exhaustion validating oversized constrained collections) — new since
+  the 2026-09-08 health check recorded "0 vulnerabilities" at the top of this
+  file. `zod` is what `src/lib/schema.js` validates every `/admin` save and
+  every `content/**` build against, so an oversized submission is the
+  realistic trigger, not a theoretical one. The weekly agent cannot pick this
+  up itself even once eligible — `package.json`/`package-lock.json` and
+  `src/lib/schema.js` are both on the never-auto-merge list — so it needs a
+  human to run `npm audit fix`, `npm test`, `npm run build` and open the PR.
+
+- [ ] **Add Dependabot (or Renovate) for npm and GitHub Actions** *(S,
+  maintainability).* There is no automated dependency-update mechanism
+  anywhere in `.github/` — only `workflows/ci.yml`. The zod advisory above had
+  to be caught by someone thinking to run `npm audit` by hand; a weekly
+  `dependabot.yml` covering the `npm` and `github-actions` ecosystems would
+  turn the next one into a PR nobody had to go looking for.
+
+- [ ] **Cache the Playwright/Chromium install in the weekly CI job** *(S,
+  maintainability / CI cost).* `ci.yml`'s scheduled run does
+  `npx playwright-core install --with-deps chromium` from scratch every Monday
+  before `audit:browser`, even though `npm ci` right above it already uses
+  `actions/cache` keyed on the lockfile. An `actions/cache` step keyed on the
+  installed `playwright-core` version (`node_modules/.cache/ms-playwright` or
+  wherever it lands) would skip that download+install most weeks and only pay
+  for it again when the pinned version bumps.
+
+- [ ] **Give `/events.xml` an image per event** *(S, polish).* `eventRssItem()`
+  (`src/lib/events.js`) emits `title`/`pubDate`/`description`/`link` but never
+  the event's photo, even though every dated event has one
+  (`src/lib/images.js` resolves it for the page already). `@astrojs/rss`
+  supports a per-item `enclosure` (`{ url, length, type }`); wiring the
+  event's own image through would let anything consuming the feed — a
+  Discord/Slack RSS bridge, an auto-poster — show a thumbnail instead of bare
+  text. Needs the image's public byte length for `enclosure.length`, which
+  `resolveImage()` doesn't currently expose, so check what Astro's asset
+  pipeline makes available before committing to the approach.
+
 ---
 
 ## 5. Everyday commands
