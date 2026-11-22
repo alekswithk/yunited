@@ -258,6 +258,70 @@ implement *from* it. Roughly ordered by impact ÷ effort.
   reach four real events before anyone noticed (`worker/README.md`). A single
   in-memory fixture module would catch a regression before it ships.
 
+- [ ] **The mobile nav toggle has no no-script fallback, unlike its sibling
+  disclosures** *(S/M, accessibility/resilience).* `Header.astro`'s own
+  comments explain why the "More" menu and the language switcher are native
+  `<details>` elements rather than script-driven: "it opens, closes and
+  takes keyboard focus with no script and no CSP cost." The primary
+  hamburger menu (`.nav-toggle` + `#main-nav`, same file, lines ~48–59)
+  doesn't follow that pattern. `global.css`'s `@media (max-width: 1100px)`
+  block (~line 502) sets `.main-nav` to `visibility: hidden; opacity: 0;
+  pointer-events: none` unconditionally below that width, and only
+  `BaseLayout`'s client script adds `.is-open` to undo it on a click. If
+  that script fails to load — a flaky connection, a CDN hiccup, a CSP
+  misconfiguration caught too late — a visitor under 1100px (every phone)
+  sees the logo and a button that does nothing, with zero way to reach
+  Home/About/Events/Members/Buddy. Checked: there is no `<noscript>` block
+  and no CSS-only fallback anywhere in `Header.astro` or `global.css` for
+  this one control. Worth a decision, not just a reflex: switching it to the
+  same `<details>` primitive changes its animation and layout (it's
+  currently an absolutely-positioned overlay panel, not an inline
+  disclosure), so this needs a real look before coding, not a drop-in swap.
+
+- [ ] **`audit:browser` never opens a disclosure before screenshotting or
+  running axe** *(S/M, accessibility/maintainability).* `scripts/browser-audit.mjs`
+  loads each of its seven targets cold (`page.goto`, then `axe.run` and a
+  full-page screenshot — lines ~57–89) and never clicks anything. Three
+  interactive disclosures ship on these very pages — the mobile nav
+  (`.nav-toggle`), the language switcher / "More" menu (`<details>`), and an
+  `UpcomingEvent` card's expand toggle, which reveals the OpenStreetMap
+  `<iframe>` — and none of their *open* states has ever been captured by a
+  screenshot or scanned by axe in CI. A contrast or focus-order bug that
+  only exists once a card is expanded (exactly the kind of thing the OSM
+  `<iframe>`'s `frame-src` note already flags as "only visible in the
+  browser on first expand") would pass every run clean. Add one more target
+  per interactive page that clicks the toggle before capturing, reusing the
+  existing axe/screenshot code path — no new dependency.
+
+- [ ] **`audit:browser`'s axe scan discards every "moderate" finding before
+  it is ever written down** *(S, accessibility).* `scripts/browser-audit.mjs`
+  filters `result.violations` to `["serious", "critical"]` (~line 82)
+  *before* pushing into `report.json`, so a moderate-impact finding (a
+  borderline contrast ratio, a redundant or missing landmark) isn't just
+  non-blocking — it is discarded in the same step that decides pass/fail
+  and never appears in the artifact a human reviews afterward either. Keep
+  the pass/fail gate exactly as it is (serious/critical only, per
+  `CLAUDE.md`'s own description of this script), but also record moderate
+  findings as a separate field in `report.json` so a maintainer skimming
+  the PNGs after a scheduled run has the fuller picture instead of nothing.
+
+- [ ] **HTML pages have no explicit `Cache-Control` in `public/_headers`**
+  *(S/M, performance).* The global `/*` block sets every security header
+  (`X-Content-Type-Options`, `Strict-Transport-Security`,
+  `Referrer-Policy`, `Permissions-Policy`, the CSP) but no `Cache-Control`
+  at all — checked, it isn't there — while every other path in the file
+  (`/_astro/*`, `/assets/*`, `/assets/fonts/*`, `/events/*.ics`, `/images/*`,
+  `/admin/*`) states its caching intent explicitly, immutable or not, with
+  a comment explaining why. HTML is the one response type left to whatever
+  Cloudflare's own default heuristic happens to be for a static-assets
+  Worker, which is an accident, not a decision. A short, explicit rule —
+  `Cache-Control: public, max-age=300, must-revalidate` (five minutes: long
+  enough to help a repeat visit inside one browsing session, short enough
+  that an `/admin` save reaches a visitor well within one Cloudflare
+  rebuild) — would make it a documented choice like everything else in this
+  file, rather than leaving the one path every visitor actually requests as
+  the one case nobody decided on.
+
 ---
 
 ## 5. Everyday commands
